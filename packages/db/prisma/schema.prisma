@@ -29,6 +29,7 @@ model User {
   locale        String    @default("mk")
   sessions      Session[]
   accounts      Account[]
+  memberships   BusinessMember[]
 
   @@map("user")
 }
@@ -93,6 +94,8 @@ model City {
   sortOrder Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  businesses Business[]
+  travelFees TravelFee[]
 
   @@map("city")
 }
@@ -126,6 +129,7 @@ model VenueFeature {
   sortOrder Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  businesses BusinessFeature[]
 
   @@map("venue_feature")
 }
@@ -156,4 +160,313 @@ model ChecklistTemplateItem {
   updatedAt    DateTime @updatedAt
 
   @@map("checklist_template_item")
+}
+
+model MusicGenre {
+  id         String          @id @default(cuid())
+  slug       String          @unique
+  nameMk     String
+  nameSq     String
+  nameEn     String
+  active     Boolean         @default(true)
+  sortOrder  Int             @default(0)
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+  businesses BusinessGenre[]
+
+  @@map("music_genre")
+}
+
+// ─── Vendors ───
+
+enum BusinessStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
+  HIDDEN
+}
+
+enum MemberRole {
+  OWNER
+  STAFF
+}
+
+enum Currency {
+  EUR
+  MKD
+}
+
+/// What a calendar day nobody marked means for this business.
+enum UnmarkedDays {
+  FREE
+  UNKNOWN
+}
+
+enum DayStatus {
+  FREE
+  TENTATIVE
+  BOOKED
+}
+
+enum DrinksIncluded {
+  NONE
+  SOFT
+  DOMESTIC_UNLIMITED
+  CUSTOM
+}
+
+enum ExtraUnit {
+  PER_PERSON
+  FIXED
+}
+
+model Business {
+  id              String            @id @default(cuid())
+  category        VendorCategoryKey
+  name            String
+  slug            String            @unique
+  descriptionMk   String            @default("")
+  descriptionSq   String?
+  descriptionEn   String?
+  /// Location for venues and studios; home city for bands.
+  cityId          String?
+  city            City?             @relation(fields: [cityId], references: [id], onDelete: SetNull)
+  address         String?
+  lat             Float?
+  lng             Float?
+  phone           String?
+  viber           String?
+  whatsapp        String?
+  email           String?
+  website         String?
+  instagram       String?
+  facebook        String?
+  /// Bands: instruments / members, free text.
+  lineup          String?
+  status          BusinessStatus    @default(DRAFT)
+  rejectionReason String?
+  submittedAt     DateTime?
+  approvedAt      DateTime?
+  unmarkedDays    UnmarkedDays      @default(UNKNOWN)
+  /// Default currency for new prices.
+  currency        Currency          @default(EUR)
+  /// One-time link for the real owner of an admin-created listing.
+  claimToken      String?           @unique
+  claimExpiresAt  DateTime?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  members         BusinessMember[]
+  invites         BusinessInvite[]
+  photos          Photo[]
+  galleries       PortfolioGallery[]
+  videoLinks      VideoLink[]
+  halls           Hall[]
+  menuPackages    MenuPackage[]
+  extras          Extra[]
+  servicePackages ServicePackage[]
+  travelFees      TravelFee[]
+  availability    AvailabilityDay[]
+  features        BusinessFeature[]
+  genres          BusinessGenre[]
+
+  @@index([category, status])
+  @@index([cityId])
+  @@map("business")
+}
+
+model BusinessMember {
+  id         String     @id @default(cuid())
+  businessId String
+  business   Business   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role       MemberRole
+  createdAt  DateTime   @default(now())
+
+  @@unique([businessId, userId])
+  @@index([userId])
+  @@map("business_member")
+}
+
+/// Copyable link that adds a staff member.
+model BusinessInvite {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  token      String   @unique
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+
+  @@index([businessId])
+  @@map("business_invite")
+}
+
+model BusinessFeature {
+  businessId String
+  business   Business     @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  featureId  String
+  feature    VenueFeature @relation(fields: [featureId], references: [id], onDelete: Cascade)
+
+  @@id([businessId, featureId])
+  @@map("business_feature")
+}
+
+model BusinessGenre {
+  businessId String
+  business   Business   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  genreId    String
+  genre      MusicGenre @relation(fields: [genreId], references: [id], onDelete: Cascade)
+
+  @@id([businessId, genreId])
+  @@map("business_genre")
+}
+
+model PortfolioGallery {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  title      String
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+  photos     Photo[]
+
+  @@index([businessId])
+  @@map("portfolio_gallery")
+}
+
+model Photo {
+  id         String            @id @default(cuid())
+  businessId String
+  business   Business          @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  galleryId  String?
+  gallery    PortfolioGallery? @relation(fields: [galleryId], references: [id], onDelete: Cascade)
+  url        String
+  sortOrder  Int               @default(0)
+  createdAt  DateTime          @default(now())
+
+  @@index([businessId, sortOrder])
+  @@map("photo")
+}
+
+model VideoLink {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  url        String
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  @@index([businessId])
+  @@map("video_link")
+}
+
+model Hall {
+  id           String            @id @default(cuid())
+  businessId   String
+  business     Business          @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  name         String
+  capacityMin  Int?
+  capacityMax  Int
+  description  String?
+  sortOrder    Int               @default(0)
+  createdAt    DateTime          @default(now())
+  availability AvailabilityDay[]
+
+  @@index([businessId])
+  @@map("hall")
+}
+
+model MenuPackage {
+  id             String         @id @default(cuid())
+  businessId     String
+  business       Business       @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  nameMk         String
+  nameSq         String?
+  nameEn         String?
+  /// Whole currency units.
+  pricePerPerson Int
+  currency       Currency
+  minGuests      Int?
+  /// One line per course, in the vendor's language.
+  courses        String[]
+  drinks         DrinksIncluded @default(NONE)
+  drinksNote     String?
+  sortOrder      Int            @default(0)
+  createdAt      DateTime       @default(now())
+
+  @@index([businessId])
+  @@map("menu_package")
+}
+
+model Extra {
+  id         String    @id @default(cuid())
+  businessId String
+  business   Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  nameMk     String
+  nameSq     String?
+  nameEn     String?
+  price      Int
+  currency   Currency
+  unit       ExtraUnit @default(FIXED)
+  sortOrder  Int       @default(0)
+  createdAt  DateTime  @default(now())
+
+  @@index([businessId])
+  @@map("extra")
+}
+
+/// Packages for bands and photo/video studios.
+model ServicePackage {
+  id             String   @id @default(cuid())
+  businessId     String
+  business       Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  nameMk         String
+  nameSq         String?
+  nameEn         String?
+  price          Int
+  currency       Currency
+  hours          Int?
+  /// Bands: number of musicians.
+  members        Int?
+  extraHourPrice Int?
+  /// What's included, one item per line.
+  includes       String[]
+  sortOrder      Int      @default(0)
+  createdAt      DateTime @default(now())
+
+  @@index([businessId])
+  @@map("service_package")
+}
+
+/// Band travel fee to a city other than its home city.
+model TravelFee {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  cityId     String
+  city       City     @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  price      Int
+  currency   Currency
+
+  @@unique([businessId, cityId])
+  @@map("travel_fee")
+}
+
+model AvailabilityDay {
+  id          String    @id @default(cuid())
+  businessId  String
+  business    Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  hallId      String?
+  hall        Hall?     @relation(fields: [hallId], references: [id], onDelete: Cascade)
+  /// hallId, or "main" for businesses without halls (keeps the unique key non-null).
+  calendarKey String
+  date        DateTime  @db.Date
+  status      DayStatus
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([businessId, calendarKey, date])
+  @@index([businessId, date])
+  @@map("availability_day")
 }

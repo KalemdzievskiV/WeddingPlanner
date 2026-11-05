@@ -8,7 +8,7 @@ import { Field, Input } from "@/components/ui/field";
 import { Link, useRouter } from "@/i18n/navigation";
 import { authClient } from "@/lib/auth-client";
 
-export function SignInForm() {
+export function SignInForm({ next }: { next?: string | null }) {
   const t = useTranslations("auth");
   const locale = useLocale();
   const router = useRouter();
@@ -25,11 +25,11 @@ export function SignInForm() {
     const { error } = await authClient.signIn.email({
       email: String(form.get("email") ?? "").trim(),
       password: String(form.get("password") ?? ""),
-      callbackURL: `/${locale}/app`,
+      callbackURL: `/${locale}${next ?? "/app"}`,
     });
     setPending(false);
     if (!error) {
-      router.push("/app");
+      router.push(next ?? "/app");
       router.refresh();
     } else if (error.code === "EMAIL_NOT_VERIFIED") {
       setNotice(t("signIn.notVerified"));

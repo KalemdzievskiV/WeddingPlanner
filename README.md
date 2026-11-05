@@ -70,6 +70,7 @@ All UI text is in `packages/i18n/src/messages/*.json`. English is the reference:
 2. Set the variables from `.env.example` on the web service. `DATABASE_URL=${{Postgres.DATABASE_URL}}`, `BETTER_AUTH_URL` = the public URL.
 3. For images in production, create a Cloudflare R2 bucket with public access and fill the `R2_*` variables. Without R2 the app writes to `UPLOAD_DIR`, which needs a Railway volume.
 4. For email, verify a sending domain in Resend and set `RESEND_API_KEY` and `EMAIL_FROM`.
-5. For Google login, create an OAuth client in Google Cloud with the redirect URI `<BETTER_AUTH_URL>/api/auth/callback/google`.
+5. For maps, create a free MapTiler key and set `NEXT_PUBLIC_MAPTILER_KEY` (development uses OpenStreetMap tiles).
+6. For Google login, create an OAuth client in Google Cloud with the redirect URI `<BETTER_AUTH_URL>/api/auth/callback/google`.
 
 On every start the container applies migrations, runs the seed, then starts Next.js.

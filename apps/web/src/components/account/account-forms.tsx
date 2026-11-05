@@ -3,23 +3,24 @@
 import { isLocale, LOCALES } from "@svadba/shared";
 import { Upload } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useActionState, useEffect, useRef } from "react";
+import {useEffect, useRef} from "react";
 import { updateProfileAction, uploadAvatarAction } from "@/actions/account";
 import { Alert } from "@/components/ui/alert";
 import { Button, buttonClass } from "@/components/ui/button";
 import { Field, Input, Select } from "@/components/ui/field";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import type { FormState } from "@/lib/form";
+import { useFormAction } from "@/lib/use-form-action";
 
 export function AvatarForm({ name, image }: { name: string; image: string | null }) {
   const t = useTranslations("account");
   const te = useTranslations("errors");
-  const [state, action, pending] = useActionState(uploadAvatarAction, {} as FormState);
+  const [state, action, pending] = useFormAction(uploadAvatarAction, {} as FormState);
   const formRef = useRef<HTMLFormElement>(null);
   const error = state.fieldErrors?.photo ?? state.formError;
 
   return (
-    <form ref={formRef} action={action} className="flex flex-col gap-5 sm:flex-row sm:items-center">
+    <form ref={formRef} onSubmit={action} className="flex flex-col gap-5 sm:flex-row sm:items-center">
       <div className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-line-strong bg-rosehip font-display text-3xl text-vranec">
         {image ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -60,7 +61,7 @@ export function ProfileForm({ name, email, locale }: { name: string; email: stri
   const currentLocale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
-  const [state, action, pending] = useActionState(updateProfileAction, {} as FormState & { locale?: string });
+  const [state, action, pending] = useFormAction(updateProfileAction, {} as FormState & { locale?: string });
   const fe = state.fieldErrors ?? {};
 
   // After saving a different language, reopen this page in that language.
@@ -71,7 +72,7 @@ export function ProfileForm({ name, email, locale }: { name: string; email: stri
   }, [state, currentLocale, pathname, router]);
 
   return (
-    <form action={action} className="space-y-5">
+    <form onSubmit={action} className="space-y-5">
       {state.ok && <Alert tone="success">{t("saved")}</Alert>}
       {state.formError && state.formError !== "emailTaken" && <Alert tone="error">{te(state.formError)}</Alert>}
       <Field id="name" label={t("name")} error={fe.name && te(fe.name)}>

@@ -64,6 +64,20 @@ const venueFeatures: [string, Names][] = [
   ["own-decor", ["Сопствена декорација", "Dekor i vetë lokalit", "In-house decor"]],
 ];
 
+const musicGenres: [string, Names][] = [
+  ["narodna", ["Народна", "Muzikë popullore", "Macedonian folk"]],
+  ["zabavna", ["Забавна", "Muzikë zbavitëse", "Pop (zabavna)"]],
+  ["stara-gradska", ["Стара градска", "Këngë të vjetra qytetare", "Old town songs"]],
+  ["zurli-tapani", ["Зурли и тапани", "Surle dhe daulle", "Zurla and drums"]],
+  ["albanska", ["Албанска", "Muzikë shqipe", "Albanian"]],
+  ["romska", ["Ромска", "Muzikë rome", "Roma music"]],
+  ["turska", ["Турска", "Muzikë turke", "Turkish"]],
+  ["pop-rok", ["Поп и рок", "Pop dhe rok", "Pop and rock"]],
+  ["dzez", ["Џез и лаунџ", "Xhaz dhe lounge", "Jazz and lounge"]],
+  ["klasicna", ["Класична", "Muzikë klasike", "Classical"]],
+  ["dj", ["ДЈ", "DJ", "DJ"]],
+];
+
 const budgetCategories: [string, Names][] = [
   ["venue", ["Ресторан / сала", "Restoranti / salla", "Restaurant / venue"]],
   ["drinks", ["Пијалоци", "Pijet", "Drinks"]],
@@ -125,6 +139,10 @@ async function seedReferenceData() {
   for (const [i, [slug, [nameMk, nameSq, nameEn]]] of venueFeatures.entries()) {
     const data = { nameMk, nameSq, nameEn, sortOrder: i };
     await prisma.venueFeature.upsert({ where: { slug }, update: {}, create: { slug, ...data } });
+  }
+  for (const [i, [slug, [nameMk, nameSq, nameEn]]] of musicGenres.entries()) {
+    const data = { nameMk, nameSq, nameEn, sortOrder: i };
+    await prisma.musicGenre.upsert({ where: { slug }, update: {}, create: { slug, ...data } });
   }
   for (const [i, [slug, [nameMk, nameSq, nameEn]]] of budgetCategories.entries()) {
     const data = { nameMk, nameSq, nameEn, sortOrder: i };

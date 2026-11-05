@@ -1,7 +1,11 @@
 {
   "common": {
     "appName": "Svadba",
-    "languages": { "mk": "Македонски", "sq": "Shqip", "en": "English" },
+    "languages": {
+      "mk": "Македонски",
+      "sq": "Shqip",
+      "en": "English"
+    },
     "language": "Language",
     "signIn": "Sign in",
     "signOut": "Sign out",
@@ -17,7 +21,36 @@
     "no": "No",
     "menu": "Menu",
     "skipToContent": "Skip to content",
-    "roles": { "COUPLE": "Couple", "VENDOR": "Vendor", "ADMIN": "Admin" }
+    "roles": {
+      "COUPLE": "Couple",
+      "VENDOR": "Vendor",
+      "ADMIN": "Admin"
+    },
+    "copy": "Copy link",
+    "copied": "Copied",
+    "edit": "Edit",
+    "back": "Back",
+    "calendar": {
+      "m1": "January",
+      "m2": "February",
+      "m3": "March",
+      "m4": "April",
+      "m5": "May",
+      "m6": "June",
+      "m7": "July",
+      "m8": "August",
+      "m9": "September",
+      "m10": "October",
+      "m11": "November",
+      "m12": "December",
+      "d1": "Mon",
+      "d2": "Tue",
+      "d3": "Wed",
+      "d4": "Thu",
+      "d5": "Fri",
+      "d6": "Sat",
+      "d7": "Sun"
+    }
   },
   "meta": {
     "title": "Svadba — wedding planning in North Macedonia",
@@ -141,10 +174,11 @@
     "coupleTitle": "Your wedding planner",
     "coupleText": "Guests, budget, checklist, seating and your vendors will live here. We're building it now.",
     "vendorTitle": "Your business",
-    "vendorText": "Here you'll set up your restaurant, band or photo studio: profile, photos, prices and free dates. We're building it now.",
+    "vendorText": "Manage your restaurant, band or photo studio: profile, photos, prices and free dates.",
     "adminTitle": "Admin panel",
     "adminText": "Manage users, cities, vendor categories and venue features.",
-    "openAdmin": "Open admin panel"
+    "openAdmin": "Open admin panel",
+    "openVendor": "Manage businesses"
   },
   "account": {
     "title": "Account",
@@ -165,7 +199,9 @@
       "cities": "Cities",
       "categories": "Vendor categories",
       "features": "Venue features",
-      "backToSite": "Back to site"
+      "backToSite": "Back to site",
+      "businesses": "Businesses",
+      "genres": "Music genres"
     },
     "overview": {
       "title": "Overview",
@@ -174,7 +210,9 @@
       "vendors": "Vendors",
       "admins": "Admins",
       "cities": "Active cities",
-      "features": "Venue features"
+      "features": "Venue features",
+      "pending": "Waiting for review",
+      "live": "Live businesses"
     },
     "users": {
       "title": "Users",
@@ -217,7 +255,43 @@
     "saved": "Saved.",
     "created": "Added.",
     "deleted": "Deleted.",
-    "confirmDelete": "Delete “{name}”? This can't be undone."
+    "confirmDelete": "Delete “{name}”? This can't be undone.",
+    "genres": {
+      "title": "Music genres",
+      "lead": "Bands tick these on their profile. Later they become search filters.",
+      "add": "Add genre"
+    },
+    "businesses": {
+      "title": "Businesses",
+      "lead": "Review new profiles, and create listings for vendors you're helping.",
+      "add": "Create listing",
+      "all": "All",
+      "empty": "No businesses here.",
+      "owner": "Owner",
+      "noOwner": "No owner yet",
+      "submitted": "Sent {date}",
+      "updated": "Updated {date}",
+      "review": "Review",
+      "approve": "Approve",
+      "reject": "Send back",
+      "rejectReason": "What needs to change",
+      "rejectHint": "The vendor sees this and gets it by email.",
+      "hide": "Hide",
+      "unhide": "Show again",
+      "editListing": "Edit listing",
+      "openPage": "Open page",
+      "claimTitle": "Claim link",
+      "claimLead": "Send this link to the owner by Viber, email or in person. It works once and expires in {days} days.",
+      "claimCreate": "Create claim link",
+      "claimNew": "Create a new link",
+      "claimExpires": "Expires {date}",
+      "team": "Team",
+      "checklist": "Profile checklist",
+      "approved": "Approved. The owner got an email.",
+      "rejected": "Sent back. The owner got an email.",
+      "newTitle": "Create a listing",
+      "newLead": "For vendors who want help getting started. You fill in the profile, then the owner takes it over with a claim link."
+    }
   },
   "errors": {
     "email": "Enter a valid email address.",
@@ -232,7 +306,21 @@
     "forbidden": "You don't have access to this.",
     "fileType": "Upload a JPG, PNG or WebP image.",
     "fileSize": "The image is larger than 10 MB.",
-    "generic": "Something went wrong. Try again."
+    "generic": "Something went wrong. Try again.",
+    "tooLong": "This is too long.",
+    "number": "Enter a number.",
+    "wholeNumber": "Enter a whole number.",
+    "positive": "Enter 0 or more.",
+    "tooLarge": "This number is too large.",
+    "url": "Enter a full link that starts with https://",
+    "videoUrl": "Use a link from YouTube, Vimeo, Instagram, Facebook or TikTok.",
+    "photoLimit": "You've reached the photo limit. Delete some photos to add new ones.",
+    "incomplete": "Finish the checklist first.",
+    "capacityRange": "The minimum can't be more than the maximum.",
+    "homeCity": "This is your home city, so there's no travel fee.",
+    "duplicateCity": "This city already has a fee.",
+    "invalidLink": "This link has expired or was already used.",
+    "checkFields": "Check the highlighted fields."
   },
   "email": {
     "greeting": "Hi {name},",
@@ -242,11 +330,295 @@
     "resetSubject": "Reset your password",
     "resetText": "We got a request to reset your Svadba password. The link works for 1 hour.",
     "resetButton": "Set new password",
-    "ignore": "If this wasn't you, ignore this email."
+    "ignore": "If this wasn't you, ignore this email.",
+    "approvedSubject": "Your profile is live",
+    "approvedText": "“{business}” is now live on Svadba. Share your page with couples.",
+    "approvedButton": "Open your page",
+    "rejectedSubject": "Your profile needs changes",
+    "rejectedText": "We reviewed “{business}”. What needs to change: {reason}",
+    "rejectedButton": "Edit your profile"
   },
   "notFound": {
     "title": "Page not found",
     "text": "The link may be old, or the page was moved.",
     "home": "Go to home page"
+  },
+  "vendor": {
+    "nav": {
+      "overview": "Overview",
+      "profile": "Profile",
+      "photos": "Photos & video",
+      "prices": "Packages",
+      "pricesVenue": "Halls & menus",
+      "travel": "Travel fees",
+      "calendar": "Calendar",
+      "team": "Team"
+    },
+    "categories": {
+      "VENUE": "Restaurant or hall",
+      "BAND": "Band or musician",
+      "PHOTO_VIDEO": "Photo & video studio"
+    },
+    "categoryHints": {
+      "VENUE": "Halls, menus per person, free dates",
+      "BAND": "Packages, music genres, travel fees",
+      "PHOTO_VIDEO": "Packages, portfolio, free dates"
+    },
+    "status": {
+      "DRAFT": "Draft",
+      "PENDING": "Waiting for review",
+      "APPROVED": "Live",
+      "REJECTED": "Needs changes",
+      "HIDDEN": "Hidden"
+    },
+    "list": {
+      "title": "Your businesses",
+      "add": "Add a business",
+      "empty": "Add your restaurant, band or studio. Listing is free.",
+      "role": {
+        "OWNER": "Owner",
+        "STAFF": "Staff"
+      }
+    },
+    "new": {
+      "title": "Add a business",
+      "lead": "Start with the basics. You'll add photos, prices and dates next.",
+      "category": "Type of business",
+      "name": "Business name",
+      "city": "City",
+      "chooseCity": "Choose a city",
+      "submit": "Create business"
+    },
+    "header": {
+      "viewPublic": "View public page",
+      "preview": "Preview page",
+      "allBusinesses": "All businesses"
+    },
+    "overview": {
+      "draftTitle": "Finish your profile",
+      "draftText": "When everything below is done, send the profile for review. We usually check it within 1–2 working days.",
+      "checklist": {
+        "name": "Name and city",
+        "address": "Address",
+        "phone": "Phone number",
+        "description": "Description in Macedonian (at least a few sentences)",
+        "photos": "At least {count} photos",
+        "priceVenue": "A hall and a menu package",
+        "pricePackage": "At least one package"
+      },
+      "fix": "Add",
+      "submit": "Send for review",
+      "pendingTitle": "Waiting for review",
+      "pendingText": "We're checking your profile. You can keep editing in the meantime, and we'll email you when it's live.",
+      "approvedTitle": "Your profile is live",
+      "approvedText": "Share your page on Instagram, Facebook or Viber:",
+      "rejectedTitle": "Your profile needs changes",
+      "rejectedText": "Note from our team:",
+      "resubmit": "Send for review again",
+      "hiddenTitle": "Your profile is hidden",
+      "hiddenText": "Our team hid this profile. Write to us if you think this is a mistake.",
+      "deleteTitle": "Delete business",
+      "deleteText": "Removes the profile, photos, prices and calendar. This can't be undone.",
+      "delete": "Delete business",
+      "confirmDelete": "Delete “{name}” and everything in it?"
+    },
+    "profile": {
+      "basics": "Basics",
+      "name": "Business name",
+      "city": "City",
+      "homeCity": "Home city",
+      "address": "Address",
+      "addressHint": "Street and number, so couples can find you.",
+      "pin": "Location on the map",
+      "pinHint": "Click the map or drag the pin to your entrance.",
+      "pinClear": "Remove pin",
+      "description": "Description",
+      "descriptionHint": "What makes you different: style, experience, what's included. Visitors who read Albanian or English see the Macedonian text when those are empty.",
+      "descriptionMk": "Macedonian",
+      "descriptionSq": "Albanian (optional)",
+      "descriptionEn": "English (optional)",
+      "contact": "Contact",
+      "phone": "Phone",
+      "viber": "Viber number",
+      "whatsapp": "WhatsApp number",
+      "email": "Email",
+      "website": "Website",
+      "instagram": "Instagram link",
+      "facebook": "Facebook link",
+      "linkPlaceholder": "https://",
+      "features": "What the venue offers",
+      "genres": "Music genres",
+      "lineup": "Lineup",
+      "lineupHint": "Members and instruments, e.g. vocals, clarinet, accordion, keyboards, drums.",
+      "currency": "Default currency for prices",
+      "save": "Save profile",
+      "saved": "Profile saved."
+    },
+    "photos": {
+      "title": "Photos",
+      "lead": "The first photo is the cover. {count} of {max} photos used.",
+      "upload": "Upload photos",
+      "uploading": "Uploading…",
+      "uploadHint": "JPG, PNG or WebP, up to 10 MB each. You can select several at once.",
+      "cover": "Cover",
+      "makeCover": "Make cover",
+      "moveLeft": "Move left",
+      "moveRight": "Move right",
+      "delete": "Delete photo",
+      "empty": "No photos yet.",
+      "mainPhotos": "Profile photos",
+      "galleries": "Portfolio",
+      "galleriesLead": "Group photos by wedding, e.g. “Ana & Marko, Ohrid 2026”.",
+      "galleryTitle": "Gallery name",
+      "createGallery": "Create gallery",
+      "deleteGallery": "Delete gallery",
+      "confirmDeleteGallery": "Delete the gallery “{title}” and its photos?",
+      "videos": "Video",
+      "videosLead": "Links from YouTube, Vimeo, Instagram, Facebook or TikTok.",
+      "videoUrl": "Video link",
+      "addVideo": "Add video",
+      "removeVideo": "Remove video"
+    },
+    "prices": {
+      "halls": "Halls",
+      "hallsLead": "Each hall has its own capacity and its own calendar.",
+      "addHall": "Add hall",
+      "hallName": "Hall name",
+      "capacityMin": "Minimum guests (optional)",
+      "capacityMax": "Maximum guests",
+      "hallDescription": "Description (optional)",
+      "guestsRange": "{min}–{max} guests",
+      "guestsMax": "up to {max} guests",
+      "menus": "Menu packages",
+      "menusLead": "Priced per person. Couples compare these side by side.",
+      "addMenu": "Add menu",
+      "nameMk": "Name (Macedonian)",
+      "nameSq": "Name (Albanian, optional)",
+      "nameEn": "Name (English, optional)",
+      "pricePerPerson": "Price per person",
+      "minGuests": "Minimum guests (optional)",
+      "courses": "Courses",
+      "coursesHint": "One course per line, e.g. “Cold appetizer: prosciutto, cheese, ajvar”.",
+      "drinks": "Drinks",
+      "drinksOptions": {
+        "NONE": "Not included",
+        "SOFT": "Soft drinks included",
+        "DOMESTIC_UNLIMITED": "Unlimited domestic drinks",
+        "CUSTOM": "Other (describe below)"
+      },
+      "drinksNote": "Drinks details (optional)",
+      "perPerson": "{price} per person",
+      "minGuestsShort": "min. {count} guests",
+      "extras": "Extras",
+      "extrasLead": "What couples can add: cake, decor, fireworks, extra drinks.",
+      "addExtra": "Add extra",
+      "price": "Price",
+      "currency": "Currency",
+      "unit": "Charged",
+      "units": {
+        "PER_PERSON": "per person",
+        "FIXED": "once"
+      },
+      "packages": "Packages",
+      "packagesLeadBand": "For example “5 musicians, 5 hours”.",
+      "packagesLeadPhoto": "For example “Photo + video, full day, album”.",
+      "addPackage": "Add package",
+      "hours": "Hours (optional)",
+      "members": "Musicians (optional)",
+      "extraHourPrice": "Price for an extra hour (optional)",
+      "includes": "What's included",
+      "includesHint": "One item per line.",
+      "hoursShort": "{count} h",
+      "membersShort": "{count} musicians",
+      "extraHourShort": "{price} per extra hour",
+      "approx": "≈ {price}",
+      "edit": "Edit",
+      "delete": "Delete",
+      "confirmDelete": "Delete “{name}”?",
+      "empty": "Nothing added yet."
+    },
+    "travel": {
+      "title": "Travel fees",
+      "lead": "No fee in your home city ({city}). Cities without a fee show “ask for price”.",
+      "noHome": "Set your home city in the profile first.",
+      "city": "City",
+      "fee": "Fee",
+      "add": "Add city",
+      "empty": "No travel fees yet."
+    },
+    "calendar": {
+      "title": "Calendar",
+      "lead": "Pick a status, then click days to mark them.",
+      "hall": "Hall",
+      "brush": {
+        "FREE": "Free",
+        "TENTATIVE": "On hold",
+        "BOOKED": "Booked",
+        "CLEAR": "Clear"
+      },
+      "unmarked": "Days you haven't marked show as",
+      "unmarkedOptions": {
+        "FREE": "free",
+        "UNKNOWN": "unknown, couples ask you"
+      },
+      "prev": "Previous month",
+      "next": "Next month",
+      "weekends": "Apply to all weekends this month",
+      "noHalls": "Add a hall first, then manage its calendar here.",
+      "saveError": "Couldn't save. Check your connection and try again."
+    },
+    "team": {
+      "title": "Team",
+      "lead": "People who can manage this business.",
+      "remove": "Remove",
+      "confirmRemove": "Remove {name} from the team?",
+      "invite": "Create invite link",
+      "inviteLead": "Staff can edit everything except the team. Each link works once and expires in {days} days.",
+      "activeInvites": "Open invite links",
+      "revoke": "Revoke",
+      "expires": "Expires {date}",
+      "onlyOwner": "Only the owner can change the team."
+    },
+    "claim": {
+      "title": "Take over your listing",
+      "text": "The Svadba team created “{name}” for you. Confirm to become its owner and manage it yourself.",
+      "submit": "Become the owner",
+      "invalid": "This link has expired or was already used. Ask us for a new one."
+    },
+    "join": {
+      "title": "Join the team",
+      "text": "You've been invited to help manage “{name}”.",
+      "submit": "Join the team",
+      "invalid": "This invite link has expired or was already used."
+    },
+    "public": {
+      "preview": "Preview: only you and our team can see this page until it's approved.",
+      "edit": "Edit profile",
+      "contact": "Contact",
+      "call": "Call",
+      "viber": "Viber",
+      "whatsapp": "WhatsApp",
+      "email": "Email",
+      "website": "Website",
+      "about": "About",
+      "halls": "Halls",
+      "menus": "Menus",
+      "extras": "Extras",
+      "packages": "Packages",
+      "genres": "Music",
+      "lineup": "Lineup",
+      "travel": "Travel",
+      "travelHome": "No travel fee in {city}",
+      "travelAsk": "Other cities: ask for the price",
+      "availability": "Availability",
+      "unmarkedFree": "Days without a mark are free.",
+      "unmarkedUnknown": "Days without a mark: ask the vendor.",
+      "videos": "Video",
+      "portfolio": "Portfolio",
+      "location": "Location",
+      "openInMaps": "Open in Google Maps",
+      "features": "Venue features",
+      "noDescription": "No description yet."
+    }
   }
 }

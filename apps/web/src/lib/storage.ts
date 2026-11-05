@@ -1,8 +1,8 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { DeleteObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import sharp from "sharp";
 import { env } from "./env";
 
@@ -69,4 +69,20 @@ export async function saveImage(file: File, folder: string, maxSize = 1600): Pro
   await mkdir(path.dirname(target), { recursive: true });
   await writeFile(target, output);
   return `/uploads/${key}`;
+}
+
+/** Deletes a stored image by its public URL. Best effort: a missing file is not an error. */
+export async function deleteImage(url: string) {
+  try {
+    const client = r2Client();
+    if (client && env.r2 && url.startsWith(`${env.r2.publicUrl}/`)) {
+      await client.send(new DeleteObjectCommand({ Bucket: env.r2.bucket, Key: url.slice(env.r2.publicUrl.length + 1) }));
+    } else if (url.startsWith("/uploads/")) {
+      const root = localUploadRoot();
+      const file = path.resolve(root, url.slice("/uploads/".length));
+      if (file.startsWith(root + path.sep)) await rm(file, { force: true });
+    }
+  } catch (error) {
+    console.error("[deleteImage]", url, error);
+  }
 }

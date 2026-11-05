@@ -4,7 +4,7 @@ import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { MonthCalendar, type DayStatus } from "@/components/ui/month-calendar";
 import { Stitch } from "@/components/ui/stitch";
-import { weekdayLabels } from "@/lib/dates";
+import { calendarLabels } from "@/lib/dates";
 
 // Sample data for the product preview in the hero.
 const SAMPLE_DAYS_LEFT = 219;
@@ -103,7 +103,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                 year={2027}
                 month={5}
                 statuses={juneStatuses}
-                weekdayLabels={weekdayLabels(locale).map((d) => d.slice(0, 2))}
+                weekdayLabels={calendarLabels(await getTranslations("common.calendar")).weekdays.map((d) => d.slice(0, 2))}
                 highlight={12}
               />
               <div className="mt-2.5 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-stone">

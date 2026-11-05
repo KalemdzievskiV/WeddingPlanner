@@ -3,20 +3,21 @@
 import type { AccountType } from "@svadba/shared";
 import { MailCheck } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useActionState } from "react";
+
 import { signUpAction } from "@/actions/auth";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import { Link } from "@/i18n/navigation";
 import type { FormState } from "@/lib/form";
+import { useFormAction } from "@/lib/use-form-action";
 import { AccountTypePicker } from "./account-type-picker";
 
-export function SignUpForm({ defaultType }: { defaultType?: AccountType }) {
+export function SignUpForm({ defaultType, next }: { defaultType?: AccountType; next?: string | null }) {
   const t = useTranslations("auth");
   const te = useTranslations("errors");
   const locale = useLocale();
-  const [state, action, pending] = useActionState(signUpAction, {} as FormState & { email?: string });
+  const [state, action, pending] = useFormAction(signUpAction, {} as FormState & { email?: string });
   const fe = state.fieldErrors ?? {};
 
   if (state.ok) {
@@ -33,8 +34,9 @@ export function SignUpForm({ defaultType }: { defaultType?: AccountType }) {
   }
 
   return (
-    <form action={action} className="space-y-5" noValidate>
+    <form onSubmit={action} className="space-y-5" noValidate>
       <input type="hidden" name="locale" value={locale} />
+      {next && <input type="hidden" name="next" value={next} />}
       {state.formError && (
         <Alert tone="error">{state.formError === "emailTaken" ? t("signUp.emailTaken") : te(state.formError)}</Alert>
       )}

@@ -10,7 +10,9 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function AdminOverviewPage() {
   const t = await getTranslations("admin.overview");
-  const [users, couples, vendors, admins, cities, features] = await Promise.all([
+  const [pending, live, users, couples, vendors, admins, cities, features] = await Promise.all([
+    prisma.business.count({ where: { status: "PENDING" } }),
+    prisma.business.count({ where: { status: "APPROVED" } }),
     prisma.user.count(),
     prisma.user.count({ where: { roles: { has: "COUPLE" } } }),
     prisma.user.count({ where: { roles: { has: "VENDOR" } } }),
@@ -19,6 +21,8 @@ export default async function AdminOverviewPage() {
     prisma.venueFeature.count({ where: { active: true } }),
   ]);
   const stats = [
+    { label: t("pending"), value: pending },
+    { label: t("live"), value: live },
     { label: t("users"), value: users },
     { label: t("couples"), value: couples },
     { label: t("vendors"), value: vendors },

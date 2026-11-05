@@ -5,17 +5,31 @@ import { createTranslator } from "next-intl";
 import { Resend } from "resend";
 import { env } from "./env";
 
-type EmailKind = "verify" | "reset";
+type EmailKind = "verify" | "reset" | "approved" | "rejected";
+
+const KEYS = {
+  verify: { subject: "verifySubject", text: "verifyText", button: "verifyButton" },
+  reset: { subject: "resetSubject", text: "resetText", button: "resetButton" },
+  approved: { subject: "approvedSubject", text: "approvedText", button: "approvedButton" },
+  rejected: { subject: "rejectedSubject", text: "rejectedText", button: "rejectedButton" },
+} as const;
 
 function escapeHtml(value: string) {
   return value.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 }
 
-function renderEmail(locale: Locale, kind: EmailKind, name: string, url: string) {
+function renderEmail(
+  locale: Locale,
+  kind: EmailKind,
+  name: string,
+  url: string,
+  values: { business?: string; reason?: string },
+) {
   const t = createTranslator({ locale, messages: messages[locale], namespace: "email" });
-  const subject = t(kind === "verify" ? "verifySubject" : "resetSubject");
-  const text = t(kind === "verify" ? "verifyText" : "resetText");
-  const button = t(kind === "verify" ? "verifyButton" : "resetButton");
+  const k = KEYS[kind];
+  const subject = t(k.subject);
+  const text = t(k.text, { business: values.business ?? "", reason: values.reason ?? "" });
+  const button = t(k.button);
   const greeting = t("greeting", { name });
   const ignore = t("ignore");
   const appName = messages[locale].common.appName;
@@ -35,16 +49,18 @@ function renderEmail(locale: Locale, kind: EmailKind, name: string, url: string)
 
 let resend: Resend | null = null;
 
-/** Sends an auth email in the user's language. Without RESEND_API_KEY it prints to the console. */
+/** Sends an email in the user's language. Without RESEND_API_KEY it prints to the console. */
 export async function sendAuthEmail(opts: {
   to: string;
   name: string;
   locale: unknown;
   kind: EmailKind;
   url: string;
+  business?: string;
+  reason?: string;
 }) {
   const locale = isLocale(opts.locale) ? opts.locale : "mk";
-  const { subject, html, text } = renderEmail(locale, opts.kind, opts.name, opts.url);
+  const { subject, html, text } = renderEmail(locale, opts.kind, opts.name, opts.url, opts);
 
   if (!env.resendKey) {
     console.log(`\n[email:dev] to=${opts.to} subject="${subject}"\n[email:dev] link: ${opts.url}\n`);

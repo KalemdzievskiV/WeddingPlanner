@@ -6,6 +6,7 @@ import { GoogleButton } from "@/components/auth/google-button";
 import { SignUpForm } from "@/components/auth/sign-up-form";
 import { Link, redirect } from "@/i18n/navigation";
 import { googleEnabled } from "@/lib/env";
+import { safeNextPath } from "@/lib/next-path";
 import { getCurrentUser } from "@/lib/session";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -17,11 +18,12 @@ export default async function SignUpPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ type?: string }>;
+  searchParams: Promise<{ type?: string; next?: string }>;
 }) {
   const locale = await localeFrom(params);
-  const { type } = await searchParams;
-  if (await getCurrentUser()) redirect({ href: "/app", locale });
+  const { type, next: rawNext } = await searchParams;
+  const next = safeNextPath(rawNext);
+  if (await getCurrentUser()) redirect({ href: next ?? "/app", locale });
   const t = await getTranslations("auth");
 
   return (
@@ -29,15 +31,15 @@ export default async function SignUpPage({
       <AuthCard title={t("signUp.title")} lead={t("signUp.lead")}>
         {googleEnabled && (
           <>
-            <GoogleButton />
+            <GoogleButton next={next} />
             <Divider label={t("or")} />
           </>
         )}
-        <SignUpForm defaultType={type === "vendor" ? "VENDOR" : "COUPLE"} />
+        <SignUpForm defaultType={type === "vendor" || next?.startsWith("/vendor") ? "VENDOR" : "COUPLE"} next={next} />
       </AuthCard>
       <p className="mt-6 text-center text-sm text-stone">
         {t("signUp.haveAccount")}{" "}
-        <Link href="/sign-in" className="font-medium text-vranec underline-offset-4 hover:underline">
+        <Link href={next ? { pathname: "/sign-in", query: { next } } : "/sign-in"} className="font-medium text-vranec underline-offset-4 hover:underline">
           {t("signUp.signInLink")}
         </Link>
       </p>

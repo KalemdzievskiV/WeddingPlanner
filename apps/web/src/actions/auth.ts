@@ -6,6 +6,7 @@ import { APIError } from "better-auth/api";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { zodFieldErrors, type FormState } from "@/lib/form";
+import { safeNextPath } from "@/lib/next-path";
 import { getCurrentUser } from "@/lib/session";
 
 export async function signUpAction(_prev: FormState, formData: FormData): Promise<FormState & { email?: string }> {
@@ -21,7 +22,7 @@ export async function signUpAction(_prev: FormState, formData: FormData): Promis
   const { name, email, password, accountType, locale } = parsed.data;
   try {
     const result = await auth.api.signUpEmail({
-      body: { name, email, password, locale, callbackURL: `/${locale}/app` },
+      body: { name, email, password, locale, callbackURL: `/${locale}${safeNextPath(formData.get("next")) ?? "/app"}` },
     });
     // When the email already exists Better Auth returns a fake user (to hide which emails exist),
     // so this update only touches a real, freshly created account.

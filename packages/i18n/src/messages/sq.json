@@ -1,7 +1,11 @@
 {
   "common": {
     "appName": "Svadba",
-    "languages": { "mk": "Македонски", "sq": "Shqip", "en": "English" },
+    "languages": {
+      "mk": "Македонски",
+      "sq": "Shqip",
+      "en": "English"
+    },
     "language": "Gjuha",
     "signIn": "Hyr",
     "signOut": "Dil",
@@ -17,7 +21,36 @@
     "no": "Jo",
     "menu": "Menyja",
     "skipToContent": "Kalo te përmbajtja",
-    "roles": { "COUPLE": "Çift", "VENDOR": "Biznes", "ADMIN": "Admin" }
+    "roles": {
+      "COUPLE": "Çift",
+      "VENDOR": "Biznes",
+      "ADMIN": "Admin"
+    },
+    "copy": "Kopjo lidhjen",
+    "copied": "U kopjua",
+    "edit": "Ndrysho",
+    "back": "Kthehu",
+    "calendar": {
+      "m1": "Janar",
+      "m2": "Shkurt",
+      "m3": "Mars",
+      "m4": "Prill",
+      "m5": "Maj",
+      "m6": "Qershor",
+      "m7": "Korrik",
+      "m8": "Gusht",
+      "m9": "Shtator",
+      "m10": "Tetor",
+      "m11": "Nëntor",
+      "m12": "Dhjetor",
+      "d1": "Hën",
+      "d2": "Mar",
+      "d3": "Mër",
+      "d4": "Enj",
+      "d5": "Pre",
+      "d6": "Sht",
+      "d7": "Die"
+    }
   },
   "meta": {
     "title": "Svadba — planifikimi i dasmës në Maqedoninë e Veriut",
@@ -141,10 +174,11 @@
     "coupleTitle": "Planifikuesi i dasmës suaj",
     "coupleText": "Këtu do të jenë të ftuarit, buxheti, detyrat, plani i uljes dhe shërbimet tuaja. Po e ndërtojmë tani.",
     "vendorTitle": "Biznesi juaj",
-    "vendorText": "Këtu do të vendosni restorantin, orkestrën ose studion: profilin, fotot, çmimet dhe datat e lira. Po e ndërtojmë tani.",
+    "vendorText": "Menaxhoni restorantin, orkestrën ose studion fotografike: profilin, fotot, çmimet dhe datat e lira.",
     "adminTitle": "Paneli i adminit",
     "adminText": "Menaxhoni përdoruesit, qytetet, kategoritë dhe karakteristikat e sallave.",
-    "openAdmin": "Hap panelin e adminit"
+    "openAdmin": "Hap panelin e adminit",
+    "openVendor": "Menaxho bizneset"
   },
   "account": {
     "title": "Llogaria",
@@ -165,7 +199,9 @@
       "cities": "Qytetet",
       "categories": "Kategoritë e bizneseve",
       "features": "Karakteristikat e sallave",
-      "backToSite": "Kthehu te faqja"
+      "backToSite": "Kthehu te faqja",
+      "businesses": "Bizneset",
+      "genres": "Zhanret muzikore"
     },
     "overview": {
       "title": "Përmbledhje",
@@ -174,7 +210,9 @@
       "vendors": "Biznese",
       "admins": "Adminë",
       "cities": "Qytete aktive",
-      "features": "Karakteristika të sallave"
+      "features": "Karakteristika të sallave",
+      "pending": "Në pritje të kontrollit",
+      "live": "Biznese të publikuara"
     },
     "users": {
       "title": "Përdoruesit",
@@ -217,7 +255,43 @@
     "saved": "U ruajt.",
     "created": "U shtua.",
     "deleted": "U fshi.",
-    "confirmDelete": "Të fshihet „{name}“? Kjo nuk mund të kthehet."
+    "confirmDelete": "Të fshihet „{name}“? Kjo nuk mund të kthehet.",
+    "genres": {
+      "title": "Zhanret muzikore",
+      "lead": "Orkestrat i zgjedhin në profil. Më vonë bëhen filtra kërkimi.",
+      "add": "Shto zhanër"
+    },
+    "businesses": {
+      "title": "Bizneset",
+      "lead": "Kontrolloni profilet e reja dhe krijoni profile për bizneset që po ndihmoni.",
+      "add": "Krijo profil",
+      "all": "Të gjitha",
+      "empty": "Nuk ka biznese këtu.",
+      "owner": "Pronari",
+      "noOwner": "Ende pa pronar",
+      "submitted": "Dërguar {date}",
+      "updated": "Përditësuar {date}",
+      "review": "Kontrollo",
+      "approve": "Mirato",
+      "reject": "Kthe për ndryshime",
+      "rejectReason": "Çfarë duhet ndryshuar",
+      "rejectHint": "Biznesi e sheh këtë dhe e merr me email.",
+      "hide": "Fshih",
+      "unhide": "Shfaq përsëri",
+      "editListing": "Ndrysho profilin",
+      "openPage": "Hap faqen",
+      "claimTitle": "Lidhja e marrjes",
+      "claimLead": "Dërgojani pronarit me Viber, email ose personalisht. Punon një herë dhe skadon pas {days} ditësh.",
+      "claimCreate": "Krijo lidhjen",
+      "claimNew": "Krijo lidhje të re",
+      "claimExpires": "Skadon {date}",
+      "team": "Ekipi",
+      "checklist": "Kontrolli i profilit",
+      "approved": "U miratua. Pronari mori email.",
+      "rejected": "U kthye për ndryshime. Pronari mori email.",
+      "newTitle": "Krijo profil",
+      "newLead": "Për bizneset që duan ndihmë në fillim. Ju e plotësoni profilin, pastaj pronari e merr me një lidhje."
+    }
   },
   "errors": {
     "email": "Shkruani një email të vlefshëm.",
@@ -232,7 +306,21 @@
     "forbidden": "Nuk keni qasje këtu.",
     "fileType": "Ngarkoni një foto JPG, PNG ose WebP.",
     "fileSize": "Fotoja është më e madhe se 10 MB.",
-    "generic": "Diçka shkoi keq. Provoni përsëri."
+    "generic": "Diçka shkoi keq. Provoni përsëri.",
+    "tooLong": "Kjo është shumë e gjatë.",
+    "number": "Shkruani një numër.",
+    "wholeNumber": "Shkruani një numër të plotë.",
+    "positive": "Shkruani 0 ose më shumë.",
+    "tooLarge": "Numri është shumë i madh.",
+    "url": "Shkruani lidhjen e plotë që fillon me https://",
+    "videoUrl": "Përdorni një lidhje nga YouTube, Vimeo, Instagram, Facebook ose TikTok.",
+    "photoLimit": "Keni arritur kufirin e fotove. Fshini disa për të shtuar të reja.",
+    "incomplete": "Së pari plotësoni listën.",
+    "capacityRange": "Minimumi nuk mund të jetë më i madh se maksimumi.",
+    "homeCity": "Ky është qyteti juaj bazë, ndaj nuk ka pagesë udhëtimi.",
+    "duplicateCity": "Ky qytet ka tashmë një pagesë.",
+    "invalidLink": "Lidhja ka skaduar ose është përdorur.",
+    "checkFields": "Kontrolloni fushat e shënuara."
   },
   "email": {
     "greeting": "Përshëndetje {name},",
@@ -242,11 +330,295 @@
     "resetSubject": "Rivendosni fjalëkalimin",
     "resetText": "Morëm një kërkesë për të rivendosur fjalëkalimin tuaj në Svadba. Lidhja vlen 1 orë.",
     "resetButton": "Vendos fjalëkalim të ri",
-    "ignore": "Nëse nuk ishit ju, injorojeni këtë email."
+    "ignore": "Nëse nuk ishit ju, injorojeni këtë email.",
+    "approvedSubject": "Profili juaj është publikuar",
+    "approvedText": "„{business}“ tani është publikuar në Svadba. Ndajeni faqen me çiftet.",
+    "approvedButton": "Hap faqen tuaj",
+    "rejectedSubject": "Profili juaj ka nevojë për ndryshime",
+    "rejectedText": "E kontrolluam „{business}“. Çfarë duhet ndryshuar: {reason}",
+    "rejectedButton": "Ndrysho profilin"
   },
   "notFound": {
     "title": "Faqja nuk u gjet",
     "text": "Lidhja mund të jetë e vjetër ose faqja është zhvendosur.",
     "home": "Shko në faqen kryesore"
+  },
+  "vendor": {
+    "nav": {
+      "overview": "Përmbledhje",
+      "profile": "Profili",
+      "photos": "Foto dhe video",
+      "prices": "Paketat",
+      "pricesVenue": "Sallat dhe menytë",
+      "travel": "Shpenzimet e udhëtimit",
+      "calendar": "Kalendari",
+      "team": "Ekipi"
+    },
+    "categories": {
+      "VENUE": "Restorant ose sallë",
+      "BAND": "Orkestër ose muzikant",
+      "PHOTO_VIDEO": "Studio foto dhe video"
+    },
+    "categoryHints": {
+      "VENUE": "Salla, meny për person, data të lira",
+      "BAND": "Paketa, zhanre muzikore, shpenzime udhëtimi",
+      "PHOTO_VIDEO": "Paketa, portofol, data të lira"
+    },
+    "status": {
+      "DRAFT": "Draft",
+      "PENDING": "Në pritje të kontrollit",
+      "APPROVED": "Publikuar",
+      "REJECTED": "Duhen ndryshime",
+      "HIDDEN": "I fshehur"
+    },
+    "list": {
+      "title": "Bizneset tuaja",
+      "add": "Shto biznes",
+      "empty": "Shtoni restorantin, orkestrën ose studion tuaj. Regjistrimi është falas.",
+      "role": {
+        "OWNER": "Pronar",
+        "STAFF": "Punonjës"
+      }
+    },
+    "new": {
+      "title": "Shto biznes",
+      "lead": "Filloni me bazat. Fotot, çmimet dhe datat i shtoni më pas.",
+      "category": "Lloji i biznesit",
+      "name": "Emri i biznesit",
+      "city": "Qyteti",
+      "chooseCity": "Zgjidhni qytetin",
+      "submit": "Krijo biznesin"
+    },
+    "header": {
+      "viewPublic": "Shiko faqen publike",
+      "preview": "Parashiko faqen",
+      "allBusinesses": "Të gjitha bizneset"
+    },
+    "overview": {
+      "draftTitle": "Plotësoni profilin",
+      "draftText": "Kur gjithçka më poshtë të jetë gati, dërgojeni profilin për kontroll. Zakonisht e kontrollojmë brenda 1–2 ditëve të punës.",
+      "checklist": {
+        "name": "Emri dhe qyteti",
+        "address": "Adresa",
+        "phone": "Numri i telefonit",
+        "description": "Përshkrimi në maqedonisht (të paktën disa fjali)",
+        "photos": "Të paktën {count} foto",
+        "priceVenue": "Një sallë dhe një paketë menyje",
+        "pricePackage": "Të paktën një paketë"
+      },
+      "fix": "Shto",
+      "submit": "Dërgo për kontroll",
+      "pendingTitle": "Në pritje të kontrollit",
+      "pendingText": "Po e kontrollojmë profilin tuaj. Ndërkohë mund të vazhdoni ta ndryshoni, dhe do t'ju shkruajmë kur të publikohet.",
+      "approvedTitle": "Profili juaj është publikuar",
+      "approvedText": "Ndani faqen tuaj në Instagram, Facebook ose Viber:",
+      "rejectedTitle": "Profili juaj ka nevojë për ndryshime",
+      "rejectedText": "Shënim nga ekipi ynë:",
+      "resubmit": "Dërgo përsëri për kontroll",
+      "hiddenTitle": "Profili juaj është i fshehur",
+      "hiddenText": "Ekipi ynë e fshehu këtë profil. Na shkruani nëse mendoni se është gabim.",
+      "deleteTitle": "Fshi biznesin",
+      "deleteText": "Fshin profilin, fotot, çmimet dhe kalendarin. Kjo nuk mund të kthehet.",
+      "delete": "Fshi biznesin",
+      "confirmDelete": "Të fshihet „{name}“ dhe gjithçka brenda tij?"
+    },
+    "profile": {
+      "basics": "Bazat",
+      "name": "Emri i biznesit",
+      "city": "Qyteti",
+      "homeCity": "Qyteti bazë",
+      "address": "Adresa",
+      "addressHint": "Rruga dhe numri, që çiftet t'ju gjejnë.",
+      "pin": "Vendndodhja në hartë",
+      "pinHint": "Klikoni hartën ose tërhiqni shenjën te hyrja juaj.",
+      "pinClear": "Hiq vendndodhjen",
+      "description": "Përshkrimi",
+      "descriptionHint": "Çfarë ju dallon: stili, përvoja, çfarë përfshihet. Kur përshkrimi shqip ose anglisht është bosh, vizitorët shohin atë maqedonisht.",
+      "descriptionMk": "Maqedonisht",
+      "descriptionSq": "Shqip (opsionale)",
+      "descriptionEn": "Anglisht (opsionale)",
+      "contact": "Kontakti",
+      "phone": "Telefoni",
+      "viber": "Numri në Viber",
+      "whatsapp": "Numri në WhatsApp",
+      "email": "Email",
+      "website": "Faqja e internetit",
+      "instagram": "Lidhja e Instagram",
+      "facebook": "Lidhja e Facebook",
+      "linkPlaceholder": "https://",
+      "features": "Çfarë ofron salla",
+      "genres": "Zhanret muzikore",
+      "lineup": "Përbërja",
+      "lineupHint": "Anëtarët dhe instrumentet, p.sh. vokal, klarinetë, fizarmonikë, tastierë, bateri.",
+      "currency": "Monedha bazë për çmimet",
+      "save": "Ruaj profilin",
+      "saved": "Profili u ruajt."
+    },
+    "photos": {
+      "title": "Fotot",
+      "lead": "Fotoja e parë është kopertina. {count} nga {max} foto të përdorura.",
+      "upload": "Ngarko foto",
+      "uploading": "Duke ngarkuar…",
+      "uploadHint": "JPG, PNG ose WebP, deri në 10 MB secila. Mund të zgjidhni disa njëherësh.",
+      "cover": "Kopertina",
+      "makeCover": "Bëje kopertinë",
+      "moveLeft": "Lëviz majtas",
+      "moveRight": "Lëviz djathtas",
+      "delete": "Fshi foton",
+      "empty": "Ende pa foto.",
+      "mainPhotos": "Fotot e profilit",
+      "galleries": "Portofoli",
+      "galleriesLead": "Gruponi fotot sipas dasmës, p.sh. „Ana dhe Marku, Ohër 2026“.",
+      "galleryTitle": "Emri i galerisë",
+      "createGallery": "Krijo galeri",
+      "deleteGallery": "Fshi galerinë",
+      "confirmDeleteGallery": "Të fshihet galeria „{title}“ me fotot?",
+      "videos": "Video",
+      "videosLead": "Lidhje nga YouTube, Vimeo, Instagram, Facebook ose TikTok.",
+      "videoUrl": "Lidhja e videos",
+      "addVideo": "Shto video",
+      "removeVideo": "Hiq videon"
+    },
+    "prices": {
+      "halls": "Sallat",
+      "hallsLead": "Çdo sallë ka kapacitetin dhe kalendarin e vet.",
+      "addHall": "Shto sallë",
+      "hallName": "Emri i sallës",
+      "capacityMin": "Të ftuar minimum (opsionale)",
+      "capacityMax": "Të ftuar maksimum",
+      "hallDescription": "Përshkrimi (opsionale)",
+      "guestsRange": "{min}–{max} të ftuar",
+      "guestsMax": "deri në {max} të ftuar",
+      "menus": "Paketat e menysë",
+      "menusLead": "Çmimi për person. Çiftet i krahasojnë krah për krah.",
+      "addMenu": "Shto meny",
+      "nameMk": "Emri (maqedonisht)",
+      "nameSq": "Emri (shqip, opsionale)",
+      "nameEn": "Emri (anglisht, opsionale)",
+      "pricePerPerson": "Çmimi për person",
+      "minGuests": "Të ftuar minimum (opsionale)",
+      "courses": "Pjatat",
+      "coursesHint": "Çdo pjatë në rresht të ri, p.sh. „Meze e ftohtë: proshutë, djathë, ajvar“.",
+      "drinks": "Pijet",
+      "drinksOptions": {
+        "NONE": "Nuk përfshihen",
+        "SOFT": "Përfshihen pije joalkoolike",
+        "DOMESTIC_UNLIMITED": "Pije vendore pa kufi",
+        "CUSTOM": "Tjetër (përshkruani më poshtë)"
+      },
+      "drinksNote": "Detaje për pijet (opsionale)",
+      "perPerson": "{price} për person",
+      "minGuestsShort": "min. {count} të ftuar",
+      "extras": "Shtesa",
+      "extrasLead": "Çfarë mund të shtojnë çiftet: tortë, dekor, fishekzjarrë, pije shtesë.",
+      "addExtra": "Shto shtesë",
+      "price": "Çmimi",
+      "currency": "Monedha",
+      "unit": "Paguhet",
+      "units": {
+        "PER_PERSON": "për person",
+        "FIXED": "një herë"
+      },
+      "packages": "Paketat",
+      "packagesLeadBand": "Për shembull „5 muzikantë, 5 orë“.",
+      "packagesLeadPhoto": "Për shembull „Foto + video, gjithë ditën, album“.",
+      "addPackage": "Shto paketë",
+      "hours": "Orë (opsionale)",
+      "members": "Muzikantë (opsionale)",
+      "extraHourPrice": "Çmimi për një orë shtesë (opsionale)",
+      "includes": "Çfarë përfshihet",
+      "includesHint": "Çdo gjë në rresht të ri.",
+      "hoursShort": "{count} orë",
+      "membersShort": "{count} muzikantë",
+      "extraHourShort": "{price} për orë shtesë",
+      "approx": "≈ {price}",
+      "edit": "Ndrysho",
+      "delete": "Fshi",
+      "confirmDelete": "Të fshihet „{name}“?",
+      "empty": "Ende asgjë e shtuar."
+    },
+    "travel": {
+      "title": "Shpenzimet e udhëtimit",
+      "lead": "Pa pagesë në qytetin bazë ({city}). Qytetet pa pagesë shfaqin „pyetni për çmimin“.",
+      "noHome": "Së pari vendosni qytetin bazë në profil.",
+      "city": "Qyteti",
+      "fee": "Pagesa",
+      "add": "Shto qytet",
+      "empty": "Ende pa shpenzime udhëtimi."
+    },
+    "calendar": {
+      "title": "Kalendari",
+      "lead": "Zgjidhni një status, pastaj klikoni ditët.",
+      "hall": "Salla",
+      "brush": {
+        "FREE": "E lirë",
+        "TENTATIVE": "E mbajtur",
+        "BOOKED": "E zënë",
+        "CLEAR": "Pastro"
+      },
+      "unmarked": "Ditët që nuk i keni shënuar shfaqen si",
+      "unmarkedOptions": {
+        "FREE": "të lira",
+        "UNKNOWN": "të panjohura, çiftet ju pyesin"
+      },
+      "prev": "Muaji i kaluar",
+      "next": "Muaji tjetër",
+      "weekends": "Zbato për të gjitha fundjavat e këtij muaji",
+      "noHalls": "Së pari shtoni një sallë, pastaj menaxhoni kalendarin e saj këtu.",
+      "saveError": "Ruajtja dështoi. Kontrolloni lidhjen dhe provoni përsëri."
+    },
+    "team": {
+      "title": "Ekipi",
+      "lead": "Personat që mund ta menaxhojnë këtë biznes.",
+      "remove": "Hiq",
+      "confirmRemove": "Të hiqet {name} nga ekipi?",
+      "invite": "Krijo lidhje ftese",
+      "inviteLead": "Punonjësit mund të ndryshojnë gjithçka përveç ekipit. Çdo lidhje punon një herë dhe skadon pas {days} ditësh.",
+      "activeInvites": "Ftesa të hapura",
+      "revoke": "Anulo",
+      "expires": "Skadon {date}",
+      "onlyOwner": "Vetëm pronari mund ta ndryshojë ekipin."
+    },
+    "claim": {
+      "title": "Merrni profilin tuaj",
+      "text": "Ekipi i Svadba krijoi „{name}“ për ju. Konfirmoni për t'u bërë pronar dhe për ta menaxhuar vetë.",
+      "submit": "Bëhu pronar",
+      "invalid": "Lidhja ka skaduar ose është përdorur. Na kërkoni një të re."
+    },
+    "join": {
+      "title": "Bashkohu me ekipin",
+      "text": "Jeni ftuar të ndihmoni në menaxhimin e „{name}“.",
+      "submit": "Bashkohu",
+      "invalid": "Lidhja e ftesës ka skaduar ose është përdorur."
+    },
+    "public": {
+      "preview": "Parashikim: vetëm ju dhe ekipi ynë e shihni këtë faqe derisa të miratohet.",
+      "edit": "Ndrysho profilin",
+      "contact": "Kontakti",
+      "call": "Telefono",
+      "viber": "Viber",
+      "whatsapp": "WhatsApp",
+      "email": "Email",
+      "website": "Faqja",
+      "about": "Rreth nesh",
+      "halls": "Sallat",
+      "menus": "Menytë",
+      "extras": "Shtesa",
+      "packages": "Paketat",
+      "genres": "Muzika",
+      "lineup": "Përbërja",
+      "travel": "Udhëtimi",
+      "travelHome": "Pa pagesë udhëtimi në {city}",
+      "travelAsk": "Qytete të tjera: pyetni për çmimin",
+      "availability": "Datat e lira",
+      "unmarkedFree": "Ditët pa shenjë janë të lira.",
+      "unmarkedUnknown": "Ditët pa shenjë: pyetni biznesin.",
+      "videos": "Video",
+      "portfolio": "Portofoli",
+      "location": "Vendndodhja",
+      "openInMaps": "Hape në Google Maps",
+      "features": "Çfarë ofron salla",
+      "noDescription": "Ende pa përshkrim."
+    }
   }
 }

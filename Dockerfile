@@ -15,6 +15,9 @@ RUN pnpm install --frozen-lockfile
 
 FROM deps AS build
 COPY . .
+# NEXT_PUBLIC_* values are baked into the browser bundle at build time.
+ARG NEXT_PUBLIC_MAPTILER_KEY
+ENV NEXT_PUBLIC_MAPTILER_KEY=$NEXT_PUBLIC_MAPTILER_KEY
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN pnpm --filter @svadba/web build
 

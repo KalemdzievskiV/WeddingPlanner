@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
 
-export function GoogleButton() {
+export function GoogleButton({ next }: { next?: string | null }) {
   const t = useTranslations("auth");
   const locale = useLocale();
   const [pending, setPending] = useState(false);
@@ -18,7 +18,7 @@ export function GoogleButton() {
       disabled={pending}
       onClick={async () => {
         setPending(true);
-        await authClient.signIn.social({ provider: "google", callbackURL: `/${locale}/app` });
+        await authClient.signIn.social({ provider: "google", callbackURL: `/${locale}${next ?? "/app"}` });
       }}
     >
       <svg aria-hidden viewBox="0 0 24 24" className="size-4">

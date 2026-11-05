@@ -116,6 +116,20 @@ _(Filled in as we agree on each question.)_
 | 42 | Launch | Couples and vendors open at the same time; catalog grows after launch. | AGREED |
 | 43 | Vendor onboarding (ops) | You (or a helper) contact vendors; admin pre-fills profiles from their Instagram/website and sends a claim link. | AGREED |
 | 44 | Build order | Foundation → Vendors → Planner → Marketplace → Launch → Mobile (section 6). | AGREED |
+| 45 | Vendor text languages | Macedonian required; Albanian and English optional, fall back to Macedonian when empty. | AGREED |
+| 46 | Ready for approval | Name, city, address, phone, description, ≥3 photos, and ≥1 price (venue: a hall + a menu package; band/photo: a package). | AGREED |
+| 47 | Edits after approval | Go live instantly. Admin can hide or reject a profile at any time. | AGREED |
+| 48 | Unmarked calendar days | Vendor setting per business: "unmarked days are free" or "unknown — ask". | AGREED |
+| 49 | Location | Address + draggable pin on an OpenStreetMap map (MapLibre; MapTiler key in production). | AGREED |
+| 50 | Band genres | Admin-managed list in MK/AL/EN; bands tick several. | AGREED |
+| 51 | Staff permissions | Staff can do everything except manage the team and delete the business. Invited with a copyable link. | AGREED |
+| 52 | Claiming pre-created listings | Admin copies a one-time claim link (valid 30 days); opener signs in or signs up and becomes owner. | AGREED |
+| 53 | Menu packages | Name, price per person, min guests, courses as text lines, drinks included (none / soft drinks / unlimited domestic / custom note). | AGREED |
+| 54 | Photo limits | 40 photos for venues and bands; 120 for photo studios, grouped in galleries. | AGREED |
+| 55 | Band travel fees | Home city has no fee; fee per other city; cities without a fee show "ask". | AGREED |
+| 56 | Public profiles in Phase 1 | Approved vendors get a shareable page by direct link (/mk/v/slug). No search or listing until Phase 3. | AGREED |
+| 57 | Venue features level | Features (parking, garden…) are set per restaurant, not per hall. Simpler for owners and for search filters. | AGREED (impl. choice) |
+| 58 | Prices | Whole currency units (no cents). Approximate conversion uses 1 EUR ≈ 61.5 MKD. | AGREED (impl. choice) |
 
 ---
 
@@ -149,7 +163,7 @@ Each phase ends with something working that you can click through.
 - Admin panel shell: users, cities, categories, venue features.
 - Email sending (Resend or similar) with MK/AL/EN templates.
 
-**Phase 1 — Vendor side**
+**Phase 1 — Vendor side** ✅ done 2026-11-05 (map tiles need a MapTiler key in production)
 - Vendor sign-up → create business (venue / band / photo) → submit for approval.
 - Admin: approve/reject, pre-create listing, send claim link.
 - Business profile: description (per language), photos, contact, address + map pin, city.

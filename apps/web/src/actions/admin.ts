@@ -6,8 +6,8 @@ import { revalidatePath } from "next/cache";
 import { zodFieldErrors, type FormState } from "@/lib/form";
 import { getCurrentUser } from "@/lib/session";
 
-export type ReferenceKind = "city" | "feature" | "category";
-const KINDS: ReferenceKind[] = ["city", "feature", "category"];
+export type ReferenceKind = "city" | "feature" | "category" | "genre";
+const KINDS: ReferenceKind[] = ["city", "feature", "category", "genre"];
 
 async function getAdmin() {
   const user = await getCurrentUser();
@@ -47,6 +47,12 @@ export async function saveReferenceAction(
       if (!parsed.success) return { fieldErrors: zodFieldErrors(parsed.error) };
       if (id) await prisma.venueFeature.update({ where: { id }, data: parsed.data });
       else await prisma.venueFeature.create({ data: { ...parsed.data, sortOrder: await prisma.venueFeature.count() } });
+    } else if (kind === "genre") {
+      // Same shape as venue features: slug + three names + visible.
+      const parsed = venueFeatureSchema.safeParse(raw);
+      if (!parsed.success) return { fieldErrors: zodFieldErrors(parsed.error) };
+      if (id) await prisma.musicGenre.update({ where: { id }, data: parsed.data });
+      else await prisma.musicGenre.create({ data: { ...parsed.data, sortOrder: await prisma.musicGenre.count() } });
     } else {
       // Categories are fixed: rename or hide only.
       const parsed = vendorCategorySchema.safeParse(raw);
@@ -70,6 +76,7 @@ export async function deleteReferenceAction(kind: ReferenceKind, id: string): Pr
   if (!(await getAdmin())) return { formError: "forbidden" };
   if (kind === "city") await prisma.city.delete({ where: { id } });
   else if (kind === "feature") await prisma.venueFeature.delete({ where: { id } });
+  else if (kind === "genre") await prisma.musicGenre.delete({ where: { id } });
   else return { formError: "forbidden" };
   revalidatePath("/", "layout");
   return { ok: true };

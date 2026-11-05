@@ -2,12 +2,13 @@
 
 import { Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useActionState, useEffect, useRef, useState, useTransition } from "react";
+import {useEffect, useRef, useState, useTransition} from "react";
 import { deleteReferenceAction, saveReferenceAction, type ReferenceKind } from "@/actions/admin";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Checkbox, inputClass } from "@/components/ui/field";
 import type { FormState } from "@/lib/form";
+import { useFormAction } from "@/lib/use-form-action";
 import { cn } from "@/lib/utils";
 
 export type ReferenceRow = {
@@ -64,7 +65,7 @@ function RowForm({ config, row, onDone }: { config: Config; row: ReferenceRow | 
   const t = useTranslations("admin");
   const tc = useTranslations("common");
   const te = useTranslations("errors");
-  const [state, action, pending] = useActionState(
+  const [state, action, pending] = useFormAction(
     saveReferenceAction.bind(null, config.kind, row?.id ?? null),
     {} as FormState,
   );
@@ -98,7 +99,7 @@ function RowForm({ config, row, onDone }: { config: Config; row: ReferenceRow | 
   );
 
   return (
-    <form ref={formRef} action={action} className="flex flex-col gap-3 xl:flex-row xl:items-end">
+    <form ref={formRef} onSubmit={action} className="flex flex-col gap-3 xl:flex-row xl:items-end">
       <div
         className={cn(
           "grid flex-1 gap-3 sm:grid-cols-2",

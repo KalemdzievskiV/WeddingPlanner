@@ -29,7 +29,11 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
           <RoleCard icon={<Heart aria-hidden className="size-5" />} title={t("coupleTitle")} text={t("coupleText")} badge={t("inProgress")} />
         )}
         {user.roles.includes("VENDOR") && (
-          <RoleCard icon={<Store aria-hidden className="size-5" />} title={t("vendorTitle")} text={t("vendorText")} badge={t("inProgress")} />
+          <RoleCard icon={<Store aria-hidden className="size-5" />} title={t("vendorTitle")} text={t("vendorText")}>
+            <ButtonLink href="/vendor" variant="secondary" size="sm" className="mt-5">
+              {t("openVendor")} <ArrowRight aria-hidden className="size-4" />
+            </ButtonLink>
+          </RoleCard>
         )}
         {user.roles.includes("ADMIN") && (
           <RoleCard icon={<Shield aria-hidden className="size-5" />} title={t("adminTitle")} text={t("adminText")}>
