@@ -10,6 +10,9 @@
 - Design tokens are in `apps/web/src/app/globals.css` (linen / ink / vranec). Headings use Prata, but its digit 1 looks like "l": show numbers and dates in the body font (Onest).
 - Prisma 7: `migrate dev` does not regenerate the client; `pnpm db:migrate` runs generate too.
 - Forms: use `useFormAction` from `@/lib/use-form-action`, never `<form action>` with useActionState (React 19 clears all fields after every submit, even on validation errors).
+- Money and dates: use `formatMoney` / `formatDate` from `@/lib/format` (deterministic, no Intl) everywhere, so server and browser output match.
+- Planner access: `requireWedding(locale)` in pages, `editableWedding()` in Server Actions (VIEWER can only read). One wedding per account (`WeddingMember.userId` is unique).
+- Paywall: limits exist but only apply when `PAYWALL_ENABLED=true` (`lib/wedding.ts`).
 - Dates in UI: month/weekday names come from `common.calendar` translations via `calendarLabels`; never `Intl` date formatting in client components (browsers often lack mk/sq data → hydration errors).
 - Vendor access: every vendor Server Action calls `getBusinessAccess(businessId)` (owner, staff or admin). Team changes and delete need `canManageTeam`.
 - Maps: MapLibre worker is copied to `public/vendor/` by `scripts/copy-maplibre-worker.mjs` (runs in `dev`/`build`).

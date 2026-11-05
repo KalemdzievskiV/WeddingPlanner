@@ -30,6 +30,8 @@ model User {
   sessions      Session[]
   accounts      Account[]
   memberships   BusinessMember[]
+  /// One wedding per account (decision 59).
+  weddingMember WeddingMember?
 
   @@map("user")
 }
@@ -96,6 +98,7 @@ model City {
   updatedAt DateTime @updatedAt
   businesses Business[]
   travelFees TravelFee[]
+  weddings   Wedding[]
 
   @@map("city")
 }
@@ -270,6 +273,7 @@ model Business {
   availability    AvailabilityDay[]
   features        BusinessFeature[]
   genres          BusinessGenre[]
+  plannedBy       PlannedVendor[]
 
   @@index([category, status])
   @@index([cityId])
@@ -469,4 +473,354 @@ model AvailabilityDay {
   @@unique([businessId, calendarKey, date])
   @@index([businessId, date])
   @@map("availability_day")
+}
+
+// ─── Couple planner ───
+
+enum WeddingRole {
+  OWNER
+  PARTNER
+  EDITOR
+  VIEWER
+}
+
+enum EventType {
+  RECEPTION
+  ENGAGEMENT
+  BACHELORETTE
+  CHURCH
+  CIVIL
+  CUSTOM
+}
+
+enum GuestSide {
+  BRIDE
+  GROOM
+  BOTH
+}
+
+enum AgeGroup {
+  CHILD
+  YOUNG
+  ADULT
+  OLDER
+}
+
+enum Rsvp {
+  PENDING
+  YES
+  NO
+}
+
+enum TableShape {
+  LONG
+  ROUND
+  HEAD
+}
+
+enum Payer {
+  COUPLE
+  BRIDE_FAMILY
+  GROOM_FAMILY
+  KUM
+  OTHER
+}
+
+enum CostType {
+  FIXED
+  PER_PERSON
+}
+
+enum PaymentKind {
+  DEPOSIT
+  INSTALLMENT
+  FINAL
+}
+
+enum PlannedVendorStatus {
+  CONSIDERING
+  BOOKED
+}
+
+model Wedding {
+  id              String    @id @default(cuid())
+  partner1        String
+  partner2        String
+  date            DateTime? @db.Date
+  cityId          String?
+  city            City?     @relation(fields: [cityId], references: [id], onDelete: SetNull)
+  estimatedGuests Int?
+  /// Total budget the couple plans to spend, in `currency`.
+  budgetTotal     Int?
+  currency        Currency  @default(EUR)
+  /// Paid plan. Limits only apply when the paywall is switched on (decision 22a).
+  premium         Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  members          WeddingMember[]
+  invites          WeddingInvite[]
+  events           WeddingEvent[]
+  households       Household[]
+  guests           Guest[]
+  tables           SeatingTable[]
+  budgetCategories BudgetCategory[]
+  expenses         Expense[]
+  tasks            Task[]
+  plannedVendors   PlannedVendor[]
+  scheduleItems    ScheduleItem[]
+
+  @@map("wedding")
+}
+
+model WeddingMember {
+  id        String      @id @default(cuid())
+  weddingId String
+  wedding   Wedding     @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  userId    String      @unique
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      WeddingRole
+  createdAt DateTime    @default(now())
+
+  @@index([weddingId])
+  @@map("wedding_member")
+}
+
+model WeddingInvite {
+  id        String      @id @default(cuid())
+  weddingId String
+  wedding   Wedding     @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  token     String      @unique
+  role      WeddingRole
+  expiresAt DateTime
+  createdAt DateTime    @default(now())
+
+  @@index([weddingId])
+  @@map("wedding_invite")
+}
+
+model WeddingEvent {
+  id            String            @id @default(cuid())
+  weddingId     String
+  wedding       Wedding           @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  type          EventType
+  /// Custom name; empty means the translated name of `type`.
+  name          String?
+  date          DateTime?         @db.Date
+  /// "HH:MM"
+  time          String?
+  place         String?
+  hasSeating    Boolean           @default(false)
+  sortOrder     Int               @default(0)
+  createdAt     DateTime          @default(now())
+  invitations   GuestInvitation[]
+  tables        SeatingTable[]
+  expenses      Expense[]
+  scheduleItems ScheduleItem[]
+
+  @@index([weddingId])
+  @@map("wedding_event")
+}
+
+model Household {
+  id          String    @id @default(cuid())
+  weddingId   String
+  wedding     Wedding   @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  name        String
+  side        GuestSide
+  /// Unguessable token for the household's RSVP link.
+  rsvpToken   String    @unique
+  /// Couple's own notes.
+  notes       String?
+  /// Note the guests left on the RSVP page.
+  guestNote   String?
+  respondedAt DateTime?
+  createdAt   DateTime  @default(now())
+  guests      Guest[]
+
+  @@index([weddingId])
+  @@map("household")
+}
+
+model Guest {
+  id          String            @id @default(cuid())
+  weddingId   String
+  wedding     Wedding           @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  householdId String
+  household   Household         @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  name        String
+  ageGroup    AgeGroup          @default(ADULT)
+  sortOrder   Int               @default(0)
+  createdAt   DateTime          @default(now())
+  invitations GuestInvitation[]
+  seats       TableSeat[]
+
+  @@index([weddingId])
+  @@index([householdId])
+  @@map("guest")
+}
+
+/// A guest invited to an event, with their answer.
+model GuestInvitation {
+  guestId String
+  guest   Guest        @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  eventId String
+  event   WeddingEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  rsvp    Rsvp         @default(PENDING)
+
+  @@id([guestId, eventId])
+  @@index([eventId])
+  @@map("guest_invitation")
+}
+
+model SeatingTable {
+  id        String       @id @default(cuid())
+  weddingId String
+  wedding   Wedding      @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  eventId   String
+  event     WeddingEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  name      String
+  shape     TableShape
+  seats     Int
+  /// Position on the floor plan, in plan units (0–1000 × 0–700).
+  x         Float        @default(0)
+  y         Float        @default(0)
+  rotation  Int          @default(0)
+  sortOrder Int          @default(0)
+  guests    TableSeat[]
+
+  @@index([eventId])
+  @@map("seating_table")
+}
+
+/// Which table a guest sits at for one event (per table, not per chair — decision 67).
+model TableSeat {
+  guestId String
+  guest   Guest        @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  tableId String
+  table   SeatingTable @relation(fields: [tableId], references: [id], onDelete: Cascade)
+  /// Same as the table's event; part of the key so a guest has one table per event.
+  eventId String
+
+  @@id([guestId, eventId])
+  @@index([tableId])
+  @@map("table_seat")
+}
+
+model BudgetCategory {
+  id        String    @id @default(cuid())
+  weddingId String
+  wedding   Wedding   @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  name      String
+  /// Template slug (venue, music…) for categories copied from the defaults.
+  slug      String?
+  sortOrder Int       @default(0)
+  expenses  Expense[]
+
+  @@index([weddingId])
+  @@map("budget_category")
+}
+
+model Expense {
+  id              String         @id @default(cuid())
+  weddingId       String
+  wedding         Wedding        @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  categoryId      String
+  category        BudgetCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  name            String
+  costType        CostType       @default(FIXED)
+  /// FIXED: the planned amount. PER_PERSON: price per adult.
+  amount          Int
+  /// PER_PERSON only: price per child (empty = same as adults).
+  childPrice      Int?
+  currency        Currency
+  /// PER_PERSON only: which event's guests to count (empty = reception).
+  eventId         String?
+  event           WeddingEvent?  @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  /// PER_PERSON only: use this number of people instead of the guest list.
+  guestsOverride  Int?
+  payer           Payer          @default(COUPLE)
+  plannedVendorId String?
+  plannedVendor   PlannedVendor? @relation(fields: [plannedVendorId], references: [id], onDelete: SetNull)
+  notes           String?
+  sortOrder       Int            @default(0)
+  createdAt       DateTime       @default(now())
+  payments        Payment[]
+
+  @@index([weddingId])
+  @@index([categoryId])
+  @@map("expense")
+}
+
+model Payment {
+  id        String      @id @default(cuid())
+  expenseId String
+  expense   Expense     @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  kind      PaymentKind @default(DEPOSIT)
+  amount    Int
+  currency  Currency
+  dueDate   DateTime?   @db.Date
+  paidAt    DateTime?   @db.Date
+  createdAt DateTime    @default(now())
+
+  @@index([expenseId])
+  @@map("payment")
+}
+
+model Task {
+  id           String    @id @default(cuid())
+  weddingId    String
+  wedding      Wedding   @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  title        String
+  /// Bucket in months before the wedding (template values: 12, 11, 9, 7, 4, 2, 0, -1). Null = no time set.
+  monthsBefore Int?
+  /// Exact date set by the couple; overrides the bucket.
+  dueDate      DateTime? @db.Date
+  /// Free text so people without an account (mother, кум) can be assigned too.
+  assignee     String?
+  done         Boolean   @default(false)
+  doneAt       DateTime?
+  templateSlug String?
+  sortOrder    Int       @default(0)
+  createdAt    DateTime  @default(now())
+
+  @@index([weddingId])
+  @@map("task")
+}
+
+model ScheduleItem {
+  id          String       @id @default(cuid())
+  weddingId   String
+  wedding     Wedding      @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  eventId     String
+  event       WeddingEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  /// "HH:MM"
+  time        String
+  title       String
+  responsible String?
+  place       String?
+  createdAt   DateTime     @default(now())
+
+  @@index([eventId])
+  @@map("schedule_item")
+}
+
+/// A vendor in the couple's plan: from the catalog (businessId) or a private entry.
+model PlannedVendor {
+  id         String              @id @default(cuid())
+  weddingId  String
+  wedding    Wedding             @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  businessId String?
+  business   Business?           @relation(fields: [businessId], references: [id], onDelete: SetNull)
+  /// Private entries: name and what they do. Catalog entries copy the business name.
+  name       String
+  kind       String?
+  contact    String?
+  status     PlannedVendorStatus @default(CONSIDERING)
+  notes      String?
+  createdAt  DateTime            @default(now())
+  expenses   Expense[]
+
+  @@index([weddingId])
+  @@map("planned_vendor")
 }

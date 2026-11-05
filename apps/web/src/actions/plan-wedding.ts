@@ -1,0 +1,193 @@
+"use server";
+
+import { prisma } from "@svadba/db";
+import {
+  eventSchema,
+  INVITE_LINK_DAYS,
+  INVITE_ROLES,
+  isLocale,
+  pickLocalized,
+  weddingSchema,
+  type InviteRole,
+} from "@svadba/shared";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { newToken } from "@/lib/business";
+import { zodFieldErrors, type FormState } from "@/lib/form";
+import { getCurrentUser } from "@/lib/session";
+import { canManage, editableWedding, getWeddingAccess } from "@/lib/wedding";
+
+const refresh = () => revalidatePath("/", "layout");
+
+function readWedding(fd: FormData) {
+  return weddingSchema.safeParse({
+    partner1: fd.get("partner1") ?? "",
+    partner2: fd.get("partner2") ?? "",
+    date: fd.get("date") ?? "",
+    cityId: fd.get("cityId") ?? "",
+    estimatedGuests: fd.get("estimatedGuests") ?? "",
+    budgetTotal: fd.get("budgetTotal") ?? "",
+    currency: fd.get("currency") ?? "EUR",
+  });
+}
+
+/** Setup wizard: creates the wedding with the reception, default budget categories and checklist. */
+export async function createWeddingAction(_prev: FormState, fd: FormData): Promise<FormState> {
+  const user = await getCurrentUser();
+  const locale = fd.get("locale");
+  if (!user || !isLocale(locale)) return { formError: "forbidden" };
+  if (await prisma.weddingMember.findUnique({ where: { userId: user.id } })) redirect(`/${locale}/plan`);
+
+  const parsed = readWedding(fd);
+  if (!parsed.success) return { fieldErrors: zodFieldErrors(parsed.error) };
+  const data = parsed.data;
+  if (data.cityId && !(await prisma.city.findUnique({ where: { id: data.cityId } }))) data.cityId = null;
+
+  const [categories, tasks] = await Promise.all([
+    prisma.budgetTemplateCategory.findMany({ orderBy: { sortOrder: "asc" } }),
+    prisma.checklistTemplateItem.findMany({ orderBy: { sortOrder: "asc" } }),
+  ]);
+
+  await prisma.wedding.create({
+    data: {
+      ...data,
+      members: { create: { userId: user.id, role: "OWNER" } },
+      events: { create: { type: "RECEPTION", date: data.date, hasSeating: true } },
+      budgetCategories: {
+        create: categories.map((c, i) => ({ name: pickLocalized(c, "name", locale), slug: c.slug, sortOrder: i })),
+      },
+      tasks: {
+        create: tasks.map((t, i) => ({
+          title: pickLocalized(t, "title", locale),
+          monthsBefore: t.monthsBefore,
+          templateSlug: t.slug,
+          sortOrder: i,
+        })),
+      },
+    },
+  });
+  if (!user.roles.includes("COUPLE")) {
+    await prisma.user.update({ where: { id: user.id }, data: { roles: { push: "COUPLE" } } });
+  }
+  refresh();
+  redirect(`/${locale}/plan`);
+}
+
+export async function updateWeddingAction(_prev: FormState, fd: FormData): Promise<FormState> {
+  const access = await getWeddingAccess();
+  if (!access || !canManage(access.role)) return { formError: "forbidden" };
+  const parsed = readWedding(fd);
+  if (!parsed.success) return { fieldErrors: zodFieldErrors(parsed.error) };
+  const old = access.wedding;
+  await prisma.$transaction([
+    prisma.wedding.update({ where: { id: old.id }, data: parsed.data }),
+    // Keep the reception on the wedding day unless the couple gave it its own date.
+    prisma.weddingEvent.updateMany({
+      where: { weddingId: old.id, type: "RECEPTION", OR: [{ date: null }, { date: old.date ?? undefined }] },
+      data: { date: parsed.data.date },
+    }),
+  ]);
+  refresh();
+  return { ok: true };
+}
+
+export async function deleteWeddingAction(locale: string): Promise<FormState> {
+  const access = await getWeddingAccess();
+  if (!access || access.role !== "OWNER" || !isLocale(locale)) return { formError: "forbidden" };
+  await prisma.wedding.delete({ where: { id: access.wedding.id } });
+  refresh();
+  redirect(`/${locale}/app`);
+}
+
+// ─── Events ───
+
+export async function saveEventAction(id: string | null, _prev: FormState, fd: FormData): Promise<FormState> {
+  const access = await editableWedding();
+  if (!access) return { formError: "forbidden" };
+  const parsed = eventSchema.safeParse({
+    type: fd.get("type"),
+    name: fd.get("name") ?? "",
+    date: fd.get("date") ?? "",
+    time: fd.get("time") ?? "",
+    place: fd.get("place") ?? "",
+    hasSeating: fd.get("hasSeating") === "on",
+  });
+  if (!parsed.success) return { fieldErrors: zodFieldErrors(parsed.error) };
+  if (parsed.data.type === "CUSTOM" && !parsed.data.name) return { fieldErrors: { name: "required" } };
+  const weddingId = access.wedding.id;
+  if (id) {
+    const { count } = await prisma.weddingEvent.updateMany({ where: { id, weddingId }, data: parsed.data });
+    if (!count) return { formError: "generic" };
+  } else {
+    const sortOrder = await prisma.weddingEvent.count({ where: { weddingId } });
+    await prisma.weddingEvent.create({ data: { ...parsed.data, weddingId, sortOrder } });
+  }
+  refresh();
+  return { ok: true };
+}
+
+export async function deleteEventAction(id: string): Promise<FormState> {
+  const access = await editableWedding();
+  if (!access) return { formError: "forbidden" };
+  const weddingId = access.wedding.id;
+  if ((await prisma.weddingEvent.count({ where: { weddingId } })) <= 1) return { formError: "lastEvent" };
+  await prisma.weddingEvent.deleteMany({ where: { id, weddingId } });
+  refresh();
+  return { ok: true };
+}
+
+// ─── Members ───
+
+export async function createWeddingInviteAction(role: InviteRole): Promise<FormState & { token?: string }> {
+  const access = await getWeddingAccess();
+  if (!access || !canManage(access.role) || !INVITE_ROLES.includes(role)) return { formError: "forbidden" };
+  const token = newToken();
+  await prisma.weddingInvite.create({
+    data: { weddingId: access.wedding.id, token, role, expiresAt: new Date(Date.now() + INVITE_LINK_DAYS * 86_400_000) },
+  });
+  refresh();
+  return { ok: true, token };
+}
+
+export async function revokeWeddingInviteAction(id: string): Promise<FormState> {
+  const access = await getWeddingAccess();
+  if (!access || !canManage(access.role)) return { formError: "forbidden" };
+  await prisma.weddingInvite.deleteMany({ where: { id, weddingId: access.wedding.id } });
+  refresh();
+  return { ok: true };
+}
+
+export async function removeWeddingMemberAction(memberId: string): Promise<FormState> {
+  const access = await getWeddingAccess();
+  if (!access || !canManage(access.role)) return { formError: "forbidden" };
+  await prisma.weddingMember.deleteMany({ where: { id: memberId, weddingId: access.wedding.id, role: { not: "OWNER" } } });
+  refresh();
+  return { ok: true };
+}
+
+/** Leave a wedding you were invited to. */
+export async function leaveWeddingAction(locale: string): Promise<FormState> {
+  const access = await getWeddingAccess();
+  if (!access || access.role === "OWNER" || !isLocale(locale)) return { formError: "forbidden" };
+  await prisma.weddingMember.delete({ where: { id: access.memberId } });
+  refresh();
+  redirect(`/${locale}/app`);
+}
+
+export async function joinWeddingAction(token: string, locale: string): Promise<FormState> {
+  const user = await getCurrentUser();
+  if (!user || !isLocale(locale)) return { formError: "forbidden" };
+  const invite = await prisma.weddingInvite.findUnique({ where: { token } });
+  if (!invite || invite.expiresAt < new Date()) return { formError: "invalidLink" };
+  const existing = await prisma.weddingMember.findUnique({ where: { userId: user.id } });
+  if (existing && existing.weddingId !== invite.weddingId) return { formError: "alreadyInWedding" };
+  await prisma.$transaction([
+    ...(existing ? [] : [prisma.weddingMember.create({ data: { weddingId: invite.weddingId, userId: user.id, role: invite.role } })]),
+    prisma.weddingInvite.delete({ where: { id: invite.id } }),
+  ]);
+  if (!user.roles.includes("COUPLE")) {
+    await prisma.user.update({ where: { id: user.id }, data: { roles: { push: "COUPLE" } } });
+  }
+  refresh();
+  redirect(`/${locale}/plan`);
+}

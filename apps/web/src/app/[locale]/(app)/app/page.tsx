@@ -26,7 +26,11 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
       <Stitch className="mt-5 w-28" />
       <div className="mt-10 grid gap-5 md:grid-cols-2">
         {user.roles.includes("COUPLE") && (
-          <RoleCard icon={<Heart aria-hidden className="size-5" />} title={t("coupleTitle")} text={t("coupleText")} badge={t("inProgress")} />
+          <RoleCard icon={<Heart aria-hidden className="size-5" />} title={t("coupleTitle")} text={t("coupleText")}>
+            <ButtonLink href="/plan" size="sm" className="mt-5">
+              {t("openPlan")} <ArrowRight aria-hidden className="size-4" />
+            </ButtonLink>
+          </RoleCard>
         )}
         {user.roles.includes("VENDOR") && (
           <RoleCard icon={<Store aria-hidden className="size-5" />} title={t("vendorTitle")} text={t("vendorText")}>

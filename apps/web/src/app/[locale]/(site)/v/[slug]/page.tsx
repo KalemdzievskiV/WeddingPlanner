@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
+import { AddToWedding } from "@/components/public/add-to-wedding";
 import { LocationMap } from "@/components/public/location-map";
 import { Alert } from "@/components/ui/alert";
 import { buttonClass, ButtonLink } from "@/components/ui/button";
@@ -12,6 +13,8 @@ import { Card } from "@/components/ui/card";
 import { MonthCalendar, type DayStatus as CalendarStatus } from "@/components/ui/month-calendar";
 import { Stitch } from "@/components/ui/stitch";
 import { canPreview } from "@/lib/business";
+import { getCurrentUser } from "@/lib/session";
+import { canEdit, getWeddingAccess } from "@/lib/wedding";
 import { telLink, videoEmbedUrl, viberLink, whatsappLink } from "@/lib/contact";
 import { calendarLabels, isoDate, monthTitle, todayIso } from "@/lib/dates";
 import { formatApprox, formatMoney } from "@/lib/format";
@@ -71,6 +74,33 @@ export default async function VendorPublicPage({ params }: { params: Promise<{ l
   const description = pickLocalized(b, "description", locale) || b.descriptionMk;
   const cityName = b.city ? pickLocalized(b.city, "name", locale) : null;
   const [cover, ...rest] = b.photos;
+
+  // "Add to my wedding" state for the visitor.
+  const [user, weddingAccess] = await Promise.all([getCurrentUser(), getWeddingAccess()]);
+  const inPlan = weddingAccess
+    ? !!(await prisma.plannedVendor.findFirst({ where: { weddingId: weddingAccess.wedding.id, businessId: b.id } }))
+    : false;
+  const addState = !user
+    ? "noAccount"
+    : !weddingAccess
+      ? "noWedding"
+      : !canEdit(weddingAccess.role)
+        ? "viewer"
+        : inPlan
+          ? "inPlan"
+          : "ready";
+  const packageOptions = [
+    ...b.menuPackages.map((m) => ({
+      kind: "menu" as const,
+      id: m.id,
+      label: `${pickLocalized(m, "name", locale)} · ${t("prices.perPerson", { price: money(m.pricePerPerson, m.currency) })}`,
+    })),
+    ...b.servicePackages.map((p) => ({
+      kind: "package" as const,
+      id: p.id,
+      label: `${pickLocalized(p, "name", locale)} · ${money(p.price, p.currency)}`,
+    })),
+  ];
 
   return (
     <main id="main" className="mx-auto max-w-6xl px-4 pb-10 pt-8 sm:px-6">
@@ -339,6 +369,7 @@ export default async function VendorPublicPage({ params }: { params: Promise<{ l
 
         {/* Contact */}
         <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+          {isPublic && <AddToWedding businessId={b.id} state={addState} packages={packageOptions} />}
           <Card className="p-5">
             <h2 className="font-display text-xl">{tp("contact")}</h2>
             <div className="mt-4 grid gap-2">

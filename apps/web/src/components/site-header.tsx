@@ -10,7 +10,7 @@ export async function SiteHeader({ showSectionLinks = false }: { showSectionLink
   const [t, tNav, user] = await Promise.all([getTranslations("common"), getTranslations("nav"), getCurrentUser()]);
 
   return (
-    <header className="border-b border-line/70 bg-linen/90 backdrop-blur supports-[backdrop-filter]:bg-linen/75 sticky top-0 z-20">
+    <header className="sticky top-0 z-20 border-b border-line/70 bg-linen/90 backdrop-blur supports-[backdrop-filter]:bg-linen/75 print:hidden">
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4 sm:px-6">
         <Link href="/" className="shrink-0 rounded">
           <Logo name={t("appName")} />

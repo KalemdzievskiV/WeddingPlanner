@@ -130,6 +130,22 @@ _(Filled in as we agree on each question.)_
 | 56 | Public profiles in Phase 1 | Approved vendors get a shareable page by direct link (/mk/v/slug). No search or listing until Phase 3. | AGREED |
 | 57 | Venue features level | Features (parking, garden…) are set per restaurant, not per hall. Simpler for owners and for search filters. | AGREED (impl. choice) |
 | 58 | Prices | Whole currency units (no cents). Approximate conversion uses 1 EUR ≈ 61.5 MKD. | AGREED (impl. choice) |
+| 59 | Weddings per account | One wedding per account (owner or helper). | AGREED |
+| 60 | Wedding date | Optional at start. Checklist due dates appear once the date is set. | AGREED |
+| 61 | Default events | Every wedding starts with the reception; couple adds others (веридба, моминска вечер, црква, матичар, custom). | AGREED |
+| 62 | Inviting partner/helpers | Copyable one-time link with a role (partner / can edit / view only), valid 7 days. | AGREED |
+| 63 | Guest sides | Bride / Groom / Both. | AGREED |
+| 64 | RSVP link | One link per household: yes/no per person per invited event + a note. Guests can't add people. | AGREED |
+| 65 | Bulk add guests | Paste a list (one family per line: "Family: name, name") and Excel/CSV import. | AGREED |
+| 66 | Guest phones | Not stored. The couple shares RSVP links themselves (Viber/WhatsApp share buttons). | AGREED |
+| 67 | Seating | Guests assigned per table, not per chair. | AGREED |
+| 68 | Seating on phones | Drag-and-drop floor plan on tablet/desktop; list of tables on phones. | AGREED |
+| 69 | Per-person costs | Planned cost = price per person × guest count (estimate until guests are added; adults and children separately, children with their own price). Couple can override. | AGREED |
+| 70 | Budget currency | Couple picks EUR or MKD for totals; each expense can be in either, converted at 61.5. | AGREED |
+| 71 | Adding catalog vendors | "Add to my wedding" on a vendor's page; status considering/booked; picking a menu/package creates a linked budget line. Vendor isn't notified (inquiries in Phase 3). | AGREED |
+| 72 | Checklist | Default MK tasks grouped by months before; exact date, assignee and done per task; fully editable. | AGREED |
+| 73 | Reminders | No reminder emails in Phase 2; the dashboard shows what's due and overdue. | AGREED |
+| 74 | Day-of schedule | Timeline per event: time, what happens, who's responsible, place. Printable page. | AGREED |
 
 ---
 
@@ -173,7 +189,7 @@ Each phase ends with something working that you can click through.
 - Staff invitations, multiple businesses per owner.
 - Public vendor profile page (read-only for now).
 
-**Phase 2 — Couple planner**
+**Phase 2 — Couple planner** ✅ done 2026-11-05
 - Create wedding (date, city, estimated guests, budget), invite partner + helpers (edit/view).
 - Events within the wedding.
 - Guest list: households, people, side, age group, events, RSVP; RSVP links per household; search/filter, counts by side/age/event.
