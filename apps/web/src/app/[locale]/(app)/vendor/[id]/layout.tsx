@@ -9,6 +9,7 @@ import { BusinessTabs } from "@/components/vendor/business-tabs";
 import { StatusBadge } from "@/components/vendor/status-badge";
 import { Link } from "@/i18n/navigation";
 import { getBusinessAccess } from "@/lib/business";
+import { isUnread } from "@/lib/inquiry-view";
 import { localeFrom } from "@/lib/locale";
 import { requireUser } from "@/lib/session";
 
@@ -32,6 +33,11 @@ export default async function BusinessLayout({
   if (!access) notFound();
   const { business, role } = access;
   const t = await getTranslations("vendor");
+  const inquiries = await prisma.inquiry.findMany({
+    where: { businessId: business.id },
+    select: { lastMessageAt: true, coupleSeenAt: true, vendorSeenAt: true },
+  });
+  const unread = inquiries.filter((i) => isUnread(i, "vendor")).length;
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -55,7 +61,7 @@ export default async function BusinessLayout({
         </Link>
       </div>
       <div className="mt-6">
-        <BusinessTabs businessId={business.id} category={business.category} />
+        <BusinessTabs businessId={business.id} category={business.category} unread={unread} />
       </div>
       <div className="pt-8">{children}</div>
     </div>

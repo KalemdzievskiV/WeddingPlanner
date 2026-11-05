@@ -16,5 +16,8 @@
 - Dates in UI: month/weekday names come from `common.calendar` translations via `calendarLabels`; never `Intl` date formatting in client components (browsers often lack mk/sq data → hydration errors).
 - Vendor access: every vendor Server Action calls `getBusinessAccess(businessId)` (owner, staff or admin). Team changes and delete need `canManageTeam`.
 - Maps: MapLibre worker is copied to `public/vendor/` by `scripts/copy-maplibre-worker.mjs` (runs in `dev`/`build`).
+- Notifications: call `notify(recipients, type, data, link)` from `@/lib/notify` (bell + email); recipients from `businessTeam` / `weddingTeam` / `admins`, always excluding the acting user. Text lives in `notifications.types`.
+- Marketplace: search logic is `lib/search.ts` (`dateFitFor` for availability); vendor budget lines go through `ensurePlannedVendor` / `createVendorExpense` in `@/lib/plan-vendors`; stats via `bumpStat` / `recordView` in `@/lib/stats`.
+- `cn` doesn't merge Tailwind classes: don't pass a conflicting `w-*` / `hidden` to components that set their own; wrap instead.
 - Checks before finishing: `pnpm typecheck`, `pnpm lint`, `pnpm build`.
 - Local DB: `pnpm db:up` (Docker, port 5434). Dev server: port 3100. Dev emails print to the server log.

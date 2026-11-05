@@ -5,6 +5,7 @@ import { getTranslations } from "next-intl/server";
 import { CopyButton } from "@/components/copy-button";
 import { Card } from "@/components/ui/card";
 import { DeleteBusinessButton, SubmitForReviewButton } from "@/components/vendor/overview-actions";
+import { StatsPanel } from "@/components/vendor/stats-panel";
 import { Link } from "@/i18n/navigation";
 import { canManageTeam, getBusinessAccess, getChecklist } from "@/lib/business";
 import { env } from "@/lib/env";
@@ -34,6 +35,7 @@ export default async function BusinessOverviewPage({ params }: { params: Promise
           </div>
         </Card>
       )}
+      {business.status === "APPROVED" && <StatsPanel businessId={business.id} />}
       {business.status === "PENDING" && (
         <Card className="border-amber/30 p-6">
           <h2 className="font-display text-2xl">{t("pendingTitle")}</h2>

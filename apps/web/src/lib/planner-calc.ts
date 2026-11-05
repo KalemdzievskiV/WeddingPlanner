@@ -33,23 +33,26 @@ type ExpenseRow = {
 };
 
 /**
- * Planned cost of an expense in its own currency (decision 69).
- * Per-person: override count, else guests invited to the event (adults + children at child price),
- * else the couple's estimate.
+ * Planned cost of an expense in its own currency (decisions 69 and 86).
+ * Per-person: override count, else the higher of the guest list (adults + children at child price)
+ * and the couple's estimate, so the budget doesn't drop while the list is half-filled.
  */
 export function plannedCost(
   e: ExpenseRow,
   counts: (eventId: string | null) => { adults: number; children: number },
   estimatedGuests: number | null,
 ) {
-  if (e.costType === "FIXED") return { total: e.amount, people: null as number | null };
-  if (e.guestsOverride != null) return { total: e.amount * e.guestsOverride, people: e.guestsOverride };
+  if (e.costType === "FIXED") return { total: e.amount, people: null as number | null, usingEstimate: false };
+  if (e.guestsOverride != null) return { total: e.amount * e.guestsOverride, people: e.guestsOverride, usingEstimate: false };
   const c = counts(e.eventId);
-  if (c.adults + c.children === 0) {
-    const people = estimatedGuests ?? 0;
-    return { total: e.amount * people, people };
-  }
-  return { total: c.adults * e.amount + c.children * (e.childPrice ?? e.amount), people: c.adults + c.children };
+  const listed = c.adults + c.children;
+  // Guests not on the list yet are counted at the adult price.
+  const missing = Math.max(0, (estimatedGuests ?? 0) - listed);
+  return {
+    total: (c.adults + missing) * e.amount + c.children * (e.childPrice ?? e.amount),
+    people: listed + missing,
+    usingEstimate: missing > 0,
+  };
 }
 
 export const toCurrency = (amount: number, from: Currency, to: Currency) => convertPrice(amount, from, to);

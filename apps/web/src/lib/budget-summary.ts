@@ -37,8 +37,6 @@ export async function loadBudget(wedding: Wedding) {
     let catPlanned = 0;
     const expenses = c.expenses.map((e) => {
       const cost = plannedCost(e, counts, wedding.estimatedGuests);
-      const usingEstimate =
-        e.costType === "PER_PERSON" && e.guestsOverride == null && counts(e.eventId).adults + counts(e.eventId).children === 0;
       const plannedConv = toCurrency(cost.total, e.currency, cur);
       const paidConv = e.payments
         .filter((p) => p.paidAt)
@@ -48,7 +46,7 @@ export async function loadBudget(wedding: Wedding) {
       paid += paidConv;
       byPayer[e.payer].planned += plannedConv;
       byPayer[e.payer].paid += paidConv;
-      return { ...e, plannedTotal: cost.total, people: cost.people, usingEstimate, plannedConv, paidConv };
+      return { ...e, plannedTotal: cost.total, people: cost.people, usingEstimate: cost.usingEstimate, plannedConv, paidConv };
     });
     return { ...c, expenses, planned: catPlanned };
   });

@@ -1,3 +1,4 @@
+import { prisma } from "@svadba/db";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
@@ -5,6 +6,7 @@ import { PlanTabs } from "@/components/plan/plan-tabs";
 import { Alert } from "@/components/ui/alert";
 import { todayIso } from "@/lib/dates";
 import { formatDate } from "@/lib/format";
+import { isUnread } from "@/lib/inquiry-view";
 import { localeFrom } from "@/lib/locale";
 import { coupleNames, daysUntil } from "@/lib/plan-helpers";
 import { canEdit, getWeddingAccess, requireWedding } from "@/lib/wedding";
@@ -26,6 +28,11 @@ export default async function PlannerLayout({
   const { wedding, role } = await requireWedding(locale);
   const t = await getTranslations("plan.header");
   const days = wedding.date ? daysUntil(wedding.date, todayIso()) : null;
+  const inquiries = await prisma.inquiry.findMany({
+    where: { weddingId: wedding.id },
+    select: { lastMessageAt: true, coupleSeenAt: true, vendorSeenAt: true },
+  });
+  const unread = inquiries.filter((i) => isUnread(i, "couple")).length;
 
   return (
     <div>
@@ -44,7 +51,7 @@ export default async function PlannerLayout({
         </p>
       </div>
       <div className="mt-5">
-        <PlanTabs />
+        <PlanTabs unread={unread} />
       </div>
       {!canEdit(role) && (
         <Alert className="mt-5 print:hidden">{t("viewOnly")}</Alert>

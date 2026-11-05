@@ -6,6 +6,6 @@ import { pickLocalized, type Locale } from "@svadba/shared";
 export async function cityOptions(locale: Locale) {
   const cities = await prisma.city.findMany({ where: { active: true } });
   return cities
-    .map((c) => ({ id: c.id, name: pickLocalized(c, "name", locale) }))
+    .map((c) => ({ id: c.id, slug: c.slug, name: pickLocalized(c, "name", locale) }))
     .sort((a, b) => a.name.localeCompare(b.name, locale));
 }

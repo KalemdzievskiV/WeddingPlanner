@@ -4,7 +4,9 @@ import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { MonthCalendar, type DayStatus } from "@/components/ui/month-calendar";
 import { Stitch } from "@/components/ui/stitch";
-import { calendarLabels } from "@/lib/dates";
+import { HomeSearch } from "@/components/search/home-search";
+import { cityOptions } from "@/lib/cities";
+import { calendarLabels, todayIso } from "@/lib/dates";
 
 // Sample data for the product preview in the hero.
 const SAMPLE_DAYS_LEFT = 219;
@@ -18,6 +20,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   setRequestLocale(locale);
   const t = await getTranslations("home");
   const format = await getFormatter();
+  const cities = (await cityOptions(locale)).map((c) => ({ slug: c.slug, name: c.name }));
   const eur = (n: number) => format.number(n, { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
 
   return (
@@ -114,6 +117,14 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             </div>
           </div>
         </Card>
+      </section>
+
+      {/* Search the catalog */}
+      <section aria-labelledby="home-search" className="mx-auto max-w-6xl px-4 pb-20 sm:px-6">
+        <h2 id="home-search" className="mb-4 font-display text-2xl sm:text-3xl">
+          {t("search.title")}
+        </h2>
+        <HomeSearch cities={cities} today={todayIso()} />
       </section>
 
       {/* Couples */}

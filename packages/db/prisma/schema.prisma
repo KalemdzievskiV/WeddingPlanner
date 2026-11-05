@@ -32,6 +32,11 @@ model User {
   memberships   BusinessMember[]
   /// One wedding per account (decision 59).
   weddingMember WeddingMember?
+  /// Email alerts for inquiries, offers and reviews (bell notifications always on).
+  emailNotifications Boolean @default(true)
+  notifications Notification[]
+  inquiryMessages InquiryMessage[]
+  reviews       Review[]
 
   @@map("user")
 }
@@ -274,6 +279,14 @@ model Business {
   features        BusinessFeature[]
   genres          BusinessGenre[]
   plannedBy       PlannedVendor[]
+  favorites       Favorite[]
+  inquiries       Inquiry[]
+  reviews         Review[]
+  statDays        BusinessStatDay[]
+  views           BusinessView[]
+  /// Kept in sync with visible reviews, for sorting search results.
+  ratingAvg       Float?
+  ratingCount     Int               @default(0)
 
   @@index([category, status])
   @@index([cityId])
@@ -377,6 +390,7 @@ model Hall {
   sortOrder    Int               @default(0)
   createdAt    DateTime          @default(now())
   availability AvailabilityDay[]
+  inquiries    Inquiry[]
 
   @@index([businessId])
   @@map("hall")
@@ -569,6 +583,9 @@ model Wedding {
   tasks            Task[]
   plannedVendors   PlannedVendor[]
   scheduleItems    ScheduleItem[]
+  favorites        Favorite[]
+  inquiries        Inquiry[]
+  reviews          Review[]
 
   @@map("wedding")
 }
@@ -617,6 +634,7 @@ model WeddingEvent {
   tables        SeatingTable[]
   expenses      Expense[]
   scheduleItems ScheduleItem[]
+  inquiries     Inquiry[]
 
   @@index([weddingId])
   @@map("wedding_event")
@@ -742,6 +760,9 @@ model Expense {
   payer           Payer          @default(COUPLE)
   plannedVendorId String?
   plannedVendor   PlannedVendor? @relation(fields: [plannedVendorId], references: [id], onDelete: SetNull)
+  /// Created from an accepted vendor offer (only once per offer).
+  offerId         String?        @unique
+  offer           Offer?         @relation(fields: [offerId], references: [id], onDelete: SetNull)
   notes           String?
   sortOrder       Int            @default(0)
   createdAt       DateTime       @default(now())
@@ -823,4 +844,196 @@ model PlannedVendor {
 
   @@index([weddingId])
   @@map("planned_vendor")
+}
+
+// ─── Marketplace ───
+
+/// A vendor saved by a wedding (shared by everyone on the wedding — decision 76).
+model Favorite {
+  weddingId  String
+  wedding    Wedding  @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@id([weddingId, businessId])
+  @@index([businessId])
+  @@map("favorite")
+}
+
+enum InquiryStatus {
+  NEW
+  REPLIED
+  OFFER_SENT
+  BOOKED
+  DECLINED
+  /// Withdrawn by the couple.
+  CANCELLED
+}
+
+/// A couple's request to a vendor (decision 78). Open = NEW / REPLIED / OFFER_SENT.
+model Inquiry {
+  id             String        @id @default(cuid())
+  weddingId      String
+  wedding        Wedding       @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  businessId     String
+  business       Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  eventId        String?
+  event          WeddingEvent? @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  hallId         String?
+  hall           Hall?         @relation(fields: [hallId], references: [id], onDelete: SetNull)
+  /// Optional menu or package the couple is interested in: "menu:<id>" / "package:<id>" with its name copied.
+  packageRef     String?
+  packageName    String?
+  date           DateTime?     @db.Date
+  guestCount     Int?
+  status         InquiryStatus @default(NEW)
+  createdById    String?
+  lastMessageAt  DateTime      @default(now())
+  /// When each side last opened the thread (for unread dots).
+  coupleSeenAt   DateTime?
+  vendorSeenAt   DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  messages       InquiryMessage[]
+  offers         Offer[]
+
+  @@index([weddingId])
+  @@index([businessId, status])
+  @@map("inquiry")
+}
+
+/// One message in an inquiry thread (not real-time chat).
+model InquiryMessage {
+  id         String   @id @default(cuid())
+  inquiryId  String
+  inquiry    Inquiry  @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+  authorId   String?
+  author     User?    @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  fromVendor Boolean
+  text       String
+  createdAt  DateTime @default(now())
+
+  @@index([inquiryId])
+  @@map("inquiry_message")
+}
+
+enum OfferUnit {
+  TOTAL
+  PER_PERSON
+}
+
+enum OfferStatus {
+  OPEN
+  ACCEPTED
+  DECLINED
+  /// Replaced by a newer offer from the vendor.
+  REPLACED
+}
+
+/// Vendor's priced offer in an inquiry (decision 79).
+model Offer {
+  id         String      @id @default(cuid())
+  inquiryId  String
+  inquiry    Inquiry     @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+  price      Int
+  unit       OfferUnit
+  currency   Currency
+  validUntil DateTime?   @db.Date
+  note       String?
+  status     OfferStatus @default(OPEN)
+  authorId   String?
+  createdAt  DateTime    @default(now())
+  respondedAt DateTime?
+  expense    Expense?
+
+  @@index([inquiryId])
+  @@map("offer")
+}
+
+enum ReviewStatus {
+  VISIBLE
+  HIDDEN
+}
+
+/// Verified review: the wedding had the vendor booked and its date has passed (decisions 16, 81).
+model Review {
+  id           String       @id @default(cuid())
+  businessId   String
+  business     Business     @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  weddingId    String
+  wedding      Wedding      @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  authorId     String?
+  author       User?        @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  /// 1–5
+  rating       Int
+  text         String
+  status       ReviewStatus @default(VISIBLE)
+  vendorReply  String?
+  repliedAt    DateTime?
+  reportedAt   DateTime?
+  reportReason String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@unique([businessId, weddingId])
+  @@index([businessId, status])
+  @@map("review")
+}
+
+enum NotificationType {
+  INQUIRY_NEW
+  INQUIRY_MESSAGE
+  INQUIRY_CANCELLED
+  OFFER_NEW
+  OFFER_ACCEPTED
+  OFFER_DECLINED
+  BOOKED
+  DECLINED
+  REVIEW_NEW
+  REVIEW_REPLY
+  REVIEW_REPORTED
+}
+
+/// In-app bell notification. Text is built from `type` + `data` in the reader's language.
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  /// Values for the message, e.g. { business, couple }.
+  data      Json             @default("{}")
+  /// Path inside the app without the locale, e.g. "/plan/inquiries/abc".
+  link      String
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  @@index([userId, readAt])
+  @@index([userId, createdAt])
+  @@map("notification")
+}
+
+/// Per-day counters for vendor stats (decision 84).
+model BusinessStatDay {
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  date       DateTime @db.Date
+  views      Int      @default(0)
+  inquiries  Int      @default(0)
+  favorites  Int      @default(0)
+
+  @@id([businessId, date])
+  @@map("business_stat_day")
+}
+
+/// Dedupes profile views: one per visitor per business per day. Old rows can be pruned.
+model BusinessView {
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  date       DateTime @db.Date
+  /// Hash of the visitor cookie.
+  visitor    String
+
+  @@id([businessId, date, visitor])
+  @@map("business_view")
 }

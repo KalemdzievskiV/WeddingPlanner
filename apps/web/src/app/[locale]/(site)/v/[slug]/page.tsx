@@ -1,12 +1,16 @@
 import { prisma } from "@svadba/db";
-import { pickLocalized, type DayStatus, type Locale } from "@svadba/shared";
-import { Globe, Mail, MapPin, Phone } from "lucide-react";
+import { OPEN_INQUIRY_STATUSES, pickLocalized, type DayStatus, type Locale } from "@svadba/shared";
+import { Globe, Mail, MapPin, MessageSquareText, Phone } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import { AddToWedding } from "@/components/public/add-to-wedding";
 import { LocationMap } from "@/components/public/location-map";
+import { ReviewForm } from "@/components/public/review-form";
+import { Stars } from "@/components/public/stars";
+import { ViewTracker } from "@/components/public/view-tracker";
+import { FavoriteButton } from "@/components/search/favorite-button";
 import { Alert } from "@/components/ui/alert";
 import { buttonClass, ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -17,7 +21,10 @@ import { getCurrentUser } from "@/lib/session";
 import { canEdit, getWeddingAccess } from "@/lib/wedding";
 import { telLink, videoEmbedUrl, viberLink, whatsappLink } from "@/lib/contact";
 import { calendarLabels, isoDate, monthTitle, todayIso } from "@/lib/dates";
-import { formatApprox, formatMoney } from "@/lib/format";
+import { formatApprox, formatDate, formatMoney } from "@/lib/format";
+import { coupleNames } from "@/lib/plan-helpers";
+import { canReview } from "@/lib/reviews";
+import { favoriteContext } from "@/lib/visitor";
 import { localeFrom } from "@/lib/locale";
 import { cn } from "@/lib/utils";
 
@@ -80,6 +87,25 @@ export default async function VendorPublicPage({ params }: { params: Promise<{ l
   const inPlan = weddingAccess
     ? !!(await prisma.plannedVendor.findFirst({ where: { weddingId: weddingAccess.wedding.id, businessId: b.id } }))
     : false;
+  const fav = await favoriteContext();
+  const [openInquiry, reviews, myReview, reviewAllowed] = await Promise.all([
+    weddingAccess
+      ? prisma.inquiry.findFirst({
+          where: { weddingId: weddingAccess.wedding.id, businessId: b.id, status: { in: [...OPEN_INQUIRY_STATUSES] } },
+          select: { id: true },
+        })
+      : null,
+    prisma.review.findMany({
+      where: { businessId: b.id, status: "VISIBLE" },
+      orderBy: { createdAt: "desc" },
+      include: { wedding: { select: { partner1: true, partner2: true, date: true } } },
+    }),
+    weddingAccess
+      ? prisma.review.findUnique({ where: { businessId_weddingId: { businessId: b.id, weddingId: weddingAccess.wedding.id } } })
+      : null,
+    weddingAccess && canEdit(weddingAccess.role) ? canReview(weddingAccess.wedding, b.id, weddingAccess.user.id) : false,
+  ]);
+  const tr = await getTranslations("reviews");
   const addState = !user
     ? "noAccount"
     : !weddingAccess
@@ -365,11 +391,83 @@ export default async function VendorPublicPage({ params }: { params: Promise<{ l
           )}
 
           <Availability businessId={b.id} halls={b.halls} unmarked={b.unmarkedDays} locale={locale} fallbackName={b.name} />
+
+          {isPublic && (
+            <section id="reviews" className="scroll-mt-24">
+              <div className="mb-4 flex flex-wrap items-baseline gap-x-4 gap-y-1">
+                <h2 className="font-display text-2xl">{tr("title")}</h2>
+                {b.ratingCount > 0 && b.ratingAvg != null && (
+                  <p className="flex items-center gap-2 text-sm text-ink-soft">
+                    <Stars value={b.ratingAvg} label={tr("average", { rating: b.ratingAvg.toFixed(1) })} />
+                    <span className="font-semibold text-ink tabular-nums">{b.ratingAvg.toFixed(1)}</span>
+                    <span className="tabular-nums">{tr("count", { count: b.ratingCount })}</span>
+                  </p>
+                )}
+              </div>
+              <p className="-mt-2 mb-5 text-sm text-stone">{tr("verifiedNote")}</p>
+              {reviewAllowed && (
+                <div className="mb-6">
+                  <ReviewForm businessId={b.id} existing={myReview ? { rating: myReview.rating, text: myReview.text } : null} />
+                </div>
+              )}
+              {reviews.length === 0 ? (
+                <p className="text-ink-soft">{tr("none")}</p>
+              ) : (
+                <ul className="space-y-6">
+                  {reviews.map((r) => (
+                    <li key={r.id} className="border-t border-line pt-5">
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                        <Stars value={r.rating} label={tr("rated", { rating: r.rating })} />
+                        <span className="font-medium">{coupleNames(r.wedding)}</span>
+                        {r.wedding.date && (
+                          <span className="text-sm text-stone tabular-nums">{tr("weddingOn", { date: formatDate(r.wedding.date) })}</span>
+                        )}
+                      </div>
+                      <p className="mt-2 whitespace-pre-line leading-relaxed text-ink-soft">{r.text}</p>
+                      {r.vendorReply && (
+                        <div className="mt-3 border-l-2 border-vranec/40 pl-4">
+                          <p className="text-sm font-medium">{tr("replyFrom", { business: b.name })}</p>
+                          <p className="mt-1 whitespace-pre-line text-sm text-ink-soft">{r.vendorReply}</p>
+                        </div>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          )}
         </div>
 
         {/* Contact */}
         <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
-          {isPublic && <AddToWedding businessId={b.id} state={addState} packages={packageOptions} />}
+          {isPublic && (
+            <>
+              <ViewTracker businessId={b.id} />
+              <FavoriteButton businessId={b.id} initial={fav.favorites.has(b.id)} state={fav.state} variant="button" />
+              {addState !== "viewer" && (
+                <Card className="space-y-3 p-5">
+                  <h2 className="font-display text-xl">{tp("inquiryTitle")}</h2>
+                  <p className="text-sm text-ink-soft">{openInquiry ? tp("inquiryOpen") : tp("inquiryText")}</p>
+                  <ButtonLink
+                    href={
+                      openInquiry
+                        ? `/plan/inquiries/${openInquiry.id}`
+                        : addState === "noAccount"
+                          ? { pathname: "/sign-in", query: { next: `/plan/inquiries/new?vendor=${b.slug}` } }
+                          : addState === "noWedding"
+                            ? "/plan/new"
+                            : { pathname: "/plan/inquiries/new", query: { vendor: b.slug } }
+                    }
+                    className="w-full"
+                  >
+                    <MessageSquareText aria-hidden className="size-4" />
+                    {openInquiry ? tp("inquiryContinue") : tp("inquiryButton")}
+                  </ButtonLink>
+                </Card>
+              )}
+              <AddToWedding businessId={b.id} state={addState} packages={packageOptions} />
+            </>
+          )}
           <Card className="p-5">
             <h2 className="font-display text-xl">{tp("contact")}</h2>
             <div className="mt-4 grid gap-2">

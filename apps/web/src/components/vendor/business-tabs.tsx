@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 
 type Tab = { href: string; label: string };
 
-export function BusinessTabs({ businessId, category }: { businessId: string; category: string }) {
+export function BusinessTabs({ businessId, category, unread = 0 }: { businessId: string; category: string; unread?: number }) {
   const t = useTranslations("vendor.nav");
   const pathname = usePathname();
   const base = `/vendor/${businessId}`;
@@ -17,6 +17,8 @@ export function BusinessTabs({ businessId, category }: { businessId: string; cat
     { href: `${base}/prices`, label: category === "VENUE" ? t("pricesVenue") : t("prices") },
     ...(category === "BAND" ? [{ href: `${base}/travel`, label: t("travel") }] : []),
     { href: `${base}/calendar`, label: t("calendar") },
+    { href: `${base}/inquiries`, label: t("inquiries") },
+    { href: `${base}/reviews`, label: t("reviews") },
     { href: `${base}/team`, label: t("team") },
   ];
 
@@ -36,6 +38,12 @@ export function BusinessTabs({ businessId, category }: { businessId: string; cat
                 )}
               >
                 {tab.label}
+                {tab.href.endsWith("/inquiries") && unread > 0 && (
+                  <span className="ml-1.5 rounded-full bg-vranec px-1.5 py-0.5 text-[11px] font-medium text-white tabular-nums">
+                    {unread}
+                    <span className="sr-only"> {t("unread")}</span>
+                  </span>
+                )}
               </Link>
             </li>
           );

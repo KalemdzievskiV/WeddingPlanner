@@ -34,3 +34,19 @@ export function formatDate(value: Date | string | null | undefined) {
 export function dateInputValue(value: Date | null | undefined) {
   return value ? value.toISOString().slice(0, 10) : "";
 }
+
+const skopjeParts = new Intl.DateTimeFormat("en-GB", {
+  timeZone: "Europe/Skopje",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  hourCycle: "h23",
+});
+
+/** "12.06.2027 18:30" in Skopje time. Uses en-GB only for the numbers, which every browser has. */
+export function formatDateTime(value: Date | string) {
+  const parts = Object.fromEntries(skopjeParts.formatToParts(new Date(value)).map((p) => [p.type, p.value]));
+  return `${parts.day}.${parts.month}.${parts.year} ${parts.hour}:${parts.minute}`;
+}

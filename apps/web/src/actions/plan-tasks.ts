@@ -4,6 +4,7 @@ import { prisma } from "@svadba/db";
 import { pickLocalized, plannedVendorSchema, PLANNED_VENDOR_STATUSES, scheduleItemSchema, taskSchema, type Locale } from "@svadba/shared";
 import { revalidatePath } from "next/cache";
 import { zodFieldErrors, type FormState } from "@/lib/form";
+import { createVendorExpense } from "@/lib/plan-vendors";
 import { editableWedding } from "@/lib/wedding";
 
 const refresh = () => revalidatePath("/", "layout");
@@ -116,8 +117,6 @@ export async function deletePlannedVendorAction(id: string): Promise<FormState> 
   return { ok: true };
 }
 
-const CATEGORY_FOR: Record<string, string> = { VENUE: "venue", BAND: "music", PHOTO_VIDEO: "photo-video" };
-
 /**
  * "Add to my wedding" from a vendor's public page (decision 71).
  * Optionally picks a menu or package, which becomes a linked budget line.
@@ -148,26 +147,7 @@ export async function addCatalogVendorAction(
     ? await prisma.plannedVendor.update({ where: { id: existing.id }, data: { status } })
     : await prisma.plannedVendor.create({ data: { weddingId, businessId, name: business.name, status } });
 
-  if (line) {
-    const category =
-      (await prisma.budgetCategory.findFirst({ where: { weddingId, slug: CATEGORY_FOR[business.category] } })) ??
-      (await prisma.budgetCategory.findFirst({ where: { weddingId }, orderBy: { sortOrder: "asc" } }));
-    if (category) {
-      const reception = await prisma.weddingEvent.findFirst({ where: { weddingId, type: "RECEPTION" } });
-      await prisma.expense.create({
-        data: {
-          weddingId,
-          categoryId: category.id,
-          name: `${business.name} · ${line.name}`,
-          costType: line.perPerson ? "PER_PERSON" : "FIXED",
-          amount: line.amount,
-          currency: line.currency,
-          eventId: line.perPerson ? (reception?.id ?? null) : null,
-          plannedVendorId: planned.id,
-        },
-      });
-    }
-  }
+  if (line) await createVendorExpense({ weddingId, business, plannedVendorId: planned.id, ...line });
   refresh();
   return { ok: true };
 }

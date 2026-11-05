@@ -146,6 +146,18 @@ _(Filled in as we agree on each question.)_
 | 72 | Checklist | Default MK tasks grouped by months before; exact date, assignee and done per task; fully editable. | AGREED |
 | 73 | Reminders | No reminder emails in Phase 2; the dashboard shows what's due and overdue. | AGREED |
 | 74 | Day-of schedule | Timeline per event: time, what happens, who's responsible, place. Printable page. | AGREED |
+| 75 | Search by date | Booked days hidden. Confirmed-free vendors first, then "unknown — ask" ones with a label; tentative days get a badge. | AGREED |
+| 76 | Search access | Anyone can search, view and compare. Favourites and inquiries need an account with a wedding; favourites belong to the wedding (shared with partner/helpers). | AGREED |
+| 77 | Result order | Default "best match": rating + profile completeness with a daily shuffle. Also price low→high, rating, newest. | AGREED |
+| 78 | Inquiry form | Wedding members who can edit only. Pre-filled event + date + guest count; optional hall/menu/package + message. One open inquiry per vendor per event. | AGREED |
+| 79 | Offers | Structured: price (total or per person), currency, valid until, note. Couple accepts/declines in one click; accepted offer can become a budget line. | AGREED |
+| 80 | Booking | Vendor marks "booked": day (and hall) blocked in their calendar, vendor added to the couple's plan as booked (+ budget line from the offer). Couple notified and can undo on their side. | AGREED |
+| 81 | Reviews | 1–5 stars + text, live immediately. Vendor can reply once and report; admin can hide any review. | AGREED |
+| 82 | Vendor alerts | Owner and all staff get bell + email; each person can turn emails off. | AGREED |
+| 83 | Compare | Tick 2–4 favourites of one category → side-by-side table (price from, capacity, features, rating, free on date, city). Compare ticks in search kept in the browser. | AGREED |
+| 84 | Vendor stats | One view per visitor per profile per day (no bots, not own team). This month vs last + 12-month chart; admin sees totals. | AGREED |
+| 85 | Search entry | Home search bar (category, city, date) + planner shortcuts that pre-fill city, date and guests. | AGREED |
+| 86 | Per-person guest count | Use the higher of estimate and guest list count (replaces 69's "estimate until first guest"). Override per expense still possible. | AGREED |
 
 ---
 
@@ -199,7 +211,7 @@ Each phase ends with something working that you can click through.
 - Vendor manager: add listed vendors or private entries, status (considering / booked), notes, linked expenses.
 - Premium limits implemented behind a feature switch (off).
 
-**Phase 3 — Marketplace**
+**Phase 3 — Marketplace** ✅ done 2026-11-05 (search, map, favourites, compare, inquiries with offers and booking, verified reviews, bell + emails, vendor stats, admin review moderation)
 - Search per category with filters (city, date free, capacity, price per person, features) + map view.
 - Favorites + compare (2–4).
 - Inquiry form → vendor inbox with statuses + email alerts; "booked" blocks the calendar and adds the vendor to the couple's plan.

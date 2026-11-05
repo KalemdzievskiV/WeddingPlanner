@@ -10,7 +10,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function AdminOverviewPage() {
   const t = await getTranslations("admin.overview");
-  const [pending, live, users, couples, vendors, admins, cities, features] = await Promise.all([
+  const [pending, live, users, couples, vendors, admins, cities, features, weddings, inquiries, booked, reviews, reported, views] = await Promise.all([
     prisma.business.count({ where: { status: "PENDING" } }),
     prisma.business.count({ where: { status: "APPROVED" } }),
     prisma.user.count(),
@@ -19,6 +19,12 @@ export default async function AdminOverviewPage() {
     prisma.user.count({ where: { roles: { has: "ADMIN" } } }),
     prisma.city.count({ where: { active: true } }),
     prisma.venueFeature.count({ where: { active: true } }),
+    prisma.wedding.count(),
+    prisma.inquiry.count(),
+    prisma.inquiry.count({ where: { status: "BOOKED" } }),
+    prisma.review.count({ where: { status: "VISIBLE" } }),
+    prisma.review.count({ where: { reportedAt: { not: null } } }),
+    prisma.businessStatDay.aggregate({ _sum: { views: true } }),
   ]);
   const stats = [
     { label: t("pending"), value: pending },
@@ -29,6 +35,12 @@ export default async function AdminOverviewPage() {
     { label: t("admins"), value: admins },
     { label: t("cities"), value: cities },
     { label: t("features"), value: features },
+    { label: t("weddings"), value: weddings },
+    { label: t("inquiries"), value: inquiries },
+    { label: t("booked"), value: booked },
+    { label: t("reviews"), value: reviews },
+    { label: t("reported"), value: reported },
+    { label: t("views"), value: views._sum.views ?? 0 },
   ];
 
   return (

@@ -4,9 +4,10 @@ import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 
-const TABS = ["", "guests", "seating", "budget", "checklist", "schedule", "vendors", "settings"] as const;
+const TABS = ["", "guests", "seating", "budget", "checklist", "schedule", "vendors", "favourites", "inquiries", "settings"] as const;
 
-export function PlanTabs() {
+/** `unread`: inquiries with something new for the couple. */
+export function PlanTabs({ unread = 0 }: { unread?: number }) {
   const t = useTranslations("plan.nav");
   const pathname = usePathname();
   return (
@@ -26,6 +27,12 @@ export function PlanTabs() {
                 )}
               >
                 {t(tab || "overview")}
+                {tab === "inquiries" && unread > 0 && (
+                  <span className="ml-1.5 rounded-full bg-vranec px-1.5 py-0.5 text-[11px] font-medium text-white tabular-nums">
+                    {unread}
+                    <span className="sr-only"> {t("unread")}</span>
+                  </span>
+                )}
               </Link>
             </li>
           );

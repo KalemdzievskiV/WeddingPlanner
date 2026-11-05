@@ -1,6 +1,6 @@
 "use client";
 
-import { Building2, LayoutGrid, ListChecks, MapPin, Music, Store, Users } from "lucide-react";
+import { Building2, LayoutGrid, ListChecks, MapPin, MessageSquareWarning, Music, Store, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 const items = [
   { href: "/admin", key: "overview", Icon: LayoutGrid },
   { href: "/admin/businesses", key: "businesses", Icon: Store },
+  { href: "/admin/reviews", key: "reviews", Icon: MessageSquareWarning },
   { href: "/admin/users", key: "users", Icon: Users },
   { href: "/admin/cities", key: "cities", Icon: MapPin },
   { href: "/admin/categories", key: "categories", Icon: Building2 },

@@ -50,7 +50,8 @@
       "d5": "Pre",
       "d6": "Sht",
       "d7": "Die"
-    }
+    },
+    "choose": "Zgjidhni…"
   },
   "meta": {
     "title": "Svadba — planifikimi i dasmës në Maqedoninë e Veriut",
@@ -58,7 +59,10 @@
   },
   "nav": {
     "forCouples": "Për çiftet",
-    "forVendors": "Për bizneset"
+    "forVendors": "Për bizneset",
+    "vendors": "Shërbimet",
+    "notifications": "Njoftimet",
+    "notificationsUnread": "{count, plural, one {Njoftimet, # e palexuar} other {Njoftimet, # të palexuara}}"
   },
   "home": {
     "eyebrow": "Planifikimi i dasmës në Maqedoninë e Veriut",
@@ -111,6 +115,13 @@
     "footer": {
       "rights": "© {year} Svadba",
       "made": "Bërë në Maqedoni, për dasmat tona."
+    },
+    "search": {
+      "title": "Gjeni shërbimet tuaja",
+      "what": "Çfarë",
+      "where": "Ku",
+      "when": "Data e dasmës",
+      "submit": "Kërko"
     }
   },
   "auth": {
@@ -202,7 +213,8 @@
       "features": "Karakteristikat e sallave",
       "backToSite": "Kthehu te faqja",
       "businesses": "Bizneset",
-      "genres": "Zhanret muzikore"
+      "genres": "Zhanret muzikore",
+      "reviews": "Vlerësimet"
     },
     "overview": {
       "title": "Përmbledhje",
@@ -213,7 +225,13 @@
       "cities": "Qytete aktive",
       "features": "Karakteristika të sallave",
       "pending": "Në pritje të kontrollit",
-      "live": "Biznese të publikuara"
+      "live": "Biznese të publikuara",
+      "weddings": "Dasma",
+      "inquiries": "Kërkesa",
+      "booked": "Rezervuar përmes kërkesave",
+      "reviews": "Vlerësime",
+      "reported": "Vlerësime të raportuara",
+      "views": "Shikime të profileve (gjithsej)"
     },
     "users": {
       "title": "Përdoruesit",
@@ -292,6 +310,21 @@
       "rejected": "U kthye për ndryshime. Pronari mori email.",
       "newTitle": "Krijo profil",
       "newLead": "Për bizneset që duan ndihmë në fillim. Ju e plotësoni profilin, pastaj pronari e merr me një lidhje."
+    },
+    "reviews": {
+      "title": "Vlerësimet",
+      "filter": {
+        "reported": "Të raportuara",
+        "all": "Të gjitha"
+      },
+      "emptyReported": "Asnjë vlerësim i raportuar.",
+      "empty": "Ende pa vlerësime.",
+      "hidden": "I fshehur",
+      "reported": "I raportuar",
+      "reason": "Arsyeja",
+      "hide": "Fshih",
+      "show": "Shfaq përsëri",
+      "dismiss": "Hidh poshtë raportin"
     }
   },
   "errors": {
@@ -329,7 +362,14 @@
     "date": "Shkruani një datë të vlefshme.",
     "time": "Shkruani një orë si 18:30.",
     "guestRequired": "Shtoni të paktën një person.",
-    "tooMany": "Kjo është shumë njëherësh."
+    "tooMany": "Kjo është shumë njëherësh.",
+    "messageShort": "Shkruani të paktën një mesazh të shkurtër (10 shenja).",
+    "rating": "Zgjidhni nga 1 deri në 5 yje.",
+    "reviewShort": "Shkruani të paktën 20 shenja që çiftet e tjera të mësojnë diçka.",
+    "inquiryOpen": "Keni tashmë një kërkesë të hapur me këtë shërbim për këtë ngjarje.",
+    "inquiryClosed": "Kjo bisedë është mbyllur.",
+    "offerClosed": "Kësaj oferte i është përgjigjur tashmë ose është zëvendësuar.",
+    "reviewNotAllowed": "Mund ta vlerësoni një shërbim pas dasmës, nëse ishte i rezervuar në planin tuaj."
   },
   "email": {
     "greeting": "Përshëndetje {name},",
@@ -345,7 +385,9 @@
     "approvedButton": "Hap faqen tuaj",
     "rejectedSubject": "Profili juaj ka nevojë për ndryshime",
     "rejectedText": "E kontrolluam „{business}“. Çfarë duhet ndryshuar: {reason}",
-    "rejectedButton": "Ndrysho profilin"
+    "rejectedButton": "Ndrysho profilin",
+    "notificationButton": "Hap në Svadba",
+    "notificationFooter": "Këto email-e i merrni për kërkesa, oferta dhe vlerësime. Çaktivizojini te cilësimet e llogarisë."
   },
   "notFound": {
     "title": "Faqja nuk u gjet",
@@ -361,7 +403,10 @@
       "pricesVenue": "Sallat dhe menytë",
       "travel": "Shpenzimet e udhëtimit",
       "calendar": "Kalendari",
-      "team": "Ekipi"
+      "team": "Ekipi",
+      "inquiries": "Kërkesat",
+      "reviews": "Vlerësimet",
+      "unread": "të palexuara"
     },
     "categories": {
       "VENUE": "Restorant ose sallë",
@@ -627,7 +672,25 @@
       "location": "Vendndodhja",
       "openInMaps": "Hape në Google Maps",
       "features": "Çfarë ofron salla",
-      "noDescription": "Ende pa përshkrim."
+      "noDescription": "Ende pa përshkrim.",
+      "inquiryTitle": "Pyetni për datën tuaj",
+      "inquiryOpen": "Keni një bisedë të hapur me këtë shërbim.",
+      "inquiryText": "Dërgoni datën dhe numrin e të ftuarve. Përgjigja vjen këtu dhe me email.",
+      "inquiryContinue": "Hap bisedën",
+      "inquiryButton": "Dërgo kërkesë"
+    },
+    "stats": {
+      "title": "Statistikat",
+      "lead": "Shikimet e profilit numërohen një herë për vizitor në ditë. Ekipi juaj nuk numërohet.",
+      "metrics": {
+        "views": "Shikime të profilit",
+        "inquiries": "Kërkesa",
+        "favorites": "Ruajtur te të preferuarat"
+      },
+      "vsLast": "Muaji i kaluar: {count}",
+      "chartTitle": "Shikimet e profilit, 12 muajt e fundit",
+      "showTable": "Shfaq të gjithë numrat",
+      "month": "Muaji"
     }
   },
   "plan": {
@@ -639,7 +702,10 @@
       "checklist": "Detyrat",
       "schedule": "Orari",
       "vendors": "Shërbimet",
-      "settings": "Cilësimet"
+      "settings": "Cilësimet",
+      "favourites": "Të preferuarat",
+      "inquiries": "Kërkesat",
+      "unread": "të palexuara"
     },
     "header": {
       "daysLeft": "{count, plural, one {edhe # ditë} other {edhe # ditë}}",
@@ -664,7 +730,7 @@
       "city": "Qyteti",
       "noCity": "Ende pa vendosur",
       "estimatedGuests": "Rreth sa të ftuar?",
-      "estimatedHint": "Mjafton një numër i përafërt. E përdorim për shpenzimet derisa lista e të ftuarve të jetë gati.",
+      "estimatedHint": "Mjafton një numër i përafërt. Shpenzimet për person përdorin këtë ose listën e të ftuarve, cilido që është më i madh.",
       "budgetTotal": "Buxheti i përgjithshëm (opsionale)",
       "currency": "Shfaqe buxhetin në",
       "submit": "Krijo planin tonë"
@@ -858,7 +924,7 @@
       "payer": "Kush paguan",
       "notes": "Shënime",
       "perPerson": "{people} persona × {price}",
-      "usingEstimate": "Përdoret vlerësimi derisa të shtohen të ftuarit",
+      "usingEstimate": "Llogaritur me vlerësimin (më i madh se lista e të ftuarve)",
       "payments": "Pagesat",
       "addPayment": "Shto pagesë",
       "paymentKinds": {
@@ -943,7 +1009,15 @@
       "empty": "Ende pa shërbime. Shtoni ata me të cilët keni folur ose përdorni „Shto në dasmën time“ në faqen e biznesit.",
       "edit": "Ndrysho",
       "delete": "Fshi",
-      "confirmDelete": "Të hiqet „{name}“ nga plani? Rreshtat në buxhet mbeten."
+      "confirmDelete": "Të hiqet „{name}“ nga plani? Rreshtat në buxhet mbeten.",
+      "findTitle": "Gjej shërbime",
+      "find": {
+        "VENUE": "Gjej lokal",
+        "BAND": "Gjej orkestër",
+        "PHOTO_VIDEO": "Gjej fotograf"
+      },
+      "reviewTitle": "Vlerësoni shërbimet tuaja",
+      "reviewText": "Dasma kaloi. Tregojuni çifteve të tjera si shkoi."
     },
     "settings": {
       "title": "Cilësimet",
@@ -1006,5 +1080,288 @@
     "thanks": "Faleminderit! Përgjigja u dërgua.",
     "change": "Ndrysho përgjigjen",
     "invalid": "Kjo lidhje nuk është e vlefshme. Kërkojini çiftit një të re."
+  },
+  "search": {
+    "favorite": {
+      "add": "Ruaj te të preferuarat",
+      "remove": "Hiq nga të preferuarat",
+      "saved": "U ruajt te të preferuarat"
+    },
+    "compare": {
+      "tick": "Krahaso",
+      "full": "Mund të krahasoni deri në 4 njëherësh.",
+      "selected": "{count, plural, one {# i zgjedhur} other {# të zgjedhur}}",
+      "readyHint": "Hapni krahasimin kur të jeni gati.",
+      "pickMore": "Zgjidhni të paktën 2 të të njëjtit lloj.",
+      "clear": "Pastro",
+      "open": "Krahaso",
+      "remove": "Hiq",
+      "title": "Krahasimi i shërbimeve",
+      "emptyText": "Shënoni „Krahaso“ te 2 deri në 4 shërbime të të njëjtit lloj, në kërkim ose te të preferuarat.",
+      "browse": "Shfleto shërbimet",
+      "fromFavourites": "Hap të preferuarat",
+      "none": "Asnjë",
+      "rating": "Vlerësimi",
+      "noReviews": "Ende pa vlerësime",
+      "priceFrom": "Paketat nga",
+      "onDate": "Më {date}",
+      "fit": {
+        "free": "I lirë",
+        "tentative": "I mundshëm",
+        "ask": "Pyetni",
+        "booked": "I zënë"
+      },
+      "capacity": "Kapaciteti",
+      "halls": "{count, plural, one {# sallë} other {# salla}}",
+      "menus": "Menytë",
+      "yes": "Po",
+      "packages": "Paketat",
+      "phone": "Telefoni",
+      "pricePerPerson": "Çmimi për person"
+    },
+    "filters": {
+      "toggle": "Filtrat",
+      "city": "Qyteti",
+      "anyCity": "E gjithë Maqedonia e Veriut",
+      "date": "Data e dasmës",
+      "dateHint": "Shërbimet e zëna atë ditë nuk shfaqen.",
+      "guests": "Të ftuar",
+      "pricePerPerson": "Çmimi për person deri në",
+      "pricePackage": "Çmimi i paketës deri në",
+      "priceAny": "Çfarëdo",
+      "currency": "Valuta",
+      "features": "Veçoritë e lokalit",
+      "genres": "Muzika",
+      "apply": "Shfaq rezultatet",
+      "clear": "Pastro filtrat"
+    },
+    "sortLabel": "Rendit",
+    "sort": {
+      "best": "Më të përshtatshmit",
+      "price": "Çmimi: nga më i ulëti",
+      "rating": "Më të vlerësuarit",
+      "newest": "Më të rinjtë"
+    },
+    "fit": {
+      "free": "I lirë më {date}",
+      "tentative": "I mundshëm më {date}",
+      "ask": "Pyetni për {date}"
+    },
+    "ratingTitle": "{count, plural, one {# vlerësim} other {# vlerësime}}",
+    "upTo": "deri në {count}",
+    "from": "nga",
+    "perPerson": "person",
+    "askPrice": "Pyetni për çmimet",
+    "title": {
+      "VENUE": "Lokale për dasma",
+      "BAND": "Orkestra dhe muzikantë",
+      "PHOTO_VIDEO": "Foto dhe video"
+    },
+    "lead": {
+      "VENUE": "Restorante dhe salla me meny për person, kapacitet dhe data të lira.",
+      "BAND": "Orkestra dhe muzikantë me paketa, zhanre dhe shpenzime udhëtimi.",
+      "PHOTO_VIDEO": "Fotografë dhe videografë me paketa dhe portofole."
+    },
+    "titleIn": "{what} në {city}",
+    "tabs": {
+      "VENUE": "Lokale",
+      "BAND": "Muzikë",
+      "PHOTO_VIDEO": "Foto dhe video"
+    },
+    "categoriesLabel": "Lloji i shërbimit",
+    "count": "{count, plural, one {# shërbim} other {# shërbime}}",
+    "onDate": "më {date}",
+    "viewLabel": "Pamja",
+    "view": {
+      "list": "Lista",
+      "map": "Harta"
+    },
+    "empty": {
+      "title": "Asnjë shërbim për këta filtra",
+      "text": "Provoni një qytet tjetër ose hiqni një filtër.",
+      "withDate": "Të gjithë që përputhen janë të zënë atë ditë, ose nuk ka përputhje. Provoni një datë afër ose hiqni një filtër."
+    },
+    "mapLabel": "Harta e rezultateve",
+    "mapMissing": "{count, plural, one {# shërbim nuk ka ende shenjë në hartë.} other {# shërbime nuk kanë ende shenjë në hartë.}}",
+    "askNote": "Shërbimet me „Pyetni“ nuk e kanë plotësuar kalendarin për atë ditë. Dërgojuni një kërkesë për ta kontrolluar.",
+    "pagesLabel": "Faqet",
+    "browse": "Shfleto shërbimet"
+  },
+  "reviews": {
+    "title": "Vlerësimet",
+    "average": "Vlerësuar {rating} nga 5",
+    "count": "{count, plural, one {# vlerësim} other {# vlerësime}}",
+    "verifiedNote": "Vlerësojnë vetëm çiftet që e rezervuan këtë shërbim përmes Svadba, pas dasmës.",
+    "none": "Ende pa vlerësime.",
+    "rated": "{rating} nga 5",
+    "weddingOn": "dasma më {date}",
+    "replyFrom": "Përgjigje nga {business}",
+    "hiddenByAdmin": "Fshehur nga administratori",
+    "form": {
+      "yours": "E keni vlerësuar këtë shërbim. Mund ta ndryshoni vlerësimin.",
+      "invite": "Si shkoi? Vlerësimi juaj i ndihmon çiftet e tjera.",
+      "edit": "Ndrysho vlerësimin",
+      "write": "Shkruaj vlerësim",
+      "saved": "Vlerësimi juaj u publikua.",
+      "rating": "Vlerësimi juaj",
+      "stars": "{count, plural, one {# yll} other {# yje}}",
+      "text": "Mendimi juaj",
+      "textHint": "Çfarë shkoi mirë, çfarë mund të ishte më mirë.",
+      "publish": "Publiko vlerësimin",
+      "cancel": "Anulo",
+      "deleteConfirm": "Të fshihet vlerësimi juaj?",
+      "delete": "Fshi vlerësimin"
+    },
+    "vendor": {
+      "lead": "Vlerësimet publikohen menjëherë. Përgjigjuni publikisht, ose raportoni te administratori një vlerësim që shkel rregullat.",
+      "empty": "Ende pa vlerësime. Çiftet mund t'ju vlerësojnë pas dasmës.",
+      "editReply": "Ndrysho përgjigjen",
+      "reply": "Përgjigju",
+      "reported": "U raportua te administratori",
+      "report": "Raporto",
+      "replySaved": "Përgjigja u publikua.",
+      "publishReply": "Publiko përgjigjen",
+      "reportReason": "Çfarë nuk shkon me këtë vlerësim?",
+      "sendReport": "Dërgo raportin"
+    }
+  },
+  "inquiries": {
+    "title": "Kërkesat",
+    "coupleLead": "Bisedat tuaja me shërbimet. Ofertat mund të shkojnë drejt e në buxhet.",
+    "findVendors": "Gjej shërbime",
+    "coupleEmpty": "Ende pa kërkesa. Hapni faqen e një shërbimi dhe dërgoni kërkesë për datën tuaj.",
+    "unread": "e palexuar",
+    "allInquiries": "Të gjitha kërkesat",
+    "details": {
+      "event": "Ngjarja",
+      "date": "Data",
+      "noDate": "Pa datë ende",
+      "guests": "Të ftuar",
+      "hall": "Salla",
+      "package": "Të interesuar për"
+    },
+    "bookedCouple": "U rezervua. Shërbimi është në planin tuaj dhe oferta në buxhet.",
+    "openVendors": "Hap shërbimet",
+    "declinedCouple": "Shërbimi e refuzoi këtë kërkesë.",
+    "cancelledCouple": "E tërhoqët këtë kërkesë.",
+    "vendorLead": "Pyetje nga çiftet për data dhe çmime. Përgjigjuni, dërgoni ofertë ose shënojeni të rezervuar.",
+    "filter": {
+      "open": "Të hapura",
+      "all": "Të gjitha"
+    },
+    "vendorEmpty": "Asnjë kërkesë e hapur.",
+    "vendorEmptyAll": "Ende pa kërkesa. Çiftet ju gjejnë përmes kërkimit.",
+    "guestsShort": "{count, plural, one {# i ftuar} other {# të ftuar}}",
+    "bookedVendor": "U rezervua. Dita është bllokuar në kalendarin tuaj.",
+    "cancelledVendor": "Çifti e tërhoqi këtë kërkesë.",
+    "status": {
+      "NEW": "E re",
+      "SENT": "Dërguar",
+      "REPLIED": "Përgjigjur",
+      "OFFER_SENT": "Ofertë e dërguar",
+      "BOOKED": "Rezervuar",
+      "DECLINED": "Refuzuar",
+      "CANCELLED": "Tërhequr"
+    },
+    "form": {
+      "title": "Dërgo kërkesë",
+      "heading": "Kërkesë për {business}",
+      "lead": "Plotësuam atë që dimë nga plani juaj. Ndryshoni çfarë nuk përshtatet.",
+      "openExisting": "Hape",
+      "event": "Ngjarja",
+      "noEvent": "Pa ngjarje të caktuar",
+      "date": "Data",
+      "dateHint": "Lëreni bosh nëse nuk keni zgjedhur ende.",
+      "guests": "Të ftuar",
+      "hall": "Salla",
+      "anyHall": "Çfarëdo salle",
+      "package": "Meny ose paketë",
+      "noPackage": "Ende nuk e dimë",
+      "message": "Mesazhi",
+      "messageHint": "Shërbimi sheh emrat tuaj, datën dhe numrin e të ftuarve.",
+      "messagePlaceholder": "Përshëndetje! Po planifikojmë dasmën dhe do të donim të dinim…",
+      "sending": "Po dërgohet…",
+      "send": "Dërgo kërkesë"
+    },
+    "thread": {
+      "reply": "Përgjigje",
+      "replyPlaceholder": "Shkruani një mesazh…",
+      "send": "Dërgo",
+      "cancelConfirm": "Të tërhiqet kjo kërkesë? Shërbimi do të njoftohet.",
+      "cancel": "Tërhiq kërkesën"
+    },
+    "offer": {
+      "title": "Oferta",
+      "status": {
+        "OPEN": "Pret përgjigje",
+        "ACCEPTED": "Pranuar",
+        "DECLINED": "Refuzuar",
+        "REPLACED": "Zëvendësuar"
+      },
+      "units": {
+        "TOTAL": "gjithsej",
+        "PER_PERSON": "për person"
+      },
+      "approx": "≈ {price}",
+      "total": "≈ {total} për {guests} të ftuar",
+      "expired": "skadoi më {date}",
+      "validUntil": "vlen deri më {date}",
+      "addToBudget": "Shto në buxhetin tim",
+      "accept": "Prano ofertën",
+      "decline": "Refuzo"
+    },
+    "vendor": {
+      "tools": {
+        "offer": "Dërgo ofertë",
+        "book": "Shëno të rezervuar",
+        "decline": "Refuzo"
+      },
+      "price": "Çmimi",
+      "currency": "Valuta",
+      "unit": "Çmimi është",
+      "units": {
+        "TOTAL": "Gjithsej",
+        "PER_PERSON": "Për person"
+      },
+      "validUntil": "Vlen deri më",
+      "validHint": "Opsionale.",
+      "note": "Shënim",
+      "noteHint": "Çfarë përfshihet, kapari, kushtet.",
+      "sendOffer": "Dërgo ofertën",
+      "bookText": "Kjo e bllokon ditën në kalendarin tuaj dhe ju shton në planin e çiftit si të rezervuar.",
+      "bookDate": "Data",
+      "bookHall": "Salla",
+      "confirmBook": "Konfirmo rezervimin",
+      "declineMessage": "Mesazh për çiftin",
+      "declineHint": "Opsionale, p.sh. që data është e zënë.",
+      "confirmDecline": "Refuzo kërkesën",
+      "alreadyBooked": "Në kalendarin tuaj kjo ditë është tashmë e zënë: {halls}."
+    }
+  },
+  "favourites": {
+    "title": "Të preferuarat",
+    "lead": "Shërbimet që keni ruajtur. Të gjithë në dasmën tuaj e shohin këtë listë. Shënoni 2–4 të të njëjtit lloj për t'i krahasuar.",
+    "empty": "Asgjë e ruajtur ende. Prekni zemrën te çdo shërbim për ta mbajtur këtu."
+  },
+  "notifications": {
+    "title": "Njoftimet",
+    "empty": "Ende asgjë këtu.",
+    "markAll": "Shëno të gjitha si të lexuara",
+    "unread": "e palexuar",
+    "emailToggle": "Më dërgo email për kërkesa, oferta dhe vlerësime",
+    "emailHint": "Zilja në aplikacion i shfaq gjithmonë.",
+    "types": {
+      "INQUIRY_NEW": "Kërkesë e re nga {couple}",
+      "INQUIRY_MESSAGE": "Mesazh i ri nga {from}",
+      "INQUIRY_CANCELLED": "{couple} e tërhoqën kërkesën",
+      "OFFER_NEW": "{business} ju dërgoi një ofertë",
+      "OFFER_ACCEPTED": "{couple} e pranuan ofertën tuaj",
+      "OFFER_DECLINED": "{couple} e refuzuan ofertën tuaj",
+      "BOOKED": "{business} e konfirmoi rezervimin tuaj",
+      "DECLINED": "{business} e refuzoi kërkesën tuaj",
+      "REVIEW_NEW": "{couple} vlerësuan {business}: {rating}/5",
+      "REVIEW_REPLY": "{business} iu përgjigj vlerësimit tuaj",
+      "REVIEW_REPORTED": "{business} raportoi një vlerësim nga {couple}"
+    }
   }
 }

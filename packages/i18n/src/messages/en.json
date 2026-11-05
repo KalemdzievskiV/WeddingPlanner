@@ -50,7 +50,8 @@
       "d5": "Fri",
       "d6": "Sat",
       "d7": "Sun"
-    }
+    },
+    "choose": "Choose…"
   },
   "meta": {
     "title": "Svadba — wedding planning in North Macedonia",
@@ -58,7 +59,10 @@
   },
   "nav": {
     "forCouples": "For couples",
-    "forVendors": "For vendors"
+    "forVendors": "For vendors",
+    "vendors": "Vendors",
+    "notifications": "Notifications",
+    "notificationsUnread": "{count, plural, one {Notifications, # unread} other {Notifications, # unread}}"
   },
   "home": {
     "eyebrow": "Wedding planning in North Macedonia",
@@ -111,6 +115,13 @@
     "footer": {
       "rights": "© {year} Svadba",
       "made": "Made in Macedonia, for Macedonian weddings."
+    },
+    "search": {
+      "title": "Find your vendors",
+      "what": "What",
+      "where": "Where",
+      "when": "Wedding date",
+      "submit": "Search"
     }
   },
   "auth": {
@@ -202,7 +213,8 @@
       "features": "Venue features",
       "backToSite": "Back to site",
       "businesses": "Businesses",
-      "genres": "Music genres"
+      "genres": "Music genres",
+      "reviews": "Reviews"
     },
     "overview": {
       "title": "Overview",
@@ -213,7 +225,13 @@
       "cities": "Active cities",
       "features": "Venue features",
       "pending": "Waiting for review",
-      "live": "Live businesses"
+      "live": "Live businesses",
+      "weddings": "Weddings",
+      "inquiries": "Inquiries",
+      "booked": "Booked through inquiries",
+      "reviews": "Reviews",
+      "reported": "Reported reviews",
+      "views": "Profile views (all time)"
     },
     "users": {
       "title": "Users",
@@ -292,6 +310,21 @@
       "rejected": "Sent back. The owner got an email.",
       "newTitle": "Create a listing",
       "newLead": "For vendors who want help getting started. You fill in the profile, then the owner takes it over with a claim link."
+    },
+    "reviews": {
+      "title": "Reviews",
+      "filter": {
+        "reported": "Reported",
+        "all": "All"
+      },
+      "emptyReported": "No reported reviews.",
+      "empty": "No reviews yet.",
+      "hidden": "Hidden",
+      "reported": "Reported",
+      "reason": "Reason",
+      "hide": "Hide",
+      "show": "Show again",
+      "dismiss": "Dismiss report"
     }
   },
   "errors": {
@@ -329,7 +362,14 @@
     "date": "Enter a valid date.",
     "time": "Enter a time like 18:30.",
     "guestRequired": "Add at least one person.",
-    "tooMany": "That's too many at once."
+    "tooMany": "That's too many at once.",
+    "messageShort": "Write at least a short message (10 characters).",
+    "rating": "Choose 1 to 5 stars.",
+    "reviewShort": "Write at least 20 characters so other couples learn something.",
+    "inquiryOpen": "You already have an open inquiry with this vendor for this event.",
+    "inquiryClosed": "This conversation is closed.",
+    "offerClosed": "This offer was already answered or replaced.",
+    "reviewNotAllowed": "You can review a vendor after your wedding, if they were booked in your plan."
   },
   "email": {
     "greeting": "Hi {name},",
@@ -345,7 +385,9 @@
     "approvedButton": "Open your page",
     "rejectedSubject": "Your profile needs changes",
     "rejectedText": "We reviewed “{business}”. What needs to change: {reason}",
-    "rejectedButton": "Edit your profile"
+    "rejectedButton": "Edit your profile",
+    "notificationButton": "Open in Svadba",
+    "notificationFooter": "You get these emails for inquiries, offers and reviews. Turn them off in your account settings."
   },
   "notFound": {
     "title": "Page not found",
@@ -361,7 +403,10 @@
       "pricesVenue": "Halls & menus",
       "travel": "Travel fees",
       "calendar": "Calendar",
-      "team": "Team"
+      "team": "Team",
+      "inquiries": "Inquiries",
+      "reviews": "Reviews",
+      "unread": "unread"
     },
     "categories": {
       "VENUE": "Restaurant or hall",
@@ -627,7 +672,25 @@
       "location": "Location",
       "openInMaps": "Open in Google Maps",
       "features": "Venue features",
-      "noDescription": "No description yet."
+      "noDescription": "No description yet.",
+      "inquiryTitle": "Ask about your date",
+      "inquiryOpen": "You have an open conversation with this vendor.",
+      "inquiryText": "Send your date and guest count. The vendor answers here and by email.",
+      "inquiryContinue": "Open conversation",
+      "inquiryButton": "Send inquiry"
+    },
+    "stats": {
+      "title": "Statistics",
+      "lead": "Profile views count once per visitor per day. Your own team isn't counted.",
+      "metrics": {
+        "views": "Profile views",
+        "inquiries": "Inquiries",
+        "favorites": "Saved to favourites"
+      },
+      "vsLast": "Last month: {count}",
+      "chartTitle": "Profile views, last 12 months",
+      "showTable": "Show all numbers",
+      "month": "Month"
     }
   },
   "plan": {
@@ -639,7 +702,10 @@
       "checklist": "Checklist",
       "schedule": "Schedule",
       "vendors": "Vendors",
-      "settings": "Settings"
+      "settings": "Settings",
+      "favourites": "Favourites",
+      "inquiries": "Inquiries",
+      "unread": "unread"
     },
     "header": {
       "daysLeft": "{count, plural, one {# day to go} other {# days to go}}",
@@ -664,7 +730,7 @@
       "city": "City",
       "noCity": "Not decided yet",
       "estimatedGuests": "About how many guests?",
-      "estimatedHint": "A rough number is fine. We use it for costs until your guest list is ready.",
+      "estimatedHint": "A rough number is fine. Per-person costs use this or the guest list, whichever is higher.",
       "budgetTotal": "Total budget (optional)",
       "currency": "Show the budget in",
       "submit": "Create our plan"
@@ -858,7 +924,7 @@
       "payer": "Who pays",
       "notes": "Notes",
       "perPerson": "{people} people × {price}",
-      "usingEstimate": "Using your estimate until guests are added",
+      "usingEstimate": "Counted with your estimate (higher than the guest list)",
       "payments": "Payments",
       "addPayment": "Add payment",
       "paymentKinds": {
@@ -943,7 +1009,15 @@
       "empty": "No vendors yet. Add the ones you've talked to, or use “Add to my wedding” on a vendor's page.",
       "edit": "Edit",
       "delete": "Delete",
-      "confirmDelete": "Remove “{name}” from your plan? Budget lines stay."
+      "confirmDelete": "Remove “{name}” from your plan? Budget lines stay.",
+      "findTitle": "Find vendors",
+      "find": {
+        "VENUE": "Find a venue",
+        "BAND": "Find a band",
+        "PHOTO_VIDEO": "Find a photographer"
+      },
+      "reviewTitle": "Review your vendors",
+      "reviewText": "Your wedding is done. Tell other couples how it went."
     },
     "settings": {
       "title": "Settings",
@@ -1006,5 +1080,288 @@
     "thanks": "Thank you! Your answer was sent.",
     "change": "Change answer",
     "invalid": "This link isn't valid. Ask the couple for a new one."
+  },
+  "search": {
+    "favorite": {
+      "add": "Save to favourites",
+      "remove": "Remove from favourites",
+      "saved": "Saved to favourites"
+    },
+    "compare": {
+      "tick": "Compare",
+      "full": "You can compare up to 4 at a time.",
+      "selected": "{count, plural, one {# selected} other {# selected}}",
+      "readyHint": "Open the comparison when you're ready.",
+      "pickMore": "Pick at least 2 of the same kind.",
+      "clear": "Clear",
+      "open": "Compare",
+      "remove": "Remove",
+      "title": "Compare vendors",
+      "emptyText": "Tick “Compare” on 2 to 4 vendors of the same kind, in search or in your favourites.",
+      "browse": "Browse vendors",
+      "fromFavourites": "Open favourites",
+      "none": "None",
+      "rating": "Rating",
+      "noReviews": "No reviews yet",
+      "priceFrom": "Packages from",
+      "onDate": "On {date}",
+      "fit": {
+        "free": "Free",
+        "tentative": "Tentative",
+        "ask": "Ask",
+        "booked": "Booked"
+      },
+      "capacity": "Capacity",
+      "halls": "{count, plural, one {# hall} other {# halls}}",
+      "menus": "Menus",
+      "yes": "Yes",
+      "packages": "Packages",
+      "phone": "Phone",
+      "pricePerPerson": "Price per person"
+    },
+    "filters": {
+      "toggle": "Filters",
+      "city": "City",
+      "anyCity": "All of North Macedonia",
+      "date": "Wedding date",
+      "dateHint": "Vendors already booked that day are hidden.",
+      "guests": "Guests",
+      "pricePerPerson": "Price per person up to",
+      "pricePackage": "Package price up to",
+      "priceAny": "Any",
+      "currency": "Currency",
+      "features": "Venue features",
+      "genres": "Music",
+      "apply": "Show results",
+      "clear": "Clear filters"
+    },
+    "sortLabel": "Sort",
+    "sort": {
+      "best": "Best match",
+      "price": "Price: low to high",
+      "rating": "Highest rated",
+      "newest": "Newest"
+    },
+    "fit": {
+      "free": "Free on {date}",
+      "tentative": "Tentative on {date}",
+      "ask": "Ask about {date}"
+    },
+    "ratingTitle": "{count, plural, one {# review} other {# reviews}}",
+    "upTo": "up to {count}",
+    "from": "from",
+    "perPerson": "person",
+    "askPrice": "Ask for prices",
+    "title": {
+      "VENUE": "Wedding venues",
+      "BAND": "Wedding bands",
+      "PHOTO_VIDEO": "Photo & video"
+    },
+    "lead": {
+      "VENUE": "Restaurants and halls with menus per person, capacity and free dates.",
+      "BAND": "Bands and musicians with packages, genres and travel fees.",
+      "PHOTO_VIDEO": "Photographers and videographers with packages and portfolios."
+    },
+    "titleIn": "{what} in {city}",
+    "tabs": {
+      "VENUE": "Venues",
+      "BAND": "Music",
+      "PHOTO_VIDEO": "Photo & video"
+    },
+    "categoriesLabel": "Vendor type",
+    "count": "{count, plural, one {# vendor} other {# vendors}}",
+    "onDate": "on {date}",
+    "viewLabel": "View",
+    "view": {
+      "list": "List",
+      "map": "Map"
+    },
+    "empty": {
+      "title": "No vendors match",
+      "text": "Try another city or remove a filter.",
+      "withDate": "Everyone matching is booked that day, or nothing matches. Try a nearby date or remove a filter."
+    },
+    "mapLabel": "Map of results",
+    "mapMissing": "{count, plural, one {# vendor has no pin on the map yet.} other {# vendors have no pin on the map yet.}}",
+    "askNote": "Vendors marked “Ask” haven't filled in their calendar for that day. Send them an inquiry to check.",
+    "pagesLabel": "Pages",
+    "browse": "Browse vendors"
+  },
+  "reviews": {
+    "title": "Reviews",
+    "average": "Rated {rating} out of 5",
+    "count": "{count, plural, one {# review} other {# reviews}}",
+    "verifiedNote": "Only couples who booked this vendor through Svadba can review, after their wedding.",
+    "none": "No reviews yet.",
+    "rated": "{rating} out of 5",
+    "weddingOn": "wedding on {date}",
+    "replyFrom": "Reply from {business}",
+    "hiddenByAdmin": "Hidden by admin",
+    "form": {
+      "yours": "You reviewed this vendor. You can change your review.",
+      "invite": "How was it? Your review helps other couples.",
+      "edit": "Edit review",
+      "write": "Write a review",
+      "saved": "Your review is published.",
+      "rating": "Your rating",
+      "stars": "{count, plural, one {# star} other {# stars}}",
+      "text": "Your review",
+      "textHint": "What went well, what could be better.",
+      "publish": "Publish review",
+      "cancel": "Cancel",
+      "deleteConfirm": "Delete your review?",
+      "delete": "Delete review"
+    },
+    "vendor": {
+      "lead": "Reviews are published at once. Reply publicly, or report a review to the admin if it breaks the rules.",
+      "empty": "No reviews yet. Couples can review you after their wedding.",
+      "editReply": "Edit reply",
+      "reply": "Reply",
+      "reported": "Reported to admin",
+      "report": "Report",
+      "replySaved": "Reply published.",
+      "publishReply": "Publish reply",
+      "reportReason": "What's wrong with this review?",
+      "sendReport": "Send report"
+    }
+  },
+  "inquiries": {
+    "title": "Inquiries",
+    "coupleLead": "Your conversations with vendors. Offers can go straight into your budget.",
+    "findVendors": "Find vendors",
+    "coupleEmpty": "No inquiries yet. Open a vendor's page and send an inquiry about your date.",
+    "unread": "unread",
+    "allInquiries": "All inquiries",
+    "details": {
+      "event": "Event",
+      "date": "Date",
+      "noDate": "No date yet",
+      "guests": "Guests",
+      "hall": "Hall",
+      "package": "Interested in"
+    },
+    "bookedCouple": "Booked. The vendor is in your plan and the offer is in your budget.",
+    "openVendors": "Open vendors",
+    "declinedCouple": "The vendor declined this inquiry.",
+    "cancelledCouple": "You withdrew this inquiry.",
+    "vendorLead": "Couples' questions about dates and prices. Reply, send an offer, or mark as booked.",
+    "filter": {
+      "open": "Open",
+      "all": "All"
+    },
+    "vendorEmpty": "No open inquiries.",
+    "vendorEmptyAll": "No inquiries yet. Couples find you through search.",
+    "guestsShort": "{count, plural, one {# guest} other {# guests}}",
+    "bookedVendor": "Booked. The day is blocked in your calendar.",
+    "cancelledVendor": "The couple withdrew this inquiry.",
+    "status": {
+      "NEW": "New",
+      "SENT": "Sent",
+      "REPLIED": "Replied",
+      "OFFER_SENT": "Offer sent",
+      "BOOKED": "Booked",
+      "DECLINED": "Declined",
+      "CANCELLED": "Withdrawn"
+    },
+    "form": {
+      "title": "Send inquiry",
+      "heading": "Inquiry to {business}",
+      "lead": "We filled in what we know from your plan. Change anything that doesn't fit.",
+      "openExisting": "Open it",
+      "event": "Event",
+      "noEvent": "No specific event",
+      "date": "Date",
+      "dateHint": "Leave empty if you haven't picked one.",
+      "guests": "Guests",
+      "hall": "Hall",
+      "anyHall": "Any hall",
+      "package": "Menu or package",
+      "noPackage": "Not sure yet",
+      "message": "Message",
+      "messageHint": "The vendor sees your names, date and guest count.",
+      "messagePlaceholder": "Hi! We're planning our wedding and would like to know…",
+      "sending": "Sending…",
+      "send": "Send inquiry"
+    },
+    "thread": {
+      "reply": "Reply",
+      "replyPlaceholder": "Write a message…",
+      "send": "Send",
+      "cancelConfirm": "Withdraw this inquiry? The vendor will be told.",
+      "cancel": "Withdraw inquiry"
+    },
+    "offer": {
+      "title": "Offer",
+      "status": {
+        "OPEN": "Waiting for answer",
+        "ACCEPTED": "Accepted",
+        "DECLINED": "Declined",
+        "REPLACED": "Replaced"
+      },
+      "units": {
+        "TOTAL": "total",
+        "PER_PERSON": "per person"
+      },
+      "approx": "≈ {price}",
+      "total": "≈ {total} for {guests} guests",
+      "expired": "expired {date}",
+      "validUntil": "valid until {date}",
+      "addToBudget": "Add to my budget",
+      "accept": "Accept offer",
+      "decline": "Decline"
+    },
+    "vendor": {
+      "tools": {
+        "offer": "Send offer",
+        "book": "Mark as booked",
+        "decline": "Decline"
+      },
+      "price": "Price",
+      "currency": "Currency",
+      "unit": "Price is",
+      "units": {
+        "TOTAL": "Total",
+        "PER_PERSON": "Per person"
+      },
+      "validUntil": "Valid until",
+      "validHint": "Optional.",
+      "note": "Note",
+      "noteHint": "What's included, deposit, conditions.",
+      "sendOffer": "Send offer",
+      "bookText": "This blocks the day in your calendar and adds you to the couple's plan as booked.",
+      "bookDate": "Date",
+      "bookHall": "Hall",
+      "confirmBook": "Confirm booking",
+      "declineMessage": "Message to the couple",
+      "declineHint": "Optional, e.g. that the date is taken.",
+      "confirmDecline": "Decline inquiry",
+      "alreadyBooked": "Your calendar already shows this day as booked: {halls}."
+    }
+  },
+  "favourites": {
+    "title": "Favourites",
+    "lead": "Vendors you saved. Everyone on your wedding sees this list. Tick 2–4 of the same kind to compare them.",
+    "empty": "Nothing saved yet. Tap the heart on any vendor to keep it here."
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "Nothing here yet.",
+    "markAll": "Mark all as read",
+    "unread": "unread",
+    "emailToggle": "Email me about inquiries, offers and reviews",
+    "emailHint": "The bell in the app always shows them.",
+    "types": {
+      "INQUIRY_NEW": "New inquiry from {couple}",
+      "INQUIRY_MESSAGE": "New message from {from}",
+      "INQUIRY_CANCELLED": "{couple} withdrew their inquiry",
+      "OFFER_NEW": "{business} sent you an offer",
+      "OFFER_ACCEPTED": "{couple} accepted your offer",
+      "OFFER_DECLINED": "{couple} declined your offer",
+      "BOOKED": "{business} confirmed your booking",
+      "DECLINED": "{business} declined your inquiry",
+      "REVIEW_NEW": "{couple} reviewed {business}: {rating}/5",
+      "REVIEW_REPLY": "{business} replied to your review",
+      "REVIEW_REPORTED": "{business} reported a review by {couple}"
+    }
   }
 }
