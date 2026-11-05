@@ -1,0 +1,252 @@
+{
+  "common": {
+    "appName": "Svadba",
+    "languages": { "mk": "Македонски", "sq": "Shqip", "en": "English" },
+    "language": "Gjuha",
+    "signIn": "Hyr",
+    "signOut": "Dil",
+    "getStarted": "Fillo",
+    "dashboard": "Paneli im",
+    "account": "Llogaria",
+    "admin": "Admin",
+    "save": "Ruaj",
+    "saving": "Duke ruajtur…",
+    "delete": "Fshi",
+    "cancel": "Anulo",
+    "yes": "Po",
+    "no": "Jo",
+    "menu": "Menyja",
+    "skipToContent": "Kalo te përmbajtja",
+    "roles": { "COUPLE": "Çift", "VENDOR": "Biznes", "ADMIN": "Admin" }
+  },
+  "meta": {
+    "title": "Svadba — planifikimi i dasmës në Maqedoninë e Veriut",
+    "description": "Planifikoni të ftuarit, buxhetin dhe detyrat në një vend dhe gjeni restorante, orkestra dhe studio fotografike me data të lira dhe çmime të vërteta."
+  },
+  "nav": {
+    "forCouples": "Për çiftet",
+    "forVendors": "Për bizneset"
+  },
+  "home": {
+    "eyebrow": "Planifikimi i dasmës në Maqedoninë e Veriut",
+    "title": "E gjithë dasma, e planifikuar në një vend.",
+    "lead": "Të ftuarit sipas familjes dhe palës, buxheti që tregon kush paguan çfarë, dhe restorante me datat e lira dhe çmimet e menysë për person.",
+    "ctaCouple": "Fillo falas",
+    "ctaVendor": "Shto biznesin tënd",
+    "preview": {
+      "label": "Dasma juaj",
+      "date": "E shtunë, 12 qershor 2027",
+      "countdown": "edhe {days} ditë",
+      "guests": "Të ftuarit",
+      "brideSide": "Pala e nuses",
+      "groomSide": "Pala e dhëndrit",
+      "budget": "Buxheti",
+      "spentOf": "{spent} nga {total}",
+      "freeOnDate": "Të lira në datën tuaj",
+      "perPerson": "{price} / person",
+      "upTo": "deri në {count} të ftuar",
+      "venueA": "Restoranti Lipa, Shkup",
+      "venueB": "Salla Biser, Ohër",
+      "calendar": "Qershor 2027",
+      "free": "E lirë",
+      "tentative": "E mbajtur",
+      "booked": "E zënë"
+    },
+    "couples": {
+      "title": "Për çiftin",
+      "lead": "Gjithçka që përndryshe do ta mbanit në fletore, grupe Viber dhe tabela.",
+      "guestsTitle": "Të ftuarit sipas familjes",
+      "guestsText": "Gruponi të ftuarit sipas familjes, shënoni palën e nuses ose të dhëndrit dhe moshën, dhe shihni numrin për çdo ngjarje.",
+      "budgetTitle": "Buxheti sipas kush paguan",
+      "budgetText": "Ndiqni kaparin, këstet dhe afatet, dhe kush paguan: ju, familjet apo kumbari.",
+      "checklistTitle": "Detyra sipas zakoneve tona",
+      "checklistText": "Nga rezervimi i restorantit një vit përpara deri te numri përfundimtar i të ftuarve, muaj pas muaji.",
+      "seatingTitle": "Plani i uljes",
+      "seatingText": "Tavolina të gjata, të rrumbullakëta dhe tavolina e çiftit, të vendosura sipas planit të sallës."
+    },
+    "vendors": {
+      "title": "Për restorante, orkestra dhe studio fotografike",
+      "lead": "Regjistrimi është falas. Tregoni datat e lira dhe çmimet, dhe merrni kërkesa nga çifte që e dinë datën dhe numrin e të ftuarve.",
+      "venueTitle": "Restorante dhe salla",
+      "venueText": "Salla me kapacitet, paketa menyje për person dhe kalendar për çdo sallë.",
+      "bandTitle": "Muzikë dhe orkestra",
+      "bandText": "Përbërja, paketat, çmimi për orë shtesë dhe shpenzimet e udhëtimit sipas qytetit.",
+      "photoTitle": "Foto dhe video",
+      "photoText": "Paketa, portofol dhe kalendari i datave të lira.",
+      "cta": "Hap llogari falas për biznes"
+    },
+    "footer": {
+      "rights": "© {year} Svadba",
+      "made": "Bërë në Maqedoni, për dasmat tona."
+    }
+  },
+  "auth": {
+    "email": "Email",
+    "password": "Fjalëkalimi",
+    "or": "ose",
+    "google": "Vazhdo me Google",
+    "genericError": "Diçka shkoi keq. Provoni përsëri.",
+    "signIn": {
+      "title": "Hyr",
+      "lead": "Mirë se u kthyet.",
+      "submit": "Hyr",
+      "forgot": "Keni harruar fjalëkalimin?",
+      "noAccount": "Nuk keni llogari?",
+      "signUpLink": "Hapni një",
+      "invalidCredentials": "Email ose fjalëkalim i gabuar.",
+      "notVerified": "Konfirmoni fillimisht email-in. Ju dërguam një lidhje të re konfirmimi."
+    },
+    "signUp": {
+      "title": "Hapni llogarinë",
+      "lead": "Falas për çiftet dhe për bizneset.",
+      "accountType": "Unë",
+      "couple": "Po planifikoj dasmë",
+      "coupleHint": "Të ftuarit, buxheti, detyrat dhe shërbimet",
+      "vendor": "Kam biznes për dasma",
+      "vendorHint": "Restorant, orkestër ose studio fotografike",
+      "name": "Emri dhe mbiemri",
+      "passwordHint": "Të paktën 8 karaktere",
+      "submit": "Hap llogarinë",
+      "haveAccount": "Keni tashmë llogari?",
+      "signInLink": "Hyni",
+      "emailTaken": "Ekziston tashmë një llogari me këtë email."
+    },
+    "checkEmail": {
+      "title": "Kontrolloni email-in",
+      "text": "Dërguam një lidhje konfirmimi te {email}. Hapeni për të aktivizuar llogarinë.",
+      "back": "Kthehu te hyrja"
+    },
+    "forgot": {
+      "title": "Rivendosni fjalëkalimin",
+      "text": "Shkruani email-in dhe do t'ju dërgojmë një lidhje për fjalëkalim të ri.",
+      "submit": "Dërgo lidhjen",
+      "sent": "Nëse ekziston një llogari për {email}, lidhja për rivendosje është rrugës."
+    },
+    "reset": {
+      "title": "Vendosni fjalëkalim të ri",
+      "newPassword": "Fjalëkalimi i ri",
+      "submit": "Ruaj fjalëkalimin e ri",
+      "success": "Fjalëkalimi u ndryshua. Tani mund të hyni.",
+      "invalidToken": "Lidhja ka skaduar ose është përdorur. Kërkoni një të re."
+    },
+    "welcome": {
+      "title": "Si do ta përdorni Svadba?",
+      "lead": "Llojin tjetër mund ta shtoni më vonë.",
+      "submit": "Vazhdo"
+    }
+  },
+  "app": {
+    "greeting": "Përshëndetje, {name}",
+    "inProgress": "Në punim",
+    "coupleTitle": "Planifikuesi i dasmës suaj",
+    "coupleText": "Këtu do të jenë të ftuarit, buxheti, detyrat, plani i uljes dhe shërbimet tuaja. Po e ndërtojmë tani.",
+    "vendorTitle": "Biznesi juaj",
+    "vendorText": "Këtu do të vendosni restorantin, orkestrën ose studion: profilin, fotot, çmimet dhe datat e lira. Po e ndërtojmë tani.",
+    "adminTitle": "Paneli i adminit",
+    "adminText": "Menaxhoni përdoruesit, qytetet, kategoritë dhe karakteristikat e sallave.",
+    "openAdmin": "Hap panelin e adminit"
+  },
+  "account": {
+    "title": "Llogaria",
+    "name": "Emri",
+    "email": "Email",
+    "locale": "Gjuha",
+    "localeHint": "Përdoret në aplikacion dhe në email-et që ju dërgojmë.",
+    "photo": "Foto e profilit",
+    "uploadPhoto": "Ngarko foto",
+    "photoHint": "JPG, PNG ose WebP, deri në 10 MB.",
+    "photoSaved": "Fotoja u përditësua.",
+    "saved": "Ndryshimet u ruajtën."
+  },
+  "admin": {
+    "nav": {
+      "overview": "Përmbledhje",
+      "users": "Përdoruesit",
+      "cities": "Qytetet",
+      "categories": "Kategoritë e bizneseve",
+      "features": "Karakteristikat e sallave",
+      "backToSite": "Kthehu te faqja"
+    },
+    "overview": {
+      "title": "Përmbledhje",
+      "users": "Përdorues",
+      "couples": "Çifte",
+      "vendors": "Biznese",
+      "admins": "Adminë",
+      "cities": "Qytete aktive",
+      "features": "Karakteristika të sallave"
+    },
+    "users": {
+      "title": "Përdoruesit",
+      "search": "Kërko sipas emrit ose email-it",
+      "name": "Emri",
+      "email": "Email",
+      "roles": "Rolet",
+      "verified": "Email i konfirmuar",
+      "joined": "Regjistruar",
+      "makeAdmin": "Bëje admin",
+      "removeAdmin": "Hiqe adminin",
+      "you": "Ju",
+      "noRoles": "Ende pa zgjedhur",
+      "empty": "Asnjë përdorues për „{query}“.",
+      "count": "{count, plural, one {# përdorues} other {# përdorues}}"
+    },
+    "fields": {
+      "slug": "Slug",
+      "slugHint": "Përdoret në lidhje. Shkronja të vogla latine, numra dhe viza.",
+      "nameMk": "Maqedonisht",
+      "nameSq": "Shqip",
+      "nameEn": "Anglisht",
+      "region": "Rajoni",
+      "active": "E dukshme"
+    },
+    "cities": {
+      "title": "Qytetet",
+      "lead": "Qytetet ku kërkojnë çiftet dhe që bizneset i zgjedhin për adresë.",
+      "add": "Shto qytet"
+    },
+    "categories": {
+      "title": "Kategoritë e bizneseve",
+      "lead": "Tri kategoritë e fillimit. Mund t'i riemërtoni ose të fshehni njërën; kategori të reja vijnë në një version të mëvonshëm."
+    },
+    "features": {
+      "title": "Karakteristikat e sallave",
+      "lead": "Shfaqen si filtra në kërkim dhe në profilet e restoranteve.",
+      "add": "Shto karakteristikë"
+    },
+    "saved": "U ruajt.",
+    "created": "U shtua.",
+    "deleted": "U fshi.",
+    "confirmDelete": "Të fshihet „{name}“? Kjo nuk mund të kthehet."
+  },
+  "errors": {
+    "email": "Shkruani një email të vlefshëm.",
+    "passwordMin": "Përdorni të paktën 8 karaktere.",
+    "passwordMax": "Përdorni jo më shumë se 128 karaktere.",
+    "nameMin": "Shkruani të paktën 2 karaktere.",
+    "nameMax": "Përdorni jo më shumë se 80 karaktere.",
+    "required": "Kjo fushë është e detyrueshme.",
+    "slug": "Përdorni shkronja të vogla latine, numra dhe viza.",
+    "slugTaken": "Ky slug përdoret tashmë.",
+    "accountType": "Zgjidhni si do ta përdorni aplikacionin.",
+    "forbidden": "Nuk keni qasje këtu.",
+    "fileType": "Ngarkoni një foto JPG, PNG ose WebP.",
+    "fileSize": "Fotoja është më e madhe se 10 MB.",
+    "generic": "Diçka shkoi keq. Provoni përsëri."
+  },
+  "email": {
+    "greeting": "Përshëndetje {name},",
+    "verifySubject": "Konfirmoni email-in",
+    "verifyText": "Konfirmoni email-in për të aktivizuar llogarinë tuaj në Svadba.",
+    "verifyButton": "Konfirmo email-in",
+    "resetSubject": "Rivendosni fjalëkalimin",
+    "resetText": "Morëm një kërkesë për të rivendosur fjalëkalimin tuaj në Svadba. Lidhja vlen 1 orë.",
+    "resetButton": "Vendos fjalëkalim të ri",
+    "ignore": "Nëse nuk ishit ju, injorojeni këtë email."
+  },
+  "notFound": {
+    "title": "Faqja nuk u gjet",
+    "text": "Lidhja mund të jetë e vjetër ose faqja është zhvendosur.",
+    "home": "Shko në faqen kryesore"
+  }
+}

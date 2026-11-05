@@ -1,0 +1,252 @@
+{
+  "common": {
+    "appName": "Svadba",
+    "languages": { "mk": "Македонски", "sq": "Shqip", "en": "English" },
+    "language": "Language",
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "getStarted": "Get started",
+    "dashboard": "My dashboard",
+    "account": "Account",
+    "admin": "Admin",
+    "save": "Save",
+    "saving": "Saving…",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "yes": "Yes",
+    "no": "No",
+    "menu": "Menu",
+    "skipToContent": "Skip to content",
+    "roles": { "COUPLE": "Couple", "VENDOR": "Vendor", "ADMIN": "Admin" }
+  },
+  "meta": {
+    "title": "Svadba — wedding planning in North Macedonia",
+    "description": "Plan guests, budget and checklist in one place, and find restaurants, bands and photo studios with free dates and real prices."
+  },
+  "nav": {
+    "forCouples": "For couples",
+    "forVendors": "For vendors"
+  },
+  "home": {
+    "eyebrow": "Wedding planning in North Macedonia",
+    "title": "The whole wedding, planned in one place.",
+    "lead": "Guests by family and side, a budget that shows who pays for what, and restaurants with their free dates and menu prices per person.",
+    "ctaCouple": "Start planning, free",
+    "ctaVendor": "List your business",
+    "preview": {
+      "label": "Your wedding",
+      "date": "Saturday, 12 June 2027",
+      "countdown": "{days} days to go",
+      "guests": "Guests",
+      "brideSide": "Bride's side",
+      "groomSide": "Groom's side",
+      "budget": "Budget",
+      "spentOf": "{spent} of {total}",
+      "freeOnDate": "Free on your date",
+      "perPerson": "{price} / person",
+      "upTo": "up to {count} guests",
+      "venueA": "Restaurant Lipa, Skopje",
+      "venueB": "Hall Biser, Ohrid",
+      "calendar": "June 2027",
+      "free": "Free",
+      "tentative": "On hold",
+      "booked": "Booked"
+    },
+    "couples": {
+      "title": "For the couple",
+      "lead": "Everything you'd otherwise keep in notebooks, Viber chats and spreadsheets.",
+      "guestsTitle": "Guests by family",
+      "guestsText": "Group guests by household, mark the bride's or groom's side and age group, and see counts for every event.",
+      "budgetTitle": "Budget per payer",
+      "budgetText": "Track the deposit, installments and due dates, and who pays: you, the families or the кум.",
+      "checklistTitle": "Checklist that knows Macedonian weddings",
+      "checklistText": "From booking the restaurant a year ahead to giving the final guest count, month by month.",
+      "seatingTitle": "Seating plan",
+      "seatingText": "Long tables, round tables and the head table, arranged on the hall's floor plan."
+    },
+    "vendors": {
+      "title": "For restaurants, bands and photo studios",
+      "lead": "Listing is free. Show your free dates and prices, and get inquiries from couples who already know their date and guest count.",
+      "venueTitle": "Restaurants and halls",
+      "venueText": "Halls with capacity, menu packages per person and a calendar for each hall.",
+      "bandTitle": "Music and bands",
+      "bandText": "Lineup, packages, extra-hour price and travel fees by city.",
+      "photoTitle": "Photo and video",
+      "photoText": "Packages, portfolio and your calendar of free dates.",
+      "cta": "Create a free vendor account"
+    },
+    "footer": {
+      "rights": "© {year} Svadba",
+      "made": "Made in Macedonia, for Macedonian weddings."
+    }
+  },
+  "auth": {
+    "email": "Email",
+    "password": "Password",
+    "or": "or",
+    "google": "Continue with Google",
+    "genericError": "Something went wrong. Try again.",
+    "signIn": {
+      "title": "Sign in",
+      "lead": "Welcome back.",
+      "submit": "Sign in",
+      "forgot": "Forgot password?",
+      "noAccount": "No account yet?",
+      "signUpLink": "Create one",
+      "invalidCredentials": "Wrong email or password.",
+      "notVerified": "Confirm your email first. We sent you a new confirmation link."
+    },
+    "signUp": {
+      "title": "Create your account",
+      "lead": "Free for couples and for businesses.",
+      "accountType": "I'm",
+      "couple": "Planning a wedding",
+      "coupleHint": "Guests, budget, checklist and vendors",
+      "vendor": "A wedding business",
+      "vendorHint": "Restaurant, band or photo studio",
+      "name": "Your name",
+      "passwordHint": "At least 8 characters",
+      "submit": "Create account",
+      "haveAccount": "Already have an account?",
+      "signInLink": "Sign in",
+      "emailTaken": "An account with this email already exists."
+    },
+    "checkEmail": {
+      "title": "Check your email",
+      "text": "We sent a confirmation link to {email}. Open it to activate your account.",
+      "back": "Back to sign in"
+    },
+    "forgot": {
+      "title": "Reset your password",
+      "text": "Enter your email and we'll send you a link to set a new password.",
+      "submit": "Send reset link",
+      "sent": "If an account exists for {email}, a reset link is on its way."
+    },
+    "reset": {
+      "title": "Set a new password",
+      "newPassword": "New password",
+      "submit": "Save new password",
+      "success": "Password changed. You can sign in now.",
+      "invalidToken": "This link has expired or was already used. Request a new one."
+    },
+    "welcome": {
+      "title": "How will you use Svadba?",
+      "lead": "You can add the other type later.",
+      "submit": "Continue"
+    }
+  },
+  "app": {
+    "greeting": "Hi, {name}",
+    "inProgress": "In progress",
+    "coupleTitle": "Your wedding planner",
+    "coupleText": "Guests, budget, checklist, seating and your vendors will live here. We're building it now.",
+    "vendorTitle": "Your business",
+    "vendorText": "Here you'll set up your restaurant, band or photo studio: profile, photos, prices and free dates. We're building it now.",
+    "adminTitle": "Admin panel",
+    "adminText": "Manage users, cities, vendor categories and venue features.",
+    "openAdmin": "Open admin panel"
+  },
+  "account": {
+    "title": "Account",
+    "name": "Name",
+    "email": "Email",
+    "locale": "Language",
+    "localeHint": "Used for the app and for emails we send you.",
+    "photo": "Profile photo",
+    "uploadPhoto": "Upload photo",
+    "photoHint": "JPG, PNG or WebP, up to 10 MB.",
+    "photoSaved": "Photo updated.",
+    "saved": "Changes saved."
+  },
+  "admin": {
+    "nav": {
+      "overview": "Overview",
+      "users": "Users",
+      "cities": "Cities",
+      "categories": "Vendor categories",
+      "features": "Venue features",
+      "backToSite": "Back to site"
+    },
+    "overview": {
+      "title": "Overview",
+      "users": "Users",
+      "couples": "Couples",
+      "vendors": "Vendors",
+      "admins": "Admins",
+      "cities": "Active cities",
+      "features": "Venue features"
+    },
+    "users": {
+      "title": "Users",
+      "search": "Search by name or email",
+      "name": "Name",
+      "email": "Email",
+      "roles": "Roles",
+      "verified": "Email confirmed",
+      "joined": "Joined",
+      "makeAdmin": "Make admin",
+      "removeAdmin": "Remove admin",
+      "you": "You",
+      "noRoles": "Not chosen yet",
+      "empty": "No users match “{query}”.",
+      "count": "{count, plural, one {# user} other {# users}}"
+    },
+    "fields": {
+      "slug": "Slug",
+      "slugHint": "Used in links. Lowercase letters, numbers and dashes.",
+      "nameMk": "Macedonian",
+      "nameSq": "Albanian",
+      "nameEn": "English",
+      "region": "Region",
+      "active": "Visible"
+    },
+    "cities": {
+      "title": "Cities",
+      "lead": "Cities couples can search in and vendors can pick for their address.",
+      "add": "Add city"
+    },
+    "categories": {
+      "title": "Vendor categories",
+      "lead": "The three launch categories. You can rename them or hide one; new categories come in a later version."
+    },
+    "features": {
+      "title": "Venue features",
+      "lead": "Shown as filters in search and as checkboxes on restaurant profiles.",
+      "add": "Add feature"
+    },
+    "saved": "Saved.",
+    "created": "Added.",
+    "deleted": "Deleted.",
+    "confirmDelete": "Delete “{name}”? This can't be undone."
+  },
+  "errors": {
+    "email": "Enter a valid email address.",
+    "passwordMin": "Use at least 8 characters.",
+    "passwordMax": "Use at most 128 characters.",
+    "nameMin": "Enter at least 2 characters.",
+    "nameMax": "Use at most 80 characters.",
+    "required": "This field is required.",
+    "slug": "Use lowercase letters, numbers and dashes.",
+    "slugTaken": "This slug is already used.",
+    "accountType": "Choose how you'll use the app.",
+    "forbidden": "You don't have access to this.",
+    "fileType": "Upload a JPG, PNG or WebP image.",
+    "fileSize": "The image is larger than 10 MB.",
+    "generic": "Something went wrong. Try again."
+  },
+  "email": {
+    "greeting": "Hi {name},",
+    "verifySubject": "Confirm your email",
+    "verifyText": "Confirm your email to activate your Svadba account.",
+    "verifyButton": "Confirm email",
+    "resetSubject": "Reset your password",
+    "resetText": "We got a request to reset your Svadba password. The link works for 1 hour.",
+    "resetButton": "Set new password",
+    "ignore": "If this wasn't you, ignore this email."
+  },
+  "notFound": {
+    "title": "Page not found",
+    "text": "The link may be old, or the page was moved.",
+    "home": "Go to home page"
+  }
+}

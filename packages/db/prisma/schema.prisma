@@ -1,0 +1,159 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Accounts (tables used by Better Auth; names must stay as they are) ───
+
+enum Role {
+  COUPLE
+  VENDOR
+  ADMIN
+}
+
+model User {
+  id            String    @id
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  /// Empty until the person picks "planning a wedding" or "I'm a vendor".
+  roles         Role[]    @default([])
+  /// Preferred language: mk | sq | en
+  locale        String    @default("mk")
+  sessions      Session[]
+  accounts      Account[]
+
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+// ─── Reference data (managed in the admin panel) ───
+
+model City {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  nameMk    String
+  nameSq    String
+  nameEn    String
+  region    String?
+  active    Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("city")
+}
+
+enum VendorCategoryKey {
+  VENUE
+  BAND
+  PHOTO_VIDEO
+}
+
+model VendorCategory {
+  id        String            @id @default(cuid())
+  key       VendorCategoryKey @unique
+  nameMk    String
+  nameSq    String
+  nameEn    String
+  active    Boolean           @default(true)
+  sortOrder Int               @default(0)
+  updatedAt DateTime          @updatedAt
+
+  @@map("vendor_category")
+}
+
+model VenueFeature {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  nameMk    String
+  nameSq    String
+  nameEn    String
+  active    Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("venue_feature")
+}
+
+/// Default budget categories copied into each new wedding.
+model BudgetTemplateCategory {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  nameMk    String
+  nameSq    String
+  nameEn    String
+  sortOrder Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  @@map("budget_template_category")
+}
+
+/// Default checklist tasks copied into each new wedding.
+model ChecklistTemplateItem {
+  id           String   @id @default(cuid())
+  slug         String   @unique
+  titleMk      String
+  titleSq      String
+  titleEn      String
+  /// When the task is due, counted in months before the wedding (0 = final month, -1 = after).
+  monthsBefore Int
+  sortOrder    Int      @default(0)
+  updatedAt    DateTime @updatedAt
+
+  @@map("checklist_template_item")
+}

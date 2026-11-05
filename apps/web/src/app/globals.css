@@ -1,0 +1,78 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens.
+ * Linen background, plum-black ink, one accent: Vranec (the Macedonian red wine).
+ * Headings: Prata. Body: Onest. Both cover Macedonian Cyrillic and Albanian Latin.
+ */
+@theme {
+  --color-linen: #faf8f5;
+  --color-surface: #ffffff;
+  --color-ink: #231a1d;
+  --color-ink-soft: #4a3f42;
+  --color-stone: #75696a;
+  --color-line: #e8e1da;
+  --color-line-strong: #d3c8bf;
+
+  --color-vranec: #7a1f33;
+  --color-vranec-deep: #5e1626;
+  --color-rosehip: #f5e9eb;
+
+  --color-olive: #4f5c40;
+  --color-olive-soft: #ebeee4;
+  --color-amber: #8a5d0c;
+  --color-amber-soft: #f7eed9;
+  --color-danger: #a12a2a;
+  --color-danger-soft: #fbeaea;
+
+  --font-display: var(--font-prata), Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-onest), ui-sans-serif, system-ui, sans-serif;
+
+  --radius-card: 14px;
+  --shadow-card: 0 1px 2px rgb(35 26 29 / 0.04), 0 8px 24px -12px rgb(35 26 29 / 0.12);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background: var(--color-linen);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-feature-settings: "tnum" 0;
+    -webkit-font-smoothing: antialiased;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-vranec);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  ::selection {
+    background: var(--color-rosehip);
+    color: var(--color-vranec-deep);
+  }
+}
+
+@layer components {
+  /* Signature: a band of cross-stitches, after Macedonian embroidery (вез). */
+  .stitch {
+    height: 10px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='10' viewBox='0 0 20 10'%3E%3Cg fill='none' stroke='%237a1f33' stroke-width='1.3' stroke-linecap='round'%3E%3Cpath d='M2.5 2.5l5 5M7.5 2.5l-5 5'/%3E%3C/g%3E%3Crect x='14' y='4' width='2' height='2' transform='rotate(45 15 5)' fill='%237a1f33'/%3E%3C/svg%3E");
+    background-repeat: round no-repeat;
+    background-size: 20px 10px;
+    background-position: left center;
+  }
+  .stitch-light {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,16 @@
+# Local Postgres for development only. Production uses Railway Postgres.
+services:
+  db:
+    image: postgres:17
+    container_name: svadba_postgres_dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: svadba
+      POSTGRES_PASSWORD: svadba
+      POSTGRES_DB: svadba
+    ports:
+      - "5434:5432"
+    volumes:
+      - svadba_pg:/var/lib/postgresql/data
+volumes:
+  svadba_pg:
