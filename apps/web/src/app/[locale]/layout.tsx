@@ -5,7 +5,10 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Onest, Prata } from "next/font/google";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
+import { CookieNotice } from "@/components/cookie-notice";
 import { routing } from "@/i18n/routing";
+import { env } from "@/lib/env";
+import { OG_LOCALE } from "@/lib/seo";
 
 const prata = Prata({ weight: "400", subsets: ["latin", "cyrillic"], variable: "--font-prata", display: "swap" });
 const onest = Onest({ subsets: ["latin", "latin-ext", "cyrillic"], variable: "--font-onest", display: "swap" });
@@ -18,10 +21,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) return {};
   const t = await getTranslations({ locale, namespace: "meta" });
+  const appName = (await getTranslations({ locale, namespace: "common" }))("appName");
+  // Canonical and hreflang links are set per public page (lib/seo.ts), never here: a layout value would apply to every page.
   return {
-    title: { default: t("title"), template: `%s · ${(await getTranslations({ locale, namespace: "common" }))("appName")}` },
+    metadataBase: new URL(env.appUrl),
+    title: { default: t("title"), template: `%s · ${appName}` },
     description: t("description"),
-    alternates: { languages: Object.fromEntries(routing.locales.map((l) => [l, `/${l}`])) },
+    openGraph: { siteName: appName, locale: OG_LOCALE[locale], type: "website" },
   };
 }
 
@@ -46,7 +52,10 @@ export default async function LocaleLayout({
         >
           {t("skipToContent")}
         </a>
-        <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        <NextIntlClientProvider>
+          {children}
+          <CookieNotice />
+        </NextIntlClientProvider>
       </body>
     </html>
   );

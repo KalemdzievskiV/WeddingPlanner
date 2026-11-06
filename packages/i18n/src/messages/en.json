@@ -153,7 +153,8 @@
       "submit": "Create account",
       "haveAccount": "Already have an account?",
       "signInLink": "Sign in",
-      "emailTaken": "An account with this email already exists."
+      "emailTaken": "An account with this email already exists.",
+      "agree": "By creating an account you agree to the <terms>terms of use</terms> and <privacy>privacy policy</privacy>."
     },
     "checkEmail": {
       "title": "Check your email",
@@ -202,7 +203,47 @@
     "uploadPhoto": "Upload photo",
     "photoHint": "JPG, PNG or WebP, up to 10 MB.",
     "photoSaved": "Photo updated.",
-    "saved": "Changes saved."
+    "saved": "Changes saved.",
+    "export": {
+      "title": "Your data",
+      "text": "Download everything we store about you and your wedding: a ZIP with a full data file, plus Excel sheets of your guest list and budget.",
+      "button": "Download my data",
+      "sheets": {
+        "household": "Family",
+        "guest": "Guest",
+        "side": "Side",
+        "ageGroup": "Age group",
+        "table": "Table",
+        "guestNote": "Note from guests",
+        "category": "Category",
+        "item": "Item",
+        "costType": "Cost type",
+        "amount": "Amount",
+        "currency": "Currency",
+        "payer": "Paid by",
+        "event": "Event",
+        "notes": "Notes",
+        "paymentKind": "Payment",
+        "dueDate": "Due",
+        "paidOn": "Paid on",
+        "guestsFile": "guests",
+        "budgetFile": "budget",
+        "guestsSheet": "Guests",
+        "budgetSheet": "Budget",
+        "paymentsSheet": "Payments"
+      }
+    },
+    "delete": {
+      "title": "Delete account",
+      "text": "You'll be signed out everywhere right away. Your account is erased for good after 30 days.",
+      "weddingOwner": "Your wedding plan passes to your partner (or the first helper who can edit). If there's no one, the plan is erased.",
+      "weddingMember": "You'll leave the wedding plan; it stays with the couple.",
+      "business": "“{business}” passes to a team member. If there's no one else on the team, it's hidden from couples.",
+      "restore": "Changed your mind? Sign in within 30 days and nothing is deleted.",
+      "confirmLabel": "Type your email ({email}) to confirm",
+      "button": "Delete my account",
+      "deleting": "Deleting…"
+    }
   },
   "admin": {
     "nav": {
@@ -369,7 +410,9 @@
     "inquiryOpen": "You already have an open inquiry with this vendor for this event.",
     "inquiryClosed": "This conversation is closed.",
     "offerClosed": "This offer was already answered or replaced.",
-    "reviewNotAllowed": "You can review a vendor after your wedding, if they were booked in your plan."
+    "reviewNotAllowed": "You can review a vendor after your wedding, if they were booked in your plan.",
+    "rsvpClosed": "This wedding is over, so answers are closed.",
+    "confirmEmail": "Type your email exactly as shown."
   },
   "email": {
     "greeting": "Hi {name},",
@@ -387,7 +430,14 @@
     "rejectedText": "We reviewed “{business}”. What needs to change: {reason}",
     "rejectedButton": "Edit your profile",
     "notificationButton": "Open in Svadba",
-    "notificationFooter": "You get these emails for inquiries, offers and reviews. Turn them off in your account settings."
+    "notificationFooter": "You get these emails for inquiries, offers and reviews. Turn them off in your account settings.",
+    "deletionSubject": "Your account will be deleted",
+    "deletionText": "We got your request to delete your Svadba account. It will be erased for good on {date}.\n\nChanged your mind? Just sign in before then and nothing is deleted.",
+    "deletionButton": "Sign in to keep my account",
+    "erasureSubject": "Your guest list will be erased soon",
+    "erasureText": "It's been almost two years since the wedding of {couple}. To protect your guests' privacy, the guest list, their answers and the seating plan will be erased on {date}.\n\nIf you'd like to keep a copy, download your data before then. Your budget and the rest of the plan stay.",
+    "erasureButton": "Download my data",
+    "erasureFooter": "You get this email because you're the owner or partner on this wedding plan."
   },
   "notFound": {
     "title": "Page not found",
@@ -712,7 +762,8 @@
       "today": "Today is the day",
       "past": "Married on {date}",
       "noDate": "Date not set yet",
-      "viewOnly": "You can view this plan but not change it."
+      "viewOnly": "You can view this plan but not change it.",
+      "archived": "This wedding is over and the plan is now read-only. You can still write reviews and download your data from your account."
     },
     "roles": {
       "OWNER": "Owner",
@@ -1079,7 +1130,8 @@
     "answerAll": "Please answer for every person.",
     "thanks": "Thank you! Your answer was sent.",
     "change": "Change answer",
-    "invalid": "This link isn't valid. Ask the couple for a new one."
+    "invalid": "This link isn't valid. Ask the couple for a new one.",
+    "closed": "This wedding is over, so answers are closed. Thank you!"
   },
   "search": {
     "favorite": {
@@ -1363,5 +1415,25 @@
       "REVIEW_REPLY": "{business} replied to your review",
       "REVIEW_REPORTED": "{business} reported a review by {couple}"
     }
+  },
+  "legal": {
+    "privacy": "Privacy policy",
+    "terms": "Terms of use",
+    "linksLabel": "Legal",
+    "updated": "Last updated {date}",
+    "draft": "This text is a draft and will be replaced with the final version before launch.",
+    "cookieNotice": {
+      "label": "Cookie notice",
+      "text": "We only use cookies needed to keep you signed in and remember your language. No tracking.",
+      "more": "Learn more",
+      "ok": "OK"
+    }
+  },
+  "errorPage": {
+    "title": "Something went wrong",
+    "text": "Sorry, this page didn't load. Try again, or go back to the home page.",
+    "retry": "Try again",
+    "home": "Go to home page",
+    "code": "Error code: {code}"
   }
 }

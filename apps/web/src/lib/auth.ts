@@ -46,5 +46,18 @@ export const auth = betterAuth({
     expiresIn: 60 * 60 * 24 * 30,
     updateAge: 60 * 60 * 24,
   },
+  databaseHooks: {
+    session: {
+      create: {
+        // Signing in during the 30-day grace period cancels account deletion (decision 89).
+        after: async (session) => {
+          await prisma.user.updateMany({
+            where: { id: session.userId, deletionRequestedAt: { not: null } },
+            data: { deletionRequestedAt: null },
+          });
+        },
+      },
+    },
+  },
   plugins: [nextCookies()],
 });

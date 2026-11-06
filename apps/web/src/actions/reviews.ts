@@ -9,13 +9,13 @@ import { admins, businessTeam, excerpt, notify, weddingTeam } from "@/lib/notify
 import { coupleNames } from "@/lib/plan-helpers";
 import { canReview, syncRating } from "@/lib/reviews";
 import { getCurrentUser } from "@/lib/session";
-import { editableWedding } from "@/lib/wedding";
+import { reviewingWedding } from "@/lib/wedding";
 
 const refresh = () => revalidatePath("/", "layout");
 
 /** Couple writes or edits their review; it's live at once (decision 81). */
 export async function saveReviewAction(businessId: string, _prev: FormState, fd: FormData): Promise<FormState> {
-  const access = await editableWedding();
+  const access = await reviewingWedding();
   if (!access || typeof businessId !== "string") return { formError: "forbidden" };
   if (!(await canReview(access.wedding, businessId, access.user.id))) return { formError: "reviewNotAllowed" };
   const parsed = reviewSchema.safeParse({ rating: fd.get("rating") ?? "", text: fd.get("text") ?? "" });
@@ -40,7 +40,7 @@ export async function saveReviewAction(businessId: string, _prev: FormState, fd:
 }
 
 export async function deleteReviewAction(businessId: string): Promise<FormState> {
-  const access = await editableWedding();
+  const access = await reviewingWedding();
   if (!access || typeof businessId !== "string") return { formError: "forbidden" };
   await prisma.review.deleteMany({ where: { businessId, weddingId: access.wedding.id } });
   await syncRating(businessId);

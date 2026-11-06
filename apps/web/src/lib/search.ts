@@ -57,6 +57,14 @@ const positiveInt = (v: string | undefined, max: number) => {
 };
 
 /** Reads filters from the URL's search params; anything invalid is ignored. */
+/** The lowest price, compared in EUR but returned in the vendor's own currency. */
+export function cheapestOf(prices: { amount: number; currency: Currency }[]) {
+  let cheapest: { amount: number; currency: Currency } | null = null;
+  for (const p of prices)
+    if (!cheapest || convertPrice(p.amount, p.currency, "EUR") < convertPrice(cheapest.amount, cheapest.currency, "EUR")) cheapest = p;
+  return cheapest;
+}
+
 export function parseFilters(category: VendorCategory, sp: Record<string, string | string[] | undefined>): SearchFilters {
   const date = one(sp.date) ?? "";
   const sort = one(sp.sort);
@@ -198,9 +206,7 @@ export async function searchVendors(f: SearchFilters, locale: Locale) {
       f.category === "VENUE"
         ? b.menuPackages.map((m) => ({ amount: m.pricePerPerson, currency: m.currency }))
         : b.servicePackages.map((p) => ({ amount: p.price, currency: p.currency }));
-    let cheapest: { amount: number; currency: Currency } | null = null;
-    for (const p of prices)
-      if (!cheapest || convertPrice(p.amount, p.currency, "EUR") < convertPrice(cheapest.amount, cheapest.currency, "EUR")) cheapest = p;
+    const cheapest = cheapestOf(prices);
     const priceEur = cheapest ? convertPrice(cheapest.amount, cheapest.currency, "EUR") : null;
     if (f.priceMax && (priceEur == null || priceEur > convertPrice(f.priceMax, f.currency, "EUR"))) continue;
 

@@ -25,7 +25,7 @@ export default async function PlannerLayout({
   params: Promise<{ locale: string }>;
 }) {
   const locale = await localeFrom(params);
-  const { wedding, role } = await requireWedding(locale);
+  const { wedding, role, archived } = await requireWedding(locale);
   const t = await getTranslations("plan.header");
   const days = wedding.date ? daysUntil(wedding.date, todayIso()) : null;
   const inquiries = await prisma.inquiry.findMany({
@@ -53,8 +53,10 @@ export default async function PlannerLayout({
       <div className="mt-5">
         <PlanTabs unread={unread} />
       </div>
-      {!canEdit(role) && (
-        <Alert className="mt-5 print:hidden">{t("viewOnly")}</Alert>
+      {archived ? (
+        <Alert className="mt-5 print:hidden">{t("archived")}</Alert>
+      ) : (
+        !canEdit(role) && <Alert className="mt-5 print:hidden">{t("viewOnly")}</Alert>
       )}
       <div className="pt-8 print:pt-0">{children}</div>
     </div>

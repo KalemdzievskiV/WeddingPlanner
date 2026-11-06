@@ -1,4 +1,6 @@
 import { localeFrom } from "@/lib/locale";
+import type { Metadata } from "next";
+import { alternatesFor } from "@/lib/seo";
 import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
 import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -14,6 +16,10 @@ const juneStatuses: Record<number, DayStatus> = {
   5: "booked", 6: "booked", 12: "free", 13: "tentative", 19: "booked", 20: "booked",
   26: "booked", 27: "free", 4: "free", 11: "free", 18: "tentative", 25: "free",
 };
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  return { alternates: alternatesFor("", await localeFrom(params)) };
+}
 
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
   const locale = await localeFrom(params);

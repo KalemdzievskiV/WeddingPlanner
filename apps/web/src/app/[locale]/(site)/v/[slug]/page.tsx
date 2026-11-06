@@ -26,6 +26,9 @@ import { coupleNames } from "@/lib/plan-helpers";
 import { canReview } from "@/lib/reviews";
 import { favoriteContext } from "@/lib/visitor";
 import { localeFrom } from "@/lib/locale";
+import { cheapestOf } from "@/lib/search";
+import { alternatesFor, OG_LOCALE } from "@/lib/seo";
+import { env } from "@/lib/env";
 import { cn } from "@/lib/utils";
 
 async function loadBusiness(slug: string) {
@@ -56,14 +59,47 @@ export async function generateMetadata({
   const { slug } = await params;
   const b = await prisma.business.findUnique({
     where: { slug },
-    include: { photos: { where: { galleryId: null }, orderBy: { sortOrder: "asc" }, take: 1 } },
+    include: {
+      city: true,
+      photos: { where: { galleryId: null }, orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }], take: 1 },
+      menuPackages: { select: { pricePerPerson: true, currency: true } },
+      servicePackages: { select: { price: true, currency: true } },
+    },
   });
   if (!b || b.status !== "APPROVED") return { robots: { index: false } };
-  const description = (pickLocalized(b, "description", locale) || b.descriptionMk).slice(0, 160);
+
+  // Link previews (decision 96): cover photo, plus category, city and "from" price in the description.
+  const ts = await getTranslations({ locale, namespace: "search" });
+  const city = b.city ? pickLocalized(b.city, "name", locale) : null;
+  const perPerson = b.category === "VENUE";
+  const cheapest = cheapestOf(
+    perPerson
+      ? b.menuPackages.map((m) => ({ amount: m.pricePerPerson, currency: m.currency }))
+      : b.servicePackages.map((p) => ({ amount: p.price, currency: p.currency })),
+  );
+  const lead = [
+    city ? ts("titleIn", { what: ts(`title.${b.category}`), city }) : ts(`title.${b.category}`),
+    cheapest && `${ts("from")} ${formatMoney(cheapest.amount, cheapest.currency, locale)}${perPerson ? ` / ${ts("perPerson")}` : ""}`,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  const text = (pickLocalized(b, "description", locale) || b.descriptionMk).replace(/\s+/g, " ").trim();
+  const description = `${lead}. ${text}`.slice(0, 200);
+  const title = city ? `${b.name}, ${city}` : b.name;
+  const path = `/v/${b.slug}`;
   return {
-    title: b.name,
+    title,
     description,
-    openGraph: { title: b.name, description, images: b.photos[0] ? [b.photos[0].url] : [] },
+    alternates: alternatesFor(path, locale),
+    openGraph: {
+      type: "website",
+      title,
+      description,
+      url: `/${locale}${path}`,
+      locale: OG_LOCALE[locale],
+      images: b.photos[0] ? [{ url: b.photos[0].url, alt: b.name }] : [],
+    },
+    twitter: { card: b.photos[0] ? "summary_large_image" : "summary" },
   };
 }
 
@@ -103,7 +139,7 @@ export default async function VendorPublicPage({ params }: { params: Promise<{ l
     weddingAccess
       ? prisma.review.findUnique({ where: { businessId_weddingId: { businessId: b.id, weddingId: weddingAccess.wedding.id } } })
       : null,
-    weddingAccess && canEdit(weddingAccess.role) ? canReview(weddingAccess.wedding, b.id, weddingAccess.user.id) : false,
+    weddingAccess && canEdit(weddingAccess.memberRole) ? canReview(weddingAccess.wedding, b.id, weddingAccess.user.id) : false,
   ]);
   const tr = await getTranslations("reviews");
   const addState = !user
@@ -128,8 +164,39 @@ export default async function VendorPublicPage({ params }: { params: Promise<{ l
     })),
   ];
 
+  // Structured data so search engines show the business with its rating (decision 95).
+  const jsonLd = isPublic
+    ? {
+        "@context": "https://schema.org",
+        "@type": b.category === "VENUE" ? "EventVenue" : "LocalBusiness",
+        name: b.name,
+        url: `${env.appUrl}/${locale}/v/${b.slug}`,
+        description: (pickLocalized(b, "description", locale) || b.descriptionMk).slice(0, 500) || undefined,
+        image: b.photos.slice(0, 5).map((p) => (p.url.startsWith("/") ? `${env.appUrl}${p.url}` : p.url)),
+        telephone: b.phone ?? undefined,
+        address: {
+          "@type": "PostalAddress",
+          streetAddress: b.address ?? undefined,
+          addressLocality: b.city ? pickLocalized(b.city, "name", locale) : undefined,
+          addressCountry: "MK",
+        },
+        geo: b.lat != null && b.lng != null ? { "@type": "GeoCoordinates", latitude: b.lat, longitude: b.lng } : undefined,
+        aggregateRating:
+          b.ratingCount > 0 && b.ratingAvg != null
+            ? { "@type": "AggregateRating", ratingValue: Number(b.ratingAvg.toFixed(1)), reviewCount: b.ratingCount }
+            : undefined,
+      }
+    : null;
+
   return (
     <main id="main" className="mx-auto max-w-6xl px-4 pb-10 pt-8 sm:px-6">
+      {jsonLd && (
+        <script
+          type="application/ld+json"
+          // JSON-LD must be inline; "<" is escaped so text can't close the script tag.
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
+        />
+      )}
       {!isPublic && (
         <Alert className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <span>{tp("preview")}</span>

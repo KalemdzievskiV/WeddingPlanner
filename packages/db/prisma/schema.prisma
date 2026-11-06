@@ -37,6 +37,8 @@ model User {
   notifications Notification[]
   inquiryMessages InquiryMessage[]
   reviews       Review[]
+  /// Set when the user asks to delete the account (decision 89). Signing in within 30 days clears it; after that the nightly job erases the account.
+  deletionRequestedAt DateTime?
 
   @@map("user")
 }
@@ -569,6 +571,12 @@ model Wedding {
   currency        Currency  @default(EUR)
   /// Paid plan. Limits only apply when the paywall is switched on (decision 22a).
   premium         Boolean   @default(false)
+  /// Read-only from 6 months after the date (decision 90).
+  archivedAt        DateTime?
+  /// Owners were emailed that guest data will be erased soon (decision 92).
+  erasureWarnedAt   DateTime?
+  /// Guest list and seating erased 2 years after the date (decision 92).
+  guestDataErasedAt DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 

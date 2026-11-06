@@ -138,9 +138,10 @@ export async function submitRsvpAction(token: string, input: unknown): Promise<F
   if (!parsed.success || typeof token !== "string") return { formError: "generic" };
   const household = await prisma.household.findUnique({
     where: { rsvpToken: token },
-    include: { guests: { include: { invitations: true } } },
+    include: { guests: { include: { invitations: true } }, wedding: { select: { archivedAt: true } } },
   });
   if (!household) return { formError: "invalidLink" };
+  if (household.wedding.archivedAt) return { formError: "rsvpClosed" };
 
   const allowed = new Set(household.guests.flatMap((g) => g.invitations.map((i) => `${g.id}:${i.eventId}`)));
   const answers = parsed.data.answers.filter((a) => allowed.has(`${a.guestId}:${a.eventId}`));

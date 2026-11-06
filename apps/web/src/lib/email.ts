@@ -5,13 +5,15 @@ import { createTranslator } from "next-intl";
 import { Resend } from "resend";
 import { env } from "./env";
 
-type EmailKind = "verify" | "reset" | "approved" | "rejected";
+type EmailKind = "verify" | "reset" | "approved" | "rejected" | "deletion" | "erasure";
 
 const KEYS = {
   verify: { subject: "verifySubject", text: "verifyText", button: "verifyButton" },
   reset: { subject: "resetSubject", text: "resetText", button: "resetButton" },
   approved: { subject: "approvedSubject", text: "approvedText", button: "approvedButton" },
   rejected: { subject: "rejectedSubject", text: "rejectedText", button: "rejectedButton" },
+  deletion: { subject: "deletionSubject", text: "deletionText", button: "deletionButton" },
+  erasure: { subject: "erasureSubject", text: "erasureText", button: "erasureButton" },
 } as const;
 
 function escapeHtml(value: string) {
@@ -38,17 +40,22 @@ function renderEmail(
   kind: EmailKind,
   name: string,
   url: string,
-  values: { business?: string; reason?: string },
+  values: { business?: string; reason?: string; date?: string; couple?: string },
 ) {
   const t = createTranslator({ locale, messages: messages[locale], namespace: "email" });
   const k = KEYS[kind];
   const subject = t(k.subject);
   const body = layout(locale, {
     greeting: t("greeting", { name }),
-    text: t(k.text, { business: values.business ?? "", reason: values.reason ?? "" }),
+    text: t(k.text, {
+      business: values.business ?? "",
+      reason: values.reason ?? "",
+      date: values.date ?? "",
+      couple: values.couple ?? "",
+    }),
     button: t(k.button),
     url,
-    footer: t("ignore"),
+    footer: t(kind === "erasure" ? "erasureFooter" : "ignore"),
   });
   return { subject, ...body };
 }
@@ -64,6 +71,8 @@ export async function sendAuthEmail(opts: {
   url: string;
   business?: string;
   reason?: string;
+  date?: string;
+  couple?: string;
 }) {
   const locale = isLocale(opts.locale) ? opts.locale : "mk";
   const { subject, html, text } = renderEmail(locale, opts.kind, opts.name, opts.url, opts);

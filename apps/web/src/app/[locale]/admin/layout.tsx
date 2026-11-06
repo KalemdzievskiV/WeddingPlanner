@@ -1,6 +1,7 @@
 import { localeFrom } from "@/lib/locale";
 import { ArrowLeft } from "lucide-react";
 import { getTranslations } from "next-intl/server";
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { AdminNav } from "@/components/admin/admin-nav";
 import { LanguageSwitcher } from "@/components/language-switcher";
@@ -8,6 +9,8 @@ import { Logo } from "@/components/ui/logo";
 import { UserMenu } from "@/components/user-menu";
 import { Link } from "@/i18n/navigation";
 import { requireAdmin } from "@/lib/session";
+
+export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 export default async function AdminLayout({
   children,

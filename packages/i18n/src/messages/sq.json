@@ -153,7 +153,8 @@
       "submit": "Hap llogarinë",
       "haveAccount": "Keni tashmë llogari?",
       "signInLink": "Hyni",
-      "emailTaken": "Ekziston tashmë një llogari me këtë email."
+      "emailTaken": "Ekziston tashmë një llogari me këtë email.",
+      "agree": "Duke hapur llogarinë pranoni <terms>kushtet e përdorimit</terms> dhe <privacy>politikën e privatësisë</privacy>."
     },
     "checkEmail": {
       "title": "Kontrolloni email-in",
@@ -202,7 +203,47 @@
     "uploadPhoto": "Ngarko foto",
     "photoHint": "JPG, PNG ose WebP, deri në 10 MB.",
     "photoSaved": "Fotoja u përditësua.",
-    "saved": "Ndryshimet u ruajtën."
+    "saved": "Ndryshimet u ruajtën.",
+    "export": {
+      "title": "Të dhënat tuaja",
+      "text": "Shkarkoni gjithçka që ruajmë për ju dhe dasmën tuaj: një ZIP me skedarin e plotë të të dhënave dhe tabela Excel me listën e të ftuarve dhe buxhetin.",
+      "button": "Shkarko të dhënat e mia",
+      "sheets": {
+        "household": "Familja",
+        "guest": "I ftuari",
+        "side": "Ana",
+        "ageGroup": "Mosha",
+        "table": "Tavolina",
+        "guestNote": "Mesazh nga të ftuarit",
+        "category": "Kategoria",
+        "item": "Zëri",
+        "costType": "Lloji i kostos",
+        "amount": "Shuma",
+        "currency": "Monedha",
+        "payer": "Paguan",
+        "event": "Ngjarja",
+        "notes": "Shënime",
+        "paymentKind": "Pagesa",
+        "dueDate": "Afati",
+        "paidOn": "Paguar më",
+        "guestsFile": "te-ftuarit",
+        "budgetFile": "buxheti",
+        "guestsSheet": "Të ftuarit",
+        "budgetSheet": "Buxheti",
+        "paymentsSheet": "Pagesat"
+      }
+    },
+    "delete": {
+      "title": "Fshi llogarinë",
+      "text": "Do të çkyçeni menjëherë nga kudo. Llogaria fshihet përfundimisht pas 30 ditësh.",
+      "weddingOwner": "Plani i dasmës kalon te partneri (ose te ndihmësi i parë që mund të ndryshojë). Nëse nuk ka askënd, plani fshihet.",
+      "weddingMember": "Do të dilni nga plani i dasmës; ai mbetet te çifti.",
+      "business": "„{business}“ kalon te një anëtar i ekipit. Nëse nuk ka tjetër në ekip, fshihet nga çiftet.",
+      "restore": "Ndryshuat mendje? Kyçuni brenda 30 ditëve dhe asgjë nuk fshihet.",
+      "confirmLabel": "Shkruani email-in tuaj ({email}) për konfirmim",
+      "button": "Fshi llogarinë time",
+      "deleting": "Po fshihet…"
+    }
   },
   "admin": {
     "nav": {
@@ -369,7 +410,9 @@
     "inquiryOpen": "Keni tashmë një kërkesë të hapur me këtë shërbim për këtë ngjarje.",
     "inquiryClosed": "Kjo bisedë është mbyllur.",
     "offerClosed": "Kësaj oferte i është përgjigjur tashmë ose është zëvendësuar.",
-    "reviewNotAllowed": "Mund ta vlerësoni një shërbim pas dasmës, nëse ishte i rezervuar në planin tuaj."
+    "reviewNotAllowed": "Mund ta vlerësoni një shërbim pas dasmës, nëse ishte i rezervuar në planin tuaj.",
+    "rsvpClosed": "Dasma ka kaluar, prandaj përgjigjet janë mbyllur.",
+    "confirmEmail": "Shkruani email-in saktësisht siç shfaqet."
   },
   "email": {
     "greeting": "Përshëndetje {name},",
@@ -387,7 +430,14 @@
     "rejectedText": "E kontrolluam „{business}“. Çfarë duhet ndryshuar: {reason}",
     "rejectedButton": "Ndrysho profilin",
     "notificationButton": "Hap në Svadba",
-    "notificationFooter": "Këto email-e i merrni për kërkesa, oferta dhe vlerësime. Çaktivizojini te cilësimet e llogarisë."
+    "notificationFooter": "Këto email-e i merrni për kërkesa, oferta dhe vlerësime. Çaktivizojini te cilësimet e llogarisë.",
+    "deletionSubject": "Llogaria juaj do të fshihet",
+    "deletionText": "Morëm kërkesën tuaj për të fshirë llogarinë në Svadba. Ajo do të fshihet përfundimisht më {date}.\n\nNdryshuat mendje? Thjesht kyçuni para kësaj date dhe asgjë nuk fshihet.",
+    "deletionButton": "Kyçu dhe mbaj llogarinë",
+    "erasureSubject": "Lista e të ftuarve do të fshihet së shpejti",
+    "erasureText": "Kanë kaluar gati dy vjet nga dasma e {couple}. Për të mbrojtur privatësinë e të ftuarve, lista e të ftuarve, përgjigjet e tyre dhe plani i uljes do të fshihen më {date}.\n\nNëse doni të ruani një kopje, shkarkoni të dhënat para kësaj date. Buxheti dhe pjesa tjetër e planit mbeten.",
+    "erasureButton": "Shkarko të dhënat e mia",
+    "erasureFooter": "E merrni këtë email sepse jeni pronar ose partner në këtë plan dasme."
   },
   "notFound": {
     "title": "Faqja nuk u gjet",
@@ -712,7 +762,8 @@
       "today": "Sot është dita",
       "past": "U martuan më {date}",
       "noDate": "Data ende nuk është caktuar",
-      "viewOnly": "Mund ta shihni planin, por jo ta ndryshoni."
+      "viewOnly": "Mund ta shihni planin, por jo ta ndryshoni.",
+      "archived": "Dasma ka kaluar dhe plani tani mund vetëm të shihet. Ende mund të shkruani vlerësime dhe të shkarkoni të dhënat nga llogaria juaj."
     },
     "roles": {
       "OWNER": "Pronar",
@@ -1079,7 +1130,8 @@
     "answerAll": "Ju lutemi përgjigjuni për çdo person.",
     "thanks": "Faleminderit! Përgjigja u dërgua.",
     "change": "Ndrysho përgjigjen",
-    "invalid": "Kjo lidhje nuk është e vlefshme. Kërkojini çiftit një të re."
+    "invalid": "Kjo lidhje nuk është e vlefshme. Kërkojini çiftit një të re.",
+    "closed": "Dasma ka kaluar, prandaj përgjigjet janë mbyllur. Faleminderit!"
   },
   "search": {
     "favorite": {
@@ -1363,5 +1415,25 @@
       "REVIEW_REPLY": "{business} iu përgjigj vlerësimit tuaj",
       "REVIEW_REPORTED": "{business} raportoi një vlerësim nga {couple}"
     }
+  },
+  "legal": {
+    "privacy": "Politika e privatësisë",
+    "terms": "Kushtet e përdorimit",
+    "linksLabel": "Informacione ligjore",
+    "updated": "Ndryshimi i fundit {date}",
+    "draft": "Ky tekst është draft dhe do të zëvendësohet me versionin përfundimtar para nisjes.",
+    "cookieNotice": {
+      "label": "Njoftim për cookies",
+      "text": "Përdorim vetëm cookies të nevojshme që të mbeteni të kyçur dhe të mbajmë mend gjuhën. Pa gjurmim.",
+      "more": "Mëso më shumë",
+      "ok": "Në rregull"
+    }
+  },
+  "errorPage": {
+    "title": "Diçka shkoi keq",
+    "text": "Faqja nuk u ngarkua. Provoni përsëri ose kthehuni në faqen kryesore.",
+    "retry": "Provo përsëri",
+    "home": "Shko në faqen kryesore",
+    "code": "Kodi i gabimit: {code}"
   }
 }

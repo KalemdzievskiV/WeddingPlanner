@@ -37,6 +37,8 @@ export default async function RsvpPage({ params }: { params: Promise<{ token: st
         <Alert tone="error" className="mt-10">
           {t("invalid")}
         </Alert>
+      ) : household.wedding.archivedAt ? (
+        <Alert className="mt-10">{t("closed")}</Alert>
       ) : (
         <>
           <header className="mt-6 text-center">

@@ -61,6 +61,20 @@ export function SignUpForm({ defaultType, next }: { defaultType?: AccountType; n
       <Button type="submit" className="w-full" size="lg" disabled={pending}>
         {t("signUp.submit")}
       </Button>
+      <p className="text-center text-sm text-stone">
+        {t.rich("signUp.agree", {
+          terms: (chunks) => (
+            <Link href="/terms" className="text-ink-soft underline underline-offset-2 hover:text-ink">
+              {chunks}
+            </Link>
+          ),
+          privacy: (chunks) => (
+            <Link href="/privacy" className="text-ink-soft underline underline-offset-2 hover:text-ink">
+              {chunks}
+            </Link>
+          ),
+        })}
+      </p>
     </form>
   );
 }

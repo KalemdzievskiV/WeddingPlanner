@@ -9,8 +9,8 @@ import { env } from "./env";
 /** Values shown in notification text. */
 export type NotificationData = { business?: string; couple?: string; from?: string; rating?: number; excerpt?: string };
 
-const recipientSelect = { id: true, name: true, email: true, locale: true, emailNotifications: true } as const;
-type Recipient = { id: string; name: string; email: string; locale: string; emailNotifications: boolean };
+const recipientSelect = { id: true, name: true, email: true, locale: true, emailNotifications: true, deletionRequestedAt: true } as const;
+type Recipient = { id: string; name: string; email: string; locale: string; emailNotifications: boolean; deletionRequestedAt?: Date | null };
 
 /** Owner and staff of a business (decision 82), except the person who acted. */
 export async function businessTeam(businessId: string, exceptUserId?: string) {
@@ -41,7 +41,9 @@ export function notificationText(locale: Locale, type: NotificationType, data: N
  * Bell notification for each recipient, plus an email for those who keep emails on.
  * `link` is an app path without the locale, e.g. "/plan/inquiries/abc".
  */
-export async function notify(recipients: Recipient[], type: NotificationType, data: NotificationData, link: string) {
+export async function notify(all: Recipient[], type: NotificationType, data: NotificationData, link: string) {
+  // Accounts waiting to be deleted (decision 89) get nothing.
+  const recipients = all.filter((r) => !r.deletionRequestedAt);
   if (recipients.length === 0) return;
   await prisma.notification.createMany({ data: recipients.map((r) => ({ userId: r.id, type, data, link })) });
   await Promise.all(

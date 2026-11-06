@@ -74,3 +74,28 @@ All UI text is in `packages/i18n/src/messages/*.json`. English is the reference:
 6. For Google login, create an OAuth client in Google Cloud with the redirect URI `<BETTER_AUTH_URL>/api/auth/callback/google`.
 
 On every start the container applies migrations, runs the seed, then starts Next.js.
+
+## Nightly jobs and backups
+
+Two small Railway **cron services** run from this repo. For each, create a service from the repo and set its config file path in the service settings.
+
+| Service | Config file | Schedule (UTC) | Variables |
+|---|---|---|---|
+| Nightly jobs | `ops/nightly/railway.json` | 02:30 | `APP_URL` (public URL of the web app), `CRON_SECRET` (same value as on the web service) |
+| Database backup | `ops/backup/railway.json` | 02:00 | `DATABASE_URL=${{Postgres.DATABASE_URL}}`, `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `BACKUP_BUCKET` |
+
+- **Nightly jobs** call `POST /api/cron/nightly`: weddings turn read-only 6 months after the date, owners are emailed a month before the guest list is erased (2 years after the date), and accounts deleted more than 30 days ago are erased. Run it by hand locally with:
+
+```bash
+curl -X POST -H "Authorization: Bearer $CRON_SECRET" http://localhost:3100/api/cron/nightly
+```
+
+- **Backups** run `pg_dump` and upload to `BACKUP_BUCKET`, keeping 30 days. Use a **private** R2 bucket (not the public image bucket): backups hold every guest list and email. Also turn on Railway's own Postgres backups. To restore: download a `.dump` file and run `pg_restore --clean --no-owner -d "$DATABASE_URL" file.dump`.
+
+## Error tracking
+
+Set `SENTRY_DSN` (server) and `NEXT_PUBLIC_SENTRY_DSN` (browser, needed at build time) to turn Sentry on. Without them nothing is loaded. Add `SENTRY_AUTH_TOKEN`, `SENTRY_ORG` and `SENTRY_PROJECT` as build variables to upload source maps.
+
+## Legal text
+
+The privacy policy and terms are in `apps/web/src/content/legal/` (one file per document, all three languages). They ship with placeholder sections; paste the final text there and set `draft: false` and the `updated` date.

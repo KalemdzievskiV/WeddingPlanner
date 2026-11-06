@@ -158,6 +158,18 @@ _(Filled in as we agree on each question.)_
 | 84 | Vendor stats | One view per visitor per profile per day (no bots, not own team). This month vs last + 12-month chart; admin sees totals. | AGREED |
 | 85 | Search entry | Home search bar (category, city, date) + planner shortcuts that pre-fill city, date and guests. | AGREED |
 | 86 | Per-person guest count | Use the higher of estimate and guest list count (replaces 69's "estimate until first guest"). Override per expense still possible. | AGREED |
+| 87 | Legal text | You provide privacy policy + terms text (MK/AL/EN). App ships the pages with placeholder sections until then. | AGREED |
+| 88 | Cookies | No analytics or tracking cookies at launch. Only login + language cookies → simple one-time info notice with OK. | AGREED |
+| 89 | Account delete | Locked at once; restorable by logging in within 30 days, then fully erased. Wedding passes to partner (else next editor) or is erased; businesses pass to another owner/staff or are hidden. | AGREED |
+| 90 | Auto-archive | 6 months after the wedding date: planner read-only, RSVP links stop, reviews still allowed, export still works. | AGREED |
+| 91 | Data export | ZIP with full JSON + Excel sheets (guests, budget). | AGREED |
+| 92 | Retention | Guest/household data of archived weddings erased 2 years after the date; owner emailed a month before. Account and reviews stay. | AGREED |
+| 93 | Error tracking | Sentry (server + browser), inactive until SENTRY_DSN is set. | AGREED |
+| 94 | Backups | Railway backups + nightly pg_dump to R2, kept 30 days. | AGREED |
+| 95 | Sitemap | Approved vendor profiles + category×city landing pages (only combos with vendors), all 3 languages with hreflang. Planner/RSVP/admin blocked in robots. | AGREED |
+| 96 | Share previews | Vendor cover photo + name, city, "from" price in OG tags. | AGREED |
+| 97 | Nightly jobs | Protected API routes (CRON_SECRET) called by a Railway cron service. | AGREED |
+| 98 | Vendor seeding | Existing admin pre-fill + claim link is enough; no bulk import. | AGREED |
 
 ---
 
@@ -219,7 +231,7 @@ Each phase ends with something working that you can click through.
 - Notification bell.
 - Vendor stats (views, inquiries, favourites).
 
-**Phase 4 — Launch prep**
+**Phase 4 — Launch prep** ✅ code done 2026-11-06 (still to do outside the code: final legal text, Sentry DSN, Railway cron services + private backup bucket, seeding real vendors, testing with couples)
 - Privacy policy, terms, cookie notice (MK/AL/EN), account export/delete, auto-archive.
 - SEO for vendor pages (per-language URLs, sitemap), performance, error tracking (Sentry), backups.
 - Seed real vendors (admin pre-fill), test with real couples.
