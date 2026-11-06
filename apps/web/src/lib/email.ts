@@ -2,6 +2,7 @@ import "server-only";
 import { messages } from "@svadba/i18n";
 import { isLocale, type Locale } from "@svadba/shared";
 import { createTranslator } from "next-intl";
+import { createTransport, type Transporter } from "nodemailer";
 import { Resend } from "resend";
 import { env } from "./env";
 
@@ -61,8 +62,37 @@ function renderEmail(
 }
 
 let resend: Resend | null = null;
+let smtp: Transporter | null = null;
 
-/** Sends an email in the user's language. Without RESEND_API_KEY it prints to the console. */
+/**
+ * Sends through Resend when RESEND_API_KEY is set, otherwise through SMTP (e.g. Gmail) when SMTP_* is set,
+ * otherwise prints the email to the console (development).
+ */
+async function deliver(to: string, subject: string, html: string, text: string, url: string) {
+  if (env.resendKey) {
+    resend ??= new Resend(env.resendKey);
+    const { error } = await resend.emails.send({ from: env.emailFrom, to, subject, html, text });
+    if (error) console.error("[email] send failed", error);
+    return;
+  }
+  if (env.smtp) {
+    smtp ??= createTransport({
+      host: env.smtp.host,
+      port: env.smtp.port,
+      secure: env.smtp.port === 465,
+      auth: { user: env.smtp.user, pass: env.smtp.pass },
+    });
+    try {
+      await smtp.sendMail({ from: env.emailFrom, to, subject, html, text });
+    } catch (error) {
+      console.error("[email] smtp send failed", error);
+    }
+    return;
+  }
+  console.log(`\n[email:dev] to=${to} subject="${subject}"\n[email:dev] link: ${url}\n`);
+}
+
+/** Sends an email in the user's language (see `deliver` for how it goes out). */
 export async function sendAuthEmail(opts: {
   to: string;
   name: string;
@@ -77,16 +107,6 @@ export async function sendAuthEmail(opts: {
   const locale = isLocale(opts.locale) ? opts.locale : "mk";
   const { subject, html, text } = renderEmail(locale, opts.kind, opts.name, opts.url, opts);
   await deliver(opts.to, subject, html, text, opts.url);
-}
-
-async function deliver(to: string, subject: string, html: string, text: string, url: string) {
-  if (!env.resendKey) {
-    console.log(`\n[email:dev] to=${to} subject="${subject}"\n[email:dev] link: ${url}\n`);
-    return;
-  }
-  resend ??= new Resend(env.resendKey);
-  const { error } = await resend.emails.send({ from: env.emailFrom, to, subject, html, text });
-  if (error) console.error("[email] send failed", error);
 }
 
 /** Email copy of a bell notification; subject and text are already translated by the caller. */

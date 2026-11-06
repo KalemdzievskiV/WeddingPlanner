@@ -69,9 +69,9 @@ All UI text is in `packages/i18n/src/messages/*.json`. English is the reference:
 1. Create a Railway project with a **Postgres** service and a service from this repo (uses `Dockerfile` + `railway.json`).
 2. Set the variables from `.env.example` on the web service. `DATABASE_URL=${{Postgres.DATABASE_URL}}`, `BETTER_AUTH_URL` = the public URL.
 3. For images in production, create a Cloudflare R2 bucket with public access and fill the `R2_*` variables. Without R2 the app writes to `UPLOAD_DIR`, which needs a Railway volume.
-4. For email, verify a sending domain in Resend and set `RESEND_API_KEY` and `EMAIL_FROM`.
+4. For email, either verify a sending domain in Resend and set `RESEND_API_KEY` and `EMAIL_FROM`, or (for a test server, before there's a domain) use Gmail SMTP: turn on 2-step verification on the Google account, create an app password at https://myaccount.google.com/apppasswords, then set `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=465`, `SMTP_USER=<the gmail address>`, `SMTP_PASS=<the app password>` and `EMAIL_FROM="Svadba <the same gmail address>"`. Gmail allows about 500 emails a day.
 5. For maps, create a free MapTiler key and set `NEXT_PUBLIC_MAPTILER_KEY` (development uses OpenStreetMap tiles).
-6. For Google login, create an OAuth client in Google Cloud with the redirect URI `<BETTER_AUTH_URL>/api/auth/callback/google`.
+6. For Google login: in Google Cloud Console create a project, set up the OAuth consent screen (External; while it's in "Testing" add each tester's Gmail under Test users), then create an OAuth client ID of type "Web application" with the authorized redirect URI `<BETTER_AUTH_URL>/api/auth/callback/google`. Set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`; the "Continue with Google" button appears once both are set.
 
 On every start the container applies migrations, runs the seed, then starts Next.js.
 

@@ -22,6 +22,16 @@ export const env = {
       ? { clientId: process.env.GOOGLE_CLIENT_ID, clientSecret: process.env.GOOGLE_CLIENT_SECRET }
       : null,
   resendKey: process.env.RESEND_API_KEY || null,
+  /** Any SMTP server, e.g. Gmail with an app password. Used when RESEND_API_KEY is empty. */
+  smtp:
+    process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS
+      ? {
+          host: process.env.SMTP_HOST,
+          port: Number(process.env.SMTP_PORT || 465),
+          user: process.env.SMTP_USER,
+          pass: process.env.SMTP_PASS,
+        }
+      : null,
   emailFrom: process.env.EMAIL_FROM ?? "Svadba <no-reply@example.com>",
   uploadDir: process.env.UPLOAD_DIR ?? "./uploads",
   r2:
