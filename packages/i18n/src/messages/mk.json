@@ -287,7 +287,8 @@
       "you": "Вие",
       "noRoles": "Сè уште не избрал",
       "empty": "Нема корисници за „{query}“.",
-      "count": "{count, plural, one {# корисник} other {# корисници}}"
+      "count": "{count, plural, one {# корисник} other {# корисници}}",
+      "confirmEmail": "Потврди е-пошта"
     },
     "fields": {
       "slug": "Slug",

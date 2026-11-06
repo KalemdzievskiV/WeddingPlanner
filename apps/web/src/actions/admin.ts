@@ -94,3 +94,12 @@ export async function setAdminRoleAction(userId: string, makeAdmin: boolean): Pr
   revalidatePath("/", "layout");
   return { ok: true };
 }
+
+/** Confirms a user's email by hand, e.g. when the confirmation email never arrived. */
+export async function confirmEmailAction(userId: string): Promise<FormState> {
+  const admin = await getAdmin();
+  if (!admin || typeof userId !== "string") return { formError: "forbidden" };
+  await prisma.user.update({ where: { id: userId }, data: { emailVerified: true } });
+  revalidatePath("/", "layout");
+  return { ok: true };
+}

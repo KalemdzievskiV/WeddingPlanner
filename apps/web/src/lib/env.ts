@@ -22,6 +22,8 @@ export const env = {
       ? { clientId: process.env.GOOGLE_CLIENT_ID, clientSecret: process.env.GOOGLE_CLIENT_SECRET }
       : null,
   resendKey: process.env.RESEND_API_KEY || null,
+  /** Brevo's web API: works on hosts that block SMTP (Railway Hobby) and needs no domain, only a verified sender. */
+  brevoKey: process.env.BREVO_API_KEY || null,
   /** Any SMTP server, e.g. Gmail with an app password. Used when RESEND_API_KEY is empty. */
   smtp:
     process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS

@@ -4,6 +4,7 @@ import { prisma } from "@svadba/db";
 import { Search } from "lucide-react";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { AdminRoleButton } from "@/components/admin/admin-role-button";
+import { ConfirmEmailButton } from "@/components/admin/confirm-email-button";
 import { PageHeader } from "@/components/admin/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -80,7 +81,10 @@ export default async function UsersPage({
                     </div>
                   </td>
                   <td className="px-5 py-3.5">
-                    <Badge tone={u.emailVerified ? "success" : "warning"}>{u.emailVerified ? tc("yes") : tc("no")}</Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge tone={u.emailVerified ? "success" : "warning"}>{u.emailVerified ? tc("yes") : tc("no")}</Badge>
+                      {!u.emailVerified && <ConfirmEmailButton userId={u.id} />}
+                    </div>
                   </td>
                   <td className="px-5 py-3.5 tabular-nums text-ink-soft">{format.dateTime(u.createdAt, { dateStyle: "medium" })}</td>
                   <td className="px-5 py-3.5 text-right">

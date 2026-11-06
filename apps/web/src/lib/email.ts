@@ -65,14 +65,18 @@ let resend: Resend | null = null;
 let smtp: Transporter | null = null;
 
 /**
- * Sends through Resend when RESEND_API_KEY is set, otherwise through SMTP (e.g. Gmail) when SMTP_* is set,
- * otherwise prints the email to the console (development).
+ * Sends through the first one configured: Resend (RESEND_API_KEY), Brevo (BREVO_API_KEY), SMTP (SMTP_*).
+ * With none, prints the email to the console (development).
  */
 async function deliver(to: string, subject: string, html: string, text: string, url: string) {
   if (env.resendKey) {
     resend ??= new Resend(env.resendKey);
     const { error } = await resend.emails.send({ from: env.emailFrom, to, subject, html, text });
     if (error) console.error("[email] send failed", error);
+    return;
+  }
+  if (env.brevoKey) {
+    await sendWithBrevo(env.brevoKey, to, subject, html, text);
     return;
   }
   if (env.smtp) {
@@ -90,6 +94,26 @@ async function deliver(to: string, subject: string, html: string, text: string, 
     return;
   }
   console.log(`\n[email:dev] to=${to} subject="${subject}"\n[email:dev] link: ${url}\n`);
+}
+
+/** Splits EMAIL_FROM ("Name <address>" or just "address") into its parts. */
+function parseFrom(from: string) {
+  const m = from.match(/^\s*"?([^"<]*?)"?\s*<([^>]+)>\s*$/);
+  return m ? { name: m[1]!.trim() || undefined, email: m[2]!.trim() } : { email: from.trim() };
+}
+
+async function sendWithBrevo(apiKey: string, to: string, subject: string, html: string, text: string) {
+  try {
+    const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: { "api-key": apiKey, "content-type": "application/json", accept: "application/json" },
+      body: JSON.stringify({ sender: parseFrom(env.emailFrom), to: [{ email: to }], subject, htmlContent: html, textContent: text }),
+      signal: AbortSignal.timeout(15_000),
+    });
+    if (!res.ok) console.error("[email] brevo send failed", res.status, await res.text());
+  } catch (error) {
+    console.error("[email] brevo send failed", error);
+  }
 }
 
 /** Sends an email in the user's language (see `deliver` for how it goes out). */

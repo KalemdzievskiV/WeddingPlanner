@@ -287,7 +287,8 @@
       "you": "Ju",
       "noRoles": "Ende pa zgjedhur",
       "empty": "Asnjë përdorues për „{query}“.",
-      "count": "{count, plural, one {# përdorues} other {# përdorues}}"
+      "count": "{count, plural, one {# përdorues} other {# përdorues}}",
+      "confirmEmail": "Konfirmo email-in"
     },
     "fields": {
       "slug": "Slug",
