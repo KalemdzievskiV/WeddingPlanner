@@ -1,7 +1,7 @@
 "use client";
 
 import { HEAD_TABLE_ROLES, PLAN_HEIGHT, PLAN_WIDTH, TABLE_SHAPES, type GuestRole, type TableShape } from "@svadba/shared";
-import { Crown, Pencil, Plus, RotateCw, Trash2, UserMinus, UserPlus, Users } from "lucide-react";
+import { Crown, Pencil, Plus, RotateCw, Search, Trash2, UserMinus, UserPlus, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState, useTransition } from "react";
 import {
@@ -14,7 +14,7 @@ import {
 } from "@/actions/plan-seating";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Field, Input, Select } from "@/components/ui/field";
+import { Field, Input, inputClass, Select } from "@/components/ui/field";
 import type { FormState } from "@/lib/form";
 import { useFormAction } from "@/lib/use-form-action";
 import { cn } from "@/lib/utils";
@@ -115,6 +115,7 @@ export function SeatingPlanner({
   const [editingTable, setEditingTable] = useState(false);
   const [moved, setMoved] = useState<Record<string, { x: number; y: number; rotation: number }>>({});
   const [pending, start] = useTransition();
+  const [query, setQuery] = useState("");
   const byId = new Map(guests.map((g) => [g.id, g]));
   // Head tables list the wedding party in its fixed order, couple in the middle (decision 102).
   const headIndex = (id: string) => {
@@ -128,6 +129,20 @@ export function SeatingPlanner({
   const seated = new Set(tables.flatMap((tb) => tb.guestIds));
   const unseated = guests.filter((g) => !seated.has(g.id));
   const households = groupBy(unseated, (g) => g.householdId);
+
+  // Search: filters the unseated list and finds who is already seated where.
+  const q = query.trim().toLowerCase();
+  const matches = (g: SeatGuest) => g.name.toLowerCase().includes(q) || g.household.toLowerCase().includes(q);
+  const shownHouseholds = q
+    ? [...households.entries()].flatMap(([hid, members]) => {
+        const hit = members.filter(matches);
+        return hit.length ? [[hid, hit] as const] : [];
+      })
+    : [...households.entries()];
+  const seatedMatches = q
+    ? tables.flatMap((tb) => tb.guestIds.flatMap((id) => (byId.get(id) && matches(byId.get(id)!) ? [{ guest: byId.get(id)!, table: tb }] : [])))
+    : [];
+  const highlight = new Set(seatedMatches.map((m) => m.guest.id));
 
   const pos = (tb: TableRow) => moved[tb.id] ?? { x: tb.x, y: tb.y, rotation: tb.rotation };
   const seat = (ids: string[]) => selected && start(async () => void (await seatGuestsAction(selected.id, ids)));
@@ -178,6 +193,7 @@ export function SeatingPlanner({
               }}
               occupancy={(tb) => tb.guestIds.length}
               nameOf={(id) => byId.get(id)?.name}
+              highlight={highlight}
             />
             {/* List: phones */}
             <ul className="grid gap-3 sm:grid-cols-2 lg:hidden">
@@ -291,14 +307,54 @@ export function SeatingPlanner({
               <p className="mt-1 text-sm text-stone">
                 {unseated.length === 0 ? t("unseatedEmpty") : selected ? t("selected", { name: selected.name }) : t("selectTable")}
               </p>
-              {unseated.length > 0 && (
+              {guests.length > 0 && (
+                <div className="relative mt-3">
+                  <Search aria-hidden className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-stone" />
+                  <input
+                    type="search"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder={t("search")}
+                    aria-label={t("search")}
+                    className={cn(inputClass, "pl-9")}
+                  />
+                </div>
+              )}
+              {seatedMatches.length > 0 && (
+                <div className="mt-3">
+                  <h3 className="text-xs font-medium uppercase tracking-wide text-stone">{t("alreadySeated")}</h3>
+                  <ul className="mt-1 divide-y divide-line">
+                    {seatedMatches.map(({ guest, table }) => (
+                      <li key={guest.id}>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedId(table.id)}
+                          className="flex w-full items-center justify-between gap-2 rounded py-1.5 text-left text-sm hover:text-vranec"
+                        >
+                          <span>{guest.name}</span>
+                          <span className="shrink-0 text-stone">{table.name}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {q && seatedMatches.length === 0 && shownHouseholds.length === 0 && (
+                <p className="mt-3 text-sm text-stone">{t("searchEmpty")}</p>
+              )}
+              {shownHouseholds.length > 0 && (
                 <ul className="mt-3 max-h-[28rem] space-y-3 overflow-y-auto pr-1">
-                  {[...households.entries()].map(([hid, members]) => (
+                  {shownHouseholds.map(([hid, members]) => (
                     <li key={hid} className="rounded-lg border border-line p-2.5">
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-sm font-medium">{members[0]!.household}</span>
-                        {editable && members.length > 1 && (
-                          <Button variant="ghost" size="sm" disabled={!selected || pending} onClick={() => seat(members.map((m) => m.id))}>
+                        {editable && households.get(hid)!.length > 1 && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            disabled={!selected || pending}
+                            onClick={() => seat(households.get(hid)!.map((m) => m.id))}
+                          >
                             <Users aria-hidden className="size-4" /> {t("seatFamily")}
                           </Button>
                         )}
@@ -352,6 +408,7 @@ function FloorPlan({
   onMove,
   occupancy,
   nameOf,
+  highlight,
 }: {
   tables: TableRow[];
   pos: (tb: TableRow) => { x: number; y: number; rotation: number };
@@ -361,6 +418,7 @@ function FloorPlan({
   onMove: (id: string, p: { x: number; y: number; rotation: number }) => void;
   occupancy: (tb: TableRow) => number;
   nameOf: (guestId: string) => string | undefined;
+  highlight: Set<string>;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [drag, setDrag] = useState<{ id: string; x: number; y: number; startX: number; startY: number; moved: boolean } | null>(null);
@@ -449,6 +507,7 @@ function FloorPlan({
                   className={cn(
                     "absolute grid place-items-center rounded-full border-[1.5px] font-semibold leading-none text-white",
                     i >= tb.seats && "ring-2 ring-danger ring-offset-1",
+                    guestId && highlight.has(guestId) && "z-10 scale-125 ring-2 ring-ink ring-offset-1",
                   )}
                   style={{
                     left: `${((c.x - CHAIR / 2) / size.w) * 100}%`,

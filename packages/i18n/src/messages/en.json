@@ -962,7 +962,10 @@
       "locked": "The seating plan is part of Premium.",
       "headTableName": "Head table",
       "headTable": "Set up head table",
-      "headTableHint": "Seats the couple, kum, kuma, starosvat and starosvatica at the head table."
+      "headTableHint": "Seats the couple, kum, kuma, starosvat and starosvatica at the head table.",
+      "search": "Search guest or family",
+      "alreadySeated": "Already seated",
+      "searchEmpty": "No guest with that name."
     },
     "budget": {
       "title": "Budget",

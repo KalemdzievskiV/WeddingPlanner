@@ -962,7 +962,10 @@
       "locked": "Plani i uljes është pjesë e Premium.",
       "headTableName": "Tryeza kryesore",
       "headTable": "Përgatit tryezën kryesore",
-      "headTableHint": "Ulë çiftin, kumbarin, kumbarën, kryekrushkun dhe kryekrushkën në tryezën kryesore."
+      "headTableHint": "Ulë çiftin, kumbarin, kumbarën, kryekrushkun dhe kryekrushkën në tryezën kryesore.",
+      "search": "Kërko të ftuar ose familje",
+      "alreadySeated": "Janë ulur tashmë",
+      "searchEmpty": "Nuk ka të ftuar me këtë emër."
     },
     "budget": {
       "title": "Buxheti",
