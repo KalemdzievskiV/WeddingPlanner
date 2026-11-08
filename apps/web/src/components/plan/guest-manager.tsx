@@ -4,7 +4,7 @@ import { AGE_GROUPS, GUEST_SIDES, type AgeGroup, type GuestSide, type Rsvp } fro
 import { Check, Link2, MessageCircle, Pencil, Plus, Search, Trash2, Upload, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState, useTransition } from "react";
-import { deleteHouseholdAction, saveHouseholdAction, setRsvpAction } from "@/actions/plan-guests";
+import { deleteAllGuestsAction, deleteHouseholdAction, saveHouseholdAction, setRsvpAction } from "@/actions/plan-guests";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonClass } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -79,7 +79,8 @@ export function GuestManager({
           <p className="text-sm text-stone">{t("ages", { adults: guestCount - children, children })}</p>
         </div>
         {editable && (
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            {households.length > 0 && <DeleteAllButton households={households} />}
             <Button variant="secondary" onClick={() => setImporting((v) => !v)}>
               <Upload aria-hidden className="size-4" /> {t("import")}
             </Button>
@@ -452,5 +453,23 @@ function HouseholdEditor({
         </div>
       </form>
     </Card>
+  );
+}
+
+function DeleteAllButton({ households }: { households: HouseholdRow[] }) {
+  const t = useTranslations("plan.guests");
+  const [pending, start] = useTransition();
+  const guests = households.reduce((n, h) => n + h.guests.length, 0);
+  return (
+    <Button
+      variant="danger"
+      disabled={pending}
+      onClick={() => {
+        if (confirm(t("confirmDeleteAll", { households: households.length, guests })))
+          start(async () => void (await deleteAllGuestsAction()));
+      }}
+    >
+      <Trash2 aria-hidden className="size-4" /> {t("deleteAll")}
+    </Button>
   );
 }

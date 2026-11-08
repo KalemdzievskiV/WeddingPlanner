@@ -871,6 +871,8 @@
       "edit": "Измени",
       "delete": "Избриши",
       "confirmDelete": "Да се избрише семејството „{name}“ со сите во него?",
+      "deleteAll": "Избриши ги сите",
+      "confirmDeleteAll": "Да се избришат сите {guests} гости во {households} семејства? Се бришат и нивните одговори и места на масите. Ова не може да се врати.",
       "rsvpLink": "Линк за потврда",
       "shareWhatsapp": "WhatsApp",
       "shareViber": "Viber",

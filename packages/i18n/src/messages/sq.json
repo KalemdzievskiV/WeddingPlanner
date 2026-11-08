@@ -871,6 +871,8 @@
       "edit": "Ndrysho",
       "delete": "Fshi",
       "confirmDelete": "Të fshihet familja „{name}“ me të gjithë?",
+      "deleteAll": "Fshiji të gjithë",
+      "confirmDeleteAll": "Të fshihen të gjithë {guests} të ftuarit në {households} familje? Fshihen edhe përgjigjet dhe vendet e tyre në tavolina. Kjo nuk mund të kthehet.",
       "rsvpLink": "Lidhja e konfirmimit",
       "shareWhatsapp": "WhatsApp",
       "shareViber": "Viber",

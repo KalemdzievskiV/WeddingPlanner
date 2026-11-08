@@ -73,6 +73,15 @@ export async function deleteHouseholdAction(id: string): Promise<FormState> {
   return { ok: true };
 }
 
+/** Clears the whole guest list (e.g. to redo an import). Answers and seats go with the guests. */
+export async function deleteAllGuestsAction(): Promise<FormState> {
+  const access = await editableWedding();
+  if (!access) return { formError: "forbidden" };
+  await prisma.household.deleteMany({ where: { weddingId: access.wedding.id } });
+  refresh();
+  return { ok: true };
+}
+
 /** Bulk add from a pasted list or a CSV/Excel file (decision 65). */
 export async function importGuestsAction(rows: unknown, eventIdsInput: unknown): Promise<FormState & { added?: number }> {
   const access = await editableWedding();
