@@ -30,14 +30,61 @@ export type TableRow = {
   guestIds: string[];
 };
 
-/** Table footprint on the floor plan, in plan units. */
-function tableSize(shape: TableShape, seats: number) {
+/** Chair diameter and the gap between chairs / chair and table, in plan units. */
+const CHAIR = 28;
+const GAP = 3;
+
+/** Table footprint on the floor plan, in plan units. Grows so `chairs` chairs fit around it. */
+function tableSize(shape: TableShape, chairs: number) {
+  const pitch = CHAIR + GAP + 1;
   if (shape === "ROUND") {
-    const d = Math.min(150, 56 + seats * 5);
+    const fit = (chairs * pitch) / Math.PI - CHAIR - 2 * GAP; // diameter whose chair ring holds every chair
+    const d = Math.max(Math.min(150, 56 + chairs * 5), fit);
     return { w: d, h: d };
   }
-  if (shape === "HEAD") return { w: Math.min(420, 70 + seats * 22), h: 46 };
-  return { w: Math.min(420, 40 + seats * 13), h: 52 };
+  if (shape === "HEAD") return { w: Math.max(Math.min(420, 70 + chairs * 22), chairs * pitch + 12), h: 46 };
+  return { w: Math.max(Math.min(420, 40 + chairs * 13), Math.ceil(chairs / 2) * pitch + 12), h: 52 };
+}
+
+/**
+ * Chair centres relative to the table's top-left corner (before rotation).
+ * Round: a ring starting at the top. Long: both long sides. Head: one side only, behind the table,
+ * so the couple faces the room (rotate the table to flip it).
+ */
+function chairSpots(shape: TableShape, chairs: number, w: number, h: number) {
+  const out = CHAIR / 2 + GAP;
+  if (shape === "ROUND") {
+    const r = w / 2 + out;
+    return Array.from({ length: chairs }, (_, i) => {
+      const a = (i / chairs) * 2 * Math.PI - Math.PI / 2;
+      return { x: w / 2 + r * Math.cos(a), y: h / 2 + r * Math.sin(a) };
+    });
+  }
+  const row = (n: number, y: number) => Array.from({ length: n }, (_, i) => ({ x: ((i + 0.5) * w) / n, y }));
+  if (shape === "HEAD") return row(chairs, -out);
+  const top = Math.ceil(chairs / 2);
+  return [...row(top, -out), ...row(chairs - top, h + out)];
+}
+
+/** Table fill meter: green when empty, orange half full, red when full. */
+const FILL_STOPS = [
+  [91, 122, 63], // green
+  [197, 138, 43], // orange
+  [161, 42, 42], // red (danger)
+] as const;
+function fillColor(seated: number, seats: number) {
+  const t = Math.min(1, seats > 0 ? seated / seats : 1) * (FILL_STOPS.length - 1);
+  const i = Math.min(FILL_STOPS.length - 2, Math.floor(t));
+  const f = t - i;
+  const [a, b] = [FILL_STOPS[i]!, FILL_STOPS[i + 1]!];
+  return `rgb(${a.map((v, k) => Math.round(v + (b[k]! - v) * f)).join(" ")})`;
+}
+
+/** "Денка Марковска" → "ДМ", "Конте" → "К". */
+function initials(name: string) {
+  const words = name.split(/\s+/).filter(Boolean);
+  const letters = words.length > 1 ? [words[0]!, words.at(-1)!] : words;
+  return letters.map((w) => w[0]!.toUpperCase()).join("");
 }
 
 export function SeatingPlanner({
@@ -101,6 +148,7 @@ export function SeatingPlanner({
                 start(async () => void (await moveTableAction(id, p.x, p.y, p.rotation)));
               }}
               occupancy={(tb) => tb.guestIds.length}
+              nameOf={(id) => byId.get(id)?.name}
             />
             {/* List: phones */}
             <ul className="grid gap-3 sm:grid-cols-2 lg:hidden">
@@ -274,6 +322,7 @@ function FloorPlan({
   onSelect,
   onMove,
   occupancy,
+  nameOf,
 }: {
   tables: TableRow[];
   pos: (tb: TableRow) => { x: number; y: number; rotation: number };
@@ -282,6 +331,7 @@ function FloorPlan({
   onSelect: (id: string) => void;
   onMove: (id: string, p: { x: number; y: number; rotation: number }) => void;
   occupancy: (tb: TableRow) => number;
+  nameOf: (guestId: string) => string | undefined;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [drag, setDrag] = useState<{ id: string; x: number; y: number; startX: number; startY: number; moved: boolean } | null>(null);
@@ -297,7 +347,7 @@ function FloorPlan({
   return (
     <div
       ref={ref}
-      className="relative hidden w-full select-none overflow-hidden rounded-[var(--radius-card)] border border-line bg-surface lg:block"
+      className="@container relative hidden w-full select-none overflow-hidden rounded-[var(--radius-card)] border border-line bg-surface lg:block"
       style={{
         aspectRatio: `${PLAN_WIDTH} / ${PLAN_HEIGHT}`,
         backgroundImage: "radial-gradient(circle, rgb(35 26 29 / 0.09) 1px, transparent 1px)",
@@ -306,8 +356,11 @@ function FloorPlan({
     >
       {tables.map((tb) => {
         const p = drag?.id === tb.id ? { ...pos(tb), x: drag.x, y: drag.y } : pos(tb);
-        const size = tableSize(tb.shape, tb.seats);
-        const over = occupancy(tb) > tb.seats;
+        const seated = occupancy(tb);
+        const chairs = Math.max(tb.seats, seated);
+        const size = tableSize(tb.shape, chairs);
+        const over = seated > tb.seats;
+        const color = fillColor(seated, tb.seats);
         return (
           <button
             key={tb.id}
@@ -356,6 +409,32 @@ function FloorPlan({
               transform: `translate(-50%, -50%) rotate(${p.rotation}deg)`,
             }}
           >
+            {chairSpots(tb.shape, chairs, size.w, size.h).map((c, i) => {
+              const guestId = tb.guestIds[i];
+              const name = guestId ? nameOf(guestId) : undefined;
+              return (
+                <span
+                  key={i}
+                  aria-hidden
+                  title={name}
+                  className={cn(
+                    "absolute grid place-items-center rounded-full border-[1.5px] font-semibold leading-none text-white",
+                    i >= tb.seats && "ring-2 ring-danger ring-offset-1",
+                  )}
+                  style={{
+                    left: `${((c.x - CHAIR / 2) / size.w) * 100}%`,
+                    top: `${((c.y - CHAIR / 2) / size.h) * 100}%`,
+                    width: `${(CHAIR / size.w) * 100}%`,
+                    height: `${(CHAIR / size.h) * 100}%`,
+                    borderColor: color,
+                    backgroundColor: guestId ? color : "var(--color-surface)",
+                    fontSize: `${(CHAIR * 0.48) / 10}cqw`,
+                  }}
+                >
+                  {name && <span style={{ transform: `rotate(${-p.rotation}deg)` }}>{initials(name)}</span>}
+                </span>
+              );
+            })}
             <span className="max-w-full truncate px-1 text-xs font-medium leading-tight" style={{ transform: `rotate(${-p.rotation}deg)` }}>
               {tb.name}
               <span className={cn("block tabular-nums", over ? "text-danger" : "text-stone")}>
