@@ -15,6 +15,7 @@ import { redirect } from "next/navigation";
 import { newToken } from "@/lib/business";
 import { zodFieldErrors, type FormState } from "@/lib/form";
 import { getCurrentUser } from "@/lib/session";
+import { fillHeadTable } from "@/lib/head-table";
 import { deleteImage } from "@/lib/storage";
 import { canManage, editableWedding, getWeddingAccess } from "@/lib/wedding";
 
@@ -81,6 +82,7 @@ export async function createWeddingAction(_prev: FormState, fd: FormData): Promi
       },
     });
   }
+  await fillHeadTable(wedding.id, { create: true, locale });
   if (!user.roles.includes("COUPLE")) {
     await prisma.user.update({ where: { id: user.id }, data: { roles: { push: "COUPLE" } } });
   }

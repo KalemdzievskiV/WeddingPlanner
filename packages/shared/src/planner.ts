@@ -21,6 +21,9 @@ export const ROLE_SIDE: Record<GuestRole, "BRIDE" | "GROOM"> = {
   DEVER: "GROOM",
 };
 
+/** Who sits at the head table, left to right as the room sees it (decision 102). */
+export const HEAD_TABLE_ROLES = ["STAROSVATICA", "STAR_SVAT", "KUM", "GROOM", "BRIDE", "KUMA"] as const satisfies readonly GuestRole[];
+
 export const RSVP_VALUES = ["PENDING", "YES", "NO"] as const;
 export type Rsvp = (typeof RSVP_VALUES)[number];
 

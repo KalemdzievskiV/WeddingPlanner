@@ -959,7 +959,10 @@
       "dragHint": "Tërhiqni tavolinat për të rregulluar sallën. Klikoni një tavolinë për ta zgjedhur.",
       "guestsAtTable": "Të ftuarit në këtë tavolinë",
       "emptyTable": "Ende askush në këtë tavolinë.",
-      "locked": "Plani i uljes është pjesë e Premium."
+      "locked": "Plani i uljes është pjesë e Premium.",
+      "headTableName": "Tryeza kryesore",
+      "headTable": "Përgatit tryezën kryesore",
+      "headTableHint": "Ulë çiftin, kumbarin, kumbarën, kryekrushkun dhe kryekrushkën në tryezën kryesore."
     },
     "budget": {
       "title": "Buxheti",

@@ -1,11 +1,12 @@
 "use client";
 
-import { PLAN_HEIGHT, PLAN_WIDTH, TABLE_SHAPES, type TableShape } from "@svadba/shared";
-import { Pencil, Plus, RotateCw, Trash2, UserMinus, UserPlus, Users } from "lucide-react";
+import { HEAD_TABLE_ROLES, PLAN_HEIGHT, PLAN_WIDTH, TABLE_SHAPES, type GuestRole, type TableShape } from "@svadba/shared";
+import { Crown, Pencil, Plus, RotateCw, Trash2, UserMinus, UserPlus, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState, useTransition } from "react";
 import {
   deleteTableAction,
+  headTableAction,
   moveTableAction,
   saveTableAction,
   seatGuestsAction,
@@ -18,7 +19,14 @@ import type { FormState } from "@/lib/form";
 import { useFormAction } from "@/lib/use-form-action";
 import { cn } from "@/lib/utils";
 
-export type SeatGuest = { id: string; name: string; household: string; householdId: string; child: boolean };
+export type SeatGuest = {
+  id: string;
+  name: string;
+  household: string;
+  householdId: string;
+  child: boolean;
+  role: GuestRole | null;
+};
 export type TableRow = {
   id: string;
   name: string;
@@ -89,23 +97,34 @@ function initials(name: string) {
 
 export function SeatingPlanner({
   eventId,
-  tables,
+  locale,
+  tables: rawTables,
   guests,
   editable,
 }: {
   eventId: string;
+  locale: string;
   tables: TableRow[];
   guests: SeatGuest[];
   editable: boolean;
 }) {
   const t = useTranslations("plan.seating");
-  const [selectedId, setSelectedId] = useState<string | null>(tables[0]?.id ?? null);
+  const tg = useTranslations("plan.guests");
+  const [selectedId, setSelectedId] = useState<string | null>(rawTables[0]?.id ?? null);
   const [adding, setAdding] = useState(false);
   const [editingTable, setEditingTable] = useState(false);
   const [moved, setMoved] = useState<Record<string, { x: number; y: number; rotation: number }>>({});
   const [pending, start] = useTransition();
-  const selected = tables.find((tb) => tb.id === selectedId) ?? null;
   const byId = new Map(guests.map((g) => [g.id, g]));
+  // Head tables list the wedding party in its fixed order, couple in the middle (decision 102).
+  const headIndex = (id: string) => {
+    const i = (HEAD_TABLE_ROLES as readonly (GuestRole | null)[]).indexOf(byId.get(id)?.role ?? null);
+    return i === -1 ? HEAD_TABLE_ROLES.length : i;
+  };
+  const tables = rawTables.map((tb) =>
+    tb.shape === "HEAD" ? { ...tb, guestIds: [...tb.guestIds].sort((a, b) => headIndex(a) - headIndex(b)) } : tb,
+  );
+  const selected = tables.find((tb) => tb.id === selectedId) ?? null;
   const seated = new Set(tables.flatMap((tb) => tb.guestIds));
   const unseated = guests.filter((g) => !seated.has(g.id));
   const households = groupBy(unseated, (g) => g.householdId);
@@ -118,11 +137,21 @@ export function SeatingPlanner({
       {editable && (
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="hidden text-sm text-stone lg:block">{t("dragHint")}</p>
-          {!adding && (
-            <Button onClick={() => setAdding(true)}>
-              <Plus aria-hidden className="size-4" /> {t("addTable")}
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="secondary"
+              title={t("headTableHint")}
+              disabled={pending}
+              onClick={() => start(async () => void (await headTableAction(eventId, locale)))}
+            >
+              <Crown aria-hidden className="size-4" /> {t("headTable")}
             </Button>
-          )}
+            {!adding && (
+              <Button onClick={() => setAdding(true)}>
+                <Plus aria-hidden className="size-4" /> {t("addTable")}
+              </Button>
+            )}
+          </div>
         </div>
       )}
       {adding && (
@@ -234,7 +263,7 @@ export function SeatingPlanner({
                           return (
                             <li key={id} className="flex items-center justify-between gap-2 py-1.5 text-sm">
                               <span>
-                                {g.name} <span className="text-stone">· {g.household}</span>
+                                {g.name} <span className="text-stone">· {g.role ? tg(`roles.${g.role}`) : g.household}</span>
                               </span>
                               {editable && (
                                 <Button

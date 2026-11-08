@@ -1,9 +1,10 @@
 "use server";
 
 import { prisma } from "@svadba/db";
-import { PLAN_HEIGHT, PLAN_WIDTH, tableSchema } from "@svadba/shared";
+import { isLocale, PLAN_HEIGHT, PLAN_WIDTH, tableSchema } from "@svadba/shared";
 import { revalidatePath } from "next/cache";
 import { zodFieldErrors, type FormState } from "@/lib/form";
+import { fillHeadTable } from "@/lib/head-table";
 import { editableWedding, premiumLocked } from "@/lib/wedding";
 
 const refresh = () => revalidatePath("/", "layout");
@@ -48,6 +49,17 @@ export async function saveTableAction(
       },
     });
   }
+  refresh();
+  return { ok: true };
+}
+
+/** "Постави главна маса": creates the head table if missing and seats the wedding party there (decision 102). */
+export async function headTableAction(eventId: string, locale: string): Promise<FormState> {
+  const access = await seatingAccess();
+  if (!access || !isLocale(locale)) return { formError: "forbidden" };
+  const event = await prisma.weddingEvent.findFirst({ where: { id: eventId, weddingId: access.wedding.id, hasSeating: true } });
+  if (!event) return { formError: "generic" };
+  await fillHeadTable(access.wedding.id, { create: true, locale, eventId });
   refresh();
   return { ok: true };
 }

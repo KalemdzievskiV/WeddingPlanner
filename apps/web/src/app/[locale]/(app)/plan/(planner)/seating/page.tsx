@@ -78,6 +78,7 @@ export default async function SeatingPage({
       <SeatingPlanner
         key={event.id}
         eventId={event.id}
+        locale={locale}
         editable={canEdit(role)}
         tables={tables.map((tb) => ({
           id: tb.id,
@@ -95,6 +96,7 @@ export default async function SeatingPage({
           household: i.guest.household.name,
           householdId: i.guest.household.id,
           child: i.guest.ageGroup === "CHILD",
+          role: i.guest.role,
         }))}
       />
     </div>

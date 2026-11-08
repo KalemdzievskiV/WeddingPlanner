@@ -959,7 +959,10 @@
       "dragHint": "Drag tables to arrange the hall. Click a table to select it.",
       "guestsAtTable": "Guests at this table",
       "emptyTable": "Nobody at this table yet.",
-      "locked": "The seating plan is part of Premium."
+      "locked": "The seating plan is part of Premium.",
+      "headTableName": "Head table",
+      "headTable": "Set up head table",
+      "headTableHint": "Seats the couple, kum, kuma, starosvat and starosvatica at the head table."
     },
     "budget": {
       "title": "Budget",

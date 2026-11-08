@@ -1,12 +1,22 @@
 "use server";
 
 import { prisma } from "@svadba/db";
-import { householdSchema, importSchema, planStartSchema, ROLE_SIDE, RSVP_VALUES, type Rsvp } from "@svadba/shared";
+import {
+  HEAD_TABLE_ROLES,
+  householdSchema,
+  importSchema,
+  planStartSchema,
+  ROLE_SIDE,
+  RSVP_VALUES,
+  type GuestRole,
+  type Rsvp,
+} from "@svadba/shared";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { newToken } from "@/lib/business";
 import { parsePasted } from "@/lib/guest-import";
+import { fillHeadTable } from "@/lib/head-table";
 import { zodFieldErrors, type FormState } from "@/lib/form";
 import { beyondCouple, editableWedding, guestLimitReached } from "@/lib/wedding";
 
@@ -29,7 +39,7 @@ export async function saveHouseholdAction(id: string | null, input: unknown): Pr
   const eventIds = await validEventIds(weddingId, parsed.data.eventIds);
 
   const existing = id
-    ? await prisma.household.findFirst({ where: { id, weddingId }, include: { guests: { select: { id: true } } } })
+    ? await prisma.household.findFirst({ where: { id, weddingId }, include: { guests: { select: { id: true, role: true } } } })
     : null;
   if (id && !existing) return { formError: "generic" };
 
@@ -48,6 +58,8 @@ export async function saveHouseholdAction(id: string | null, input: unknown): Pr
   const total = await prisma.guest.count({ where: { weddingId } });
   if (guestLimitReached(access.wedding, total, newCount)) return { formError: "guestLimit" };
 
+  const headRole = (r: GuestRole | null | undefined) => !!r && (HEAD_TABLE_ROLES as readonly GuestRole[]).includes(r);
+  const toHeadTable: string[] = [];
   await prisma.$transaction(async (tx) => {
     const household = existing
       ? await tx.household.update({ where: { id: existing.id }, data: { name, side, notes } })
@@ -67,6 +79,8 @@ export async function saveHouseholdAction(id: string | null, input: unknown): Pr
           : await tx.guest.create({
               data: { weddingId, householdId: household.id, name: g.name, ageGroup: g.ageGroup, role: g.role ?? null, sortOrder: i },
             });
+      // Newly given a head-table role: seat them at the head table (decision 102).
+      if (headRole(g.role) && existing?.guests.find((x) => x.id === guest.id)?.role !== g.role) toHeadTable.push(guest.id);
       // Same events for the whole household; keep existing answers.
       await tx.guestInvitation.deleteMany({ where: { guestId: guest.id, eventId: { notIn: eventIds } } });
       await tx.guestInvitation.createMany({
@@ -77,6 +91,7 @@ export async function saveHouseholdAction(id: string | null, input: unknown): Pr
       await tx.tableSeat.deleteMany({ where: { guestId: guest.id, eventId: { notIn: eventIds } } });
     }
   });
+  if (toHeadTable.length) await fillHeadTable(weddingId, { create: false, guestIds: toHeadTable });
   refresh();
   return { ok: true };
 }
@@ -198,6 +213,7 @@ export async function startPlanAction(locale: string, input: unknown): Promise<F
       { timeout: 30_000 },
     );
   }
+  await fillHeadTable(weddingId, { create: false });
   refresh();
   redirect(`/${locale}/plan/guests`);
 }
