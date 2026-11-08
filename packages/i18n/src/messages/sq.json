@@ -413,7 +413,8 @@
     "offerClosed": "Kësaj oferte i është përgjigjur tashmë ose është zëvendësuar.",
     "reviewNotAllowed": "Mund ta vlerësoni një shërbim pas dasmës, nëse ishte i rezervuar në planin tuaj.",
     "rsvpClosed": "Dasma ka kaluar, prandaj përgjigjet janë mbyllur.",
-    "confirmEmail": "Shkruani email-in saktësisht siç shfaqet."
+    "confirmEmail": "Shkruani email-in saktësisht siç shfaqet.",
+    "roleTaken": "Këtë rol e ka tashmë një i ftuar tjetër."
   },
   "email": {
     "greeting": "Përshëndetje {name},",
@@ -897,6 +898,7 @@
         "KUM": "Kumbari",
         "KUMA": "Kumbara",
         "STAR_SVAT": "Kryekrushku",
+        "STAROSVATICA": "Kryekrushkja",
         "DEVER": "Vëllai i dhëndrit",
         "DEVERUSHA": "Shoqëruesja e nuses"
       },

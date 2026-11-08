@@ -77,6 +77,10 @@ export function GuestManager({
     });
   }, [households, query, side, eventId, rsvp]);
 
+  /** Roles already held by guests of other families; each role belongs to one guest (decision 101). */
+  const rolesOutside = (householdId: string | null) =>
+    new Set(households.filter((h) => h.id !== householdId).flatMap((h) => h.guests.flatMap((g) => (g.role ? [g.role] : []))));
+
   const guestCount = filtered.reduce((n, h) => n + h.guests.length, 0);
   const children = filtered.reduce((n, h) => n + h.guests.filter((g) => g.ageGroup === "CHILD").length, 0);
 
@@ -104,7 +108,7 @@ export function GuestManager({
 
       {importing && <GuestImport events={events} onClose={() => setImporting(false)} />}
       {editing === "new" && (
-        <HouseholdEditor household={null} events={events} onDone={() => setEditing(null)} />
+        <HouseholdEditor household={null} events={events} takenRoles={rolesOutside(null)} onDone={() => setEditing(null)} />
       )}
 
       {households.length > 0 && (
@@ -158,7 +162,7 @@ export function GuestManager({
           {filtered.map((h) =>
             editing === h.id ? (
               <li key={h.id}>
-                <HouseholdEditor household={h} events={events} onDone={() => setEditing(null)} />
+                <HouseholdEditor household={h} events={events} takenRoles={rolesOutside(h.id)} onDone={() => setEditing(null)} />
               </li>
             ) : (
               <li key={h.id}>
@@ -318,10 +322,12 @@ type DraftGuest = { id?: string; key: string; name: string; ageGroup: AgeGroup; 
 function HouseholdEditor({
   household,
   events,
+  takenRoles,
   onDone,
 }: {
   household: HouseholdRow | null;
   events: EventOption[];
+  takenRoles: Set<GuestRole>;
   onDone: () => void;
 }) {
   const t = useTranslations("plan.guests");
@@ -423,7 +429,7 @@ function HouseholdEditor({
                 >
                   <option value="">{t("noRole")}</option>
                   {GUEST_ROLES.map((r) => (
-                    <option key={r} value={r}>
+                    <option key={r} value={r} disabled={takenRoles.has(r) || guests.some((o) => o.key !== g.key && o.role === r)}>
                       {t(`roles.${r}`)}
                     </option>
                   ))}

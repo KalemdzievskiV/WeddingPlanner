@@ -172,6 +172,7 @@ _(Filled in as we agree on each question.)_
 | 98 | Vendor seeding | Existing admin pre-fill + claim link is enough; no bulk import. | AGREED |
 | 99 | Invitation picture | One picture per wedding (JPG/PNG/WebP, kept up to 2400px), uploaded on the Guests page. Shown full width at the top of every RSVP page (tap to open full size) and used as the link preview on Viber/WhatsApp. Full online invitation page stays for later. | AGREED |
 | 100 | Plan first step + wedding party | Right after creating a plan, a one-time page: bride's side vs groom's side, wedding-party roles (bride side: Невеста, Деверуша; groom side: Младоженец, Кум, Кума, Стар сват, Девер; names of the couple pre-filled, all optional), quick guest rows per side (a name, or "Family: name, name") and a "both sides" strip; live ratio and totals. Party members are saved as guests (own household, role on the guest) so they get seats and count for the venue. Skippable; gone once the plan has guests. Roles stay editable in the family editor. | AGREED |
+| 101 | Couple as guests, one guest per role | Creating a plan also adds the bride and groom as guests (own household on their side, role set, invited to all events); the first step renames them instead of adding them again and still shows while the plan holds only the couple. New role Старосватица (groom side, next to Старосват). Each role belongs to one guest: taken roles are disabled in the family editor and rejected by the server. Existing plans are not back-filled. | AGREED |
 
 ---
 

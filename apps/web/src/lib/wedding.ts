@@ -71,3 +71,6 @@ export function guestLimitReached(wedding: Wedding, currentCount: number, adding
 export function premiumLocked(wedding: Wedding) {
   return paywallOn() && !wedding.premium;
 }
+
+/** Guests other than the couple (who are added with the plan, decision 101). The plan's first step only runs while there are none. */
+export const beyondCouple = { OR: [{ role: null }, { role: { notIn: ["BRIDE" as const, "GROOM" as const] } }] };

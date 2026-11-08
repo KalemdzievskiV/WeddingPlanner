@@ -49,7 +49,8 @@ export async function createWeddingAction(_prev: FormState, fd: FormData): Promi
     prisma.checklistTemplateItem.findMany({ orderBy: { sortOrder: "asc" } }),
   ]);
 
-  await prisma.wedding.create({
+  const wedding = await prisma.wedding.create({
+    include: { events: { select: { id: true } } },
     data: {
       ...data,
       members: { create: { userId: user.id, role: "OWNER" } },
@@ -67,6 +68,19 @@ export async function createWeddingAction(_prev: FormState, fd: FormData): Promi
       },
     },
   });
+  // The couple are guests from the start (decision 101): seated at the head table, counted for the venue.
+  const invitations = { create: wedding.events.map((e) => ({ eventId: e.id })) };
+  for (const [role, name] of [["BRIDE", data.partner1], ["GROOM", data.partner2]] as const) {
+    await prisma.household.create({
+      data: {
+        weddingId: wedding.id,
+        name,
+        side: role,
+        rsvpToken: newToken(),
+        guests: { create: { weddingId: wedding.id, name, role, invitations } },
+      },
+    });
+  }
   if (!user.roles.includes("COUPLE")) {
     await prisma.user.update({ where: { id: user.id }, data: { roles: { push: "COUPLE" } } });
   }

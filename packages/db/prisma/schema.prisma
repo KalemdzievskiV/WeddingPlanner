@@ -521,6 +521,7 @@ enum GuestRole {
   KUM
   KUMA
   STAR_SVAT
+  STAROSVATICA
   DEVER
   DEVERUSHA
 }

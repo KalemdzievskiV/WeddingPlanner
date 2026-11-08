@@ -7,8 +7,8 @@ export type GuestSide = (typeof GUEST_SIDES)[number];
 export const AGE_GROUPS = ["CHILD", "YOUNG", "ADULT", "OLDER"] as const;
 export type AgeGroup = (typeof AGE_GROUPS)[number];
 
-/** Wedding-party roles (decision 100), in display order, with the side each sits on by default. */
-export const GUEST_ROLES = ["BRIDE", "DEVERUSHA", "GROOM", "KUM", "KUMA", "STAR_SVAT", "DEVER"] as const;
+/** Wedding-party roles (decisions 100-101), in display order, with the side each sits on by default. Each role is held by one guest at most. */
+export const GUEST_ROLES = ["BRIDE", "DEVERUSHA", "GROOM", "KUM", "KUMA", "STAR_SVAT", "STAROSVATICA", "DEVER"] as const;
 export type GuestRole = (typeof GUEST_ROLES)[number];
 export const ROLE_SIDE: Record<GuestRole, "BRIDE" | "GROOM"> = {
   BRIDE: "BRIDE",
@@ -17,6 +17,7 @@ export const ROLE_SIDE: Record<GuestRole, "BRIDE" | "GROOM"> = {
   KUM: "GROOM",
   KUMA: "GROOM",
   STAR_SVAT: "GROOM",
+  STAROSVATICA: "GROOM",
   DEVER: "GROOM",
 };
 

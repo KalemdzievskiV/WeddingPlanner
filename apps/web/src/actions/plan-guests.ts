@@ -8,7 +8,7 @@ import { z } from "zod";
 import { newToken } from "@/lib/business";
 import { parsePasted } from "@/lib/guest-import";
 import { zodFieldErrors, type FormState } from "@/lib/form";
-import { editableWedding, guestLimitReached } from "@/lib/wedding";
+import { beyondCouple, editableWedding, guestLimitReached } from "@/lib/wedding";
 
 const refresh = () => revalidatePath("/", "layout");
 
@@ -32,6 +32,17 @@ export async function saveHouseholdAction(id: string | null, input: unknown): Pr
     ? await prisma.household.findFirst({ where: { id, weddingId }, include: { guests: { select: { id: true } } } })
     : null;
   if (id && !existing) return { formError: "generic" };
+
+  // Each wedding-party role belongs to one guest (decision 101).
+  const roles = guests.flatMap((g) => (g.role ? [g.role] : []));
+  if (new Set(roles).size !== roles.length) return { fieldErrors: { guests: "roleTaken" } };
+  if (roles.length) {
+    const clash = await prisma.guest.findFirst({
+      where: { weddingId, role: { in: roles }, ...(existing ? { householdId: { not: existing.id } } : {}) },
+      select: { id: true },
+    });
+    if (clash) return { fieldErrors: { guests: "roleTaken" } };
+  }
 
   const newCount = guests.filter((g) => !g.id).length;
   const total = await prisma.guest.count({ where: { weddingId } });
@@ -130,7 +141,8 @@ export async function importGuestsAction(rows: unknown, eventIdsInput: unknown):
 /**
  * First step of a new plan (decision 100): the wedding party (one person per role, each in their own
  * household on the role's side) plus quick guest lines ("Name" or "Family: name, name") per side.
- * Only for a plan without guests yet, so a second submit can't duplicate everyone.
+ * Only while the plan holds nothing but the couple (added with the plan, decision 101), so a second submit
+ * can't duplicate everyone. The couple's names update their existing guests.
  */
 export async function startPlanAction(locale: string, input: unknown): Promise<FormState> {
   const access = await editableWedding();
@@ -138,13 +150,24 @@ export async function startPlanAction(locale: string, input: unknown): Promise<F
   const parsed = planStartSchema.safeParse(input);
   if (!parsed.success) return { formError: "importInvalid" };
   const weddingId = access.wedding.id;
-  if (await prisma.guest.count({ where: { weddingId } })) redirect(`/${locale}/plan/guests`);
+  if (await prisma.guest.count({ where: { weddingId, ...beyondCouple } })) redirect(`/${locale}/plan/guests`);
 
-  const party = parsed.data.party;
+  const couple = await prisma.guest.findMany({ where: { weddingId, role: { in: ["BRIDE", "GROOM"] } } });
+  const party = parsed.data.party.filter((p) => !couple.some((c) => c.role === p.role));
+  const renames = parsed.data.party.flatMap((p) => {
+    const c = couple.find((g) => g.role === p.role);
+    return c && c.name !== p.name ? [{ guest: c, name: p.name }] : [];
+  });
   const families = parsed.data.lines.flatMap((l) => parsePasted(l.text, l.side, "ADULT"));
   const adding = party.length + families.reduce((n, f) => n + f.guests.length, 0);
+  for (const r of renames) {
+    await prisma.$transaction([
+      prisma.guest.update({ where: { id: r.guest.id }, data: { name: r.name } }),
+      prisma.household.update({ where: { id: r.guest.householdId }, data: { name: r.name } }),
+    ]);
+  }
   if (adding > 0) {
-    if (guestLimitReached(access.wedding, 0, adding)) return { formError: "guestLimit" };
+    if (guestLimitReached(access.wedding, couple.length, adding)) return { formError: "guestLimit" };
     const events = await prisma.weddingEvent.findMany({ where: { weddingId }, select: { id: true } });
     const invitations = { create: events.map((e) => ({ eventId: e.id })) };
     await prisma.$transaction(
