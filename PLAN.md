@@ -171,6 +171,7 @@ _(Filled in as we agree on each question.)_
 | 97 | Nightly jobs | Protected API routes (CRON_SECRET) called by a Railway cron service. | AGREED |
 | 98 | Vendor seeding | Existing admin pre-fill + claim link is enough; no bulk import. | AGREED |
 | 99 | Invitation picture | One picture per wedding (JPG/PNG/WebP, kept up to 2400px), uploaded on the Guests page. Shown full width at the top of every RSVP page (tap to open full size) and used as the link preview on Viber/WhatsApp. Full online invitation page stays for later. | AGREED |
+| 100 | Plan first step + wedding party | Right after creating a plan, a one-time page: bride's side vs groom's side, wedding-party roles (bride side: Невеста, Деверуша; groom side: Младоженец, Кум, Кума, Стар сват, Девер; names of the couple pre-filled, all optional), quick guest rows per side (a name, or "Family: name, name") and a "both sides" strip; live ratio and totals. Party members are saved as guests (own household, role on the guest) so they get seats and count for the venue. Skippable; gone once the plan has guests. Roles stay editable in the family editor. | AGREED |
 
 ---
 

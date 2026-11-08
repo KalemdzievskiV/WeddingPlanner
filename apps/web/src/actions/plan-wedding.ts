@@ -71,7 +71,8 @@ export async function createWeddingAction(_prev: FormState, fd: FormData): Promi
     await prisma.user.update({ where: { id: user.id }, data: { roles: { push: "COUPLE" } } });
   }
   refresh();
-  redirect(`/${locale}/plan`);
+  // First step: wedding party and first guests by side (decision 100).
+  redirect(`/${locale}/plan/start`);
 }
 
 export async function updateWeddingAction(_prev: FormState, fd: FormData): Promise<FormState> {

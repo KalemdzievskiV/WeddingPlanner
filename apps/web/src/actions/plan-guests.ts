@@ -1,10 +1,12 @@
 "use server";
 
 import { prisma } from "@svadba/db";
-import { householdSchema, importSchema, RSVP_VALUES, type Rsvp } from "@svadba/shared";
+import { householdSchema, importSchema, planStartSchema, ROLE_SIDE, RSVP_VALUES, type Rsvp } from "@svadba/shared";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { newToken } from "@/lib/business";
+import { parsePasted } from "@/lib/guest-import";
 import { zodFieldErrors, type FormState } from "@/lib/form";
 import { editableWedding, guestLimitReached } from "@/lib/wedding";
 
@@ -47,9 +49,12 @@ export async function saveHouseholdAction(id: string | null, input: unknown): Pr
     for (const [i, g] of guests.entries()) {
       const guest =
         g.id && keep.has(g.id) && existing?.guests.some((x) => x.id === g.id)
-          ? await tx.guest.update({ where: { id: g.id }, data: { name: g.name, ageGroup: g.ageGroup, sortOrder: i } })
+          ? await tx.guest.update({
+              where: { id: g.id },
+              data: { name: g.name, ageGroup: g.ageGroup, role: g.role ?? null, sortOrder: i },
+            })
           : await tx.guest.create({
-              data: { weddingId, householdId: household.id, name: g.name, ageGroup: g.ageGroup, sortOrder: i },
+              data: { weddingId, householdId: household.id, name: g.name, ageGroup: g.ageGroup, role: g.role ?? null, sortOrder: i },
             });
       // Same events for the whole household; keep existing answers.
       await tx.guestInvitation.deleteMany({ where: { guestId: guest.id, eventId: { notIn: eventIds } } });
@@ -120,6 +125,58 @@ export async function importGuestsAction(rows: unknown, eventIdsInput: unknown):
   );
   refresh();
   return { ok: true, added: adding };
+}
+
+/**
+ * First step of a new plan (decision 100): the wedding party (one person per role, each in their own
+ * household on the role's side) plus quick guest lines ("Name" or "Family: name, name") per side.
+ * Only for a plan without guests yet, so a second submit can't duplicate everyone.
+ */
+export async function startPlanAction(locale: string, input: unknown): Promise<FormState> {
+  const access = await editableWedding();
+  if (!access) return { formError: "forbidden" };
+  const parsed = planStartSchema.safeParse(input);
+  if (!parsed.success) return { formError: "importInvalid" };
+  const weddingId = access.wedding.id;
+  if (await prisma.guest.count({ where: { weddingId } })) redirect(`/${locale}/plan/guests`);
+
+  const party = parsed.data.party;
+  const families = parsed.data.lines.flatMap((l) => parsePasted(l.text, l.side, "ADULT"));
+  const adding = party.length + families.reduce((n, f) => n + f.guests.length, 0);
+  if (adding > 0) {
+    if (guestLimitReached(access.wedding, 0, adding)) return { formError: "guestLimit" };
+    const events = await prisma.weddingEvent.findMany({ where: { weddingId }, select: { id: true } });
+    const invitations = { create: events.map((e) => ({ eventId: e.id })) };
+    await prisma.$transaction(
+      async (tx) => {
+        for (const p of party) {
+          await tx.household.create({
+            data: {
+              weddingId,
+              name: p.name,
+              side: ROLE_SIDE[p.role],
+              rsvpToken: newToken(),
+              guests: { create: { weddingId, name: p.name, role: p.role, invitations } },
+            },
+          });
+        }
+        for (const f of families) {
+          await tx.household.create({
+            data: {
+              weddingId,
+              name: f.household,
+              side: f.side,
+              rsvpToken: newToken(),
+              guests: { create: f.guests.map((g, i) => ({ weddingId, name: g.name, ageGroup: g.ageGroup, sortOrder: i, invitations })) },
+            },
+          });
+        }
+      },
+      { timeout: 30_000 },
+    );
+  }
+  refresh();
+  redirect(`/${locale}/plan/guests`);
 }
 
 /** The couple marks an answer themselves (most RSVPs in Macedonia come by phone). */

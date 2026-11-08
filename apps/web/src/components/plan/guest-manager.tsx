@@ -1,6 +1,6 @@
 "use client";
 
-import { AGE_GROUPS, GUEST_SIDES, type AgeGroup, type GuestSide, type Rsvp } from "@svadba/shared";
+import { AGE_GROUPS, GUEST_ROLES, GUEST_SIDES, type AgeGroup, type GuestRole, type GuestSide, type Rsvp } from "@svadba/shared";
 import { Check, Link2, MessageCircle, Pencil, Plus, Search, Trash2, Upload, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState, useTransition } from "react";
@@ -14,7 +14,13 @@ import { cn } from "@/lib/utils";
 import { GuestImport } from "./guest-import";
 import { InvitationCard } from "./invitation-card";
 
-export type GuestRow = { id: string; name: string; ageGroup: AgeGroup; invitations: { eventId: string; rsvp: Rsvp }[] };
+export type GuestRow = {
+  id: string;
+  name: string;
+  ageGroup: AgeGroup;
+  role: GuestRole | null;
+  invitations: { eventId: string; rsvp: Rsvp }[];
+};
 export type HouseholdRow = {
   id: string;
   name: string;
@@ -262,7 +268,11 @@ function HouseholdCard({
         {h.guests.map((g) => (
           <li key={g.id} className="flex flex-wrap items-center gap-x-3 gap-y-1.5 py-2">
             <span className="min-w-0 flex-1 text-sm">
-              {g.name} <span className="text-stone">· {t(`ageGroups.${g.ageGroup}`)}</span>
+              {g.name}
+              {g.role && (
+                <span className="ml-1.5 rounded-full bg-rosehip px-2 py-0.5 text-xs font-medium text-vranec">{t(`roles.${g.role}`)}</span>
+              )}{" "}
+              <span className="text-stone">· {t(`ageGroups.${g.ageGroup}`)}</span>
             </span>
             <span className="flex flex-wrap gap-1.5">
               {events.map((e) => {
@@ -303,7 +313,7 @@ function HouseholdCard({
   );
 }
 
-type DraftGuest = { id?: string; key: string; name: string; ageGroup: AgeGroup };
+type DraftGuest = { id?: string; key: string; name: string; ageGroup: AgeGroup; role: GuestRole | null };
 
 function HouseholdEditor({
   household,
@@ -321,8 +331,8 @@ function HouseholdEditor({
   const [side, setSide] = useState<GuestSide>(household?.side ?? "BRIDE");
   const [notes, setNotes] = useState(household?.notes ?? "");
   const [guests, setGuests] = useState<DraftGuest[]>(
-    household?.guests.map((g) => ({ id: g.id, key: g.id, name: g.name, ageGroup: g.ageGroup })) ?? [
-      { key: "g0", name: "", ageGroup: "ADULT" },
+    household?.guests.map((g) => ({ id: g.id, key: g.id, name: g.name, ageGroup: g.ageGroup, role: g.role })) ?? [
+      { key: "g0", name: "", ageGroup: "ADULT", role: null },
     ],
   );
   const [eventIds, setEventIds] = useState<string[]>(() => {
@@ -345,7 +355,7 @@ function HouseholdEditor({
       side,
       notes,
       eventIds,
-      guests: guests.filter((g) => g.name.trim()).map(({ id, name, ageGroup }) => ({ id, name, ageGroup })),
+      guests: guests.filter((g) => g.name.trim()).map(({ id, name, ageGroup, role }) => ({ id, name, ageGroup, role })),
     };
     start(async () => {
       const res = await saveHouseholdAction(household?.id ?? null, payload);
@@ -386,23 +396,42 @@ function HouseholdEditor({
           <legend className="mb-2 text-sm font-medium">{t("members")}</legend>
           <ul className="space-y-2">
             {guests.map((g, i) => (
-              <li key={g.key} className="grid grid-cols-[1fr_8.5rem_auto] gap-2">
+              <li key={g.key} className="grid grid-cols-[1fr_auto] gap-2 sm:grid-cols-[1fr_8.5rem_9.5rem_auto]">
                 <Input
                   aria-label={`${t("memberName")} ${i + 1}`}
                   value={g.name}
                   onChange={(e) => update(g.key, { name: e.target.value })}
                   placeholder={t("memberName")}
                 />
-                <Select aria-label={t("ageGroup")} value={g.ageGroup} onChange={(e) => update(g.key, { ageGroup: e.target.value as AgeGroup })}>
+                <Select
+                  aria-label={t("ageGroup")}
+                  value={g.ageGroup}
+                  className="col-start-1 sm:col-start-auto"
+                  onChange={(e) => update(g.key, { ageGroup: e.target.value as AgeGroup })}
+                >
                   {AGE_GROUPS.map((a) => (
                     <option key={a} value={a}>
                       {t(`ageGroups.${a}`)}
                     </option>
                   ))}
                 </Select>
+                <Select
+                  aria-label={t("role")}
+                  value={g.role ?? ""}
+                  className="col-start-1 sm:col-start-auto"
+                  onChange={(e) => update(g.key, { role: (e.target.value || null) as GuestRole | null })}
+                >
+                  <option value="">{t("noRole")}</option>
+                  {GUEST_ROLES.map((r) => (
+                    <option key={r} value={r}>
+                      {t(`roles.${r}`)}
+                    </option>
+                  ))}
+                </Select>
                 <Button
                   type="button"
                   variant="ghost"
+                  className="col-start-2 row-start-1 sm:col-start-auto sm:row-start-auto"
                   aria-label={t("removeMember")}
                   disabled={guests.length === 1}
                   onClick={() => setGuests((gs) => gs.filter((x) => x.key !== g.key))}
@@ -418,7 +447,7 @@ function HouseholdEditor({
             variant="ghost"
             size="sm"
             className="mt-2"
-            onClick={() => setGuests((gs) => [...gs, { key: `g${Date.now()}`, name: "", ageGroup: "ADULT" }])}
+            onClick={() => setGuests((gs) => [...gs, { key: `g${Date.now()}`, name: "", ageGroup: "ADULT", role: null }])}
           >
             <Plus aria-hidden className="size-4" /> {t("addMember")}
           </Button>

@@ -890,7 +890,18 @@
         "remove": "Remove invitation",
         "confirmRemove": "Remove the invitation picture? Guests won't see it anymore.",
         "alt": "Invitation picture"
-      }
+      },
+      "roles": {
+        "BRIDE": "Bride",
+        "GROOM": "Groom",
+        "KUM": "Kum (best man)",
+        "KUMA": "Kuma",
+        "STAR_SVAT": "Stari svat",
+        "DEVER": "Dever (groom's brother)",
+        "DEVERUSHA": "Bridesmaid"
+      },
+      "role": "Role",
+      "noRole": "No role"
     },
     "import": {
       "title": "Import guests",
@@ -1132,6 +1143,27 @@
       "openPlan": "Open my plan",
       "needWedding": "Create your wedding plan to save vendors.",
       "createPlan": "Create my plan"
+    },
+    "start": {
+      "title": "Who's coming to the wedding?",
+      "lead": "Start with the wedding party and your first guests from both sides. This is just a start: you can change everything later in Guests.",
+      "brideSide": "Bride's side",
+      "groomSide": "Groom's side",
+      "bothSides": "Both sides",
+      "party": "Wedding party",
+      "guests": "Guests",
+      "people": "{count, plural, one {# person} other {# people}}",
+      "addGuest": "Add guest",
+      "removeRow": "Remove row",
+      "placeholderBride": "Name, or a family: Petrovski: Ivan, Ana",
+      "placeholderGroom": "Name, or a family: Nikolovski: Goran, Elena",
+      "placeholderBoth": "Shared friends or a family",
+      "hint": "One row is one person or one family. Enter adds a new row.",
+      "ratio": "Ratio by sides",
+      "summary": "Wedding party {party} · Guests {guests} · Total {total}",
+      "save": "Save and continue",
+      "saving": "Saving…",
+      "skip": "Skip"
     }
   },
   "rsvp": {

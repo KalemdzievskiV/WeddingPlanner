@@ -890,7 +890,18 @@
         "remove": "Hiqe ftesën",
         "confirmRemove": "Të hiqet fotoja e ftesës? Të ftuarit nuk do ta shohin më.",
         "alt": "Foto e ftesës"
-      }
+      },
+      "roles": {
+        "BRIDE": "Nusja",
+        "GROOM": "Dhëndri",
+        "KUM": "Kumbari",
+        "KUMA": "Kumbara",
+        "STAR_SVAT": "Kryekrushku",
+        "DEVER": "Vëllai i dhëndrit",
+        "DEVERUSHA": "Shoqëruesja e nuses"
+      },
+      "role": "Roli",
+      "noRole": "Pa rol"
     },
     "import": {
       "title": "Fut të ftuar",
@@ -1132,6 +1143,27 @@
       "openPlan": "Hap planin tim",
       "needWedding": "Krijoni planin e dasmës për të ruajtur shërbimet.",
       "createPlan": "Krijo planin"
+    },
+    "start": {
+      "title": "Kush vjen në dasmë?",
+      "lead": "Filloni me shoqërinë e dasmës dhe të ftuarit e parë nga të dyja anët. Ky është vetëm fillimi: gjithçka mund të ndryshohet më vonë te „Të ftuarit“.",
+      "brideSide": "Ana e nuses",
+      "groomSide": "Ana e dhëndrit",
+      "bothSides": "Të përbashkët",
+      "party": "Shoqëria e dasmës",
+      "guests": "Të ftuarit",
+      "people": "{count, plural, one {# person} other {# persona}}",
+      "addGuest": "Shto të ftuar",
+      "removeRow": "Hiq rreshtin",
+      "placeholderBride": "Emri, ose familja: Petrovski: Ivan, Ana",
+      "placeholderGroom": "Emri, ose familja: Nikollovski: Goran, Elena",
+      "placeholderBoth": "Miq ose familje të përbashkët",
+      "hint": "Një rresht është një person ose një familje. Enter shton rresht të ri.",
+      "ratio": "Raporti sipas anëve",
+      "summary": "Shoqëria e dasmës {party} · Të ftuar {guests} · Gjithsej {total}",
+      "save": "Ruaj dhe vazhdo",
+      "saving": "Po ruhet…",
+      "skip": "Kapërce"
     }
   },
   "rsvp": {

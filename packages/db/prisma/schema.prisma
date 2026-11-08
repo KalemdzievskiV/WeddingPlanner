@@ -515,6 +515,16 @@ enum GuestSide {
   BOTH
 }
 
+enum GuestRole {
+  BRIDE
+  GROOM
+  KUM
+  KUMA
+  STAR_SVAT
+  DEVER
+  DEVERUSHA
+}
+
 enum AgeGroup {
   CHILD
   YOUNG
@@ -678,6 +688,8 @@ model Guest {
   household   Household         @relation(fields: [householdId], references: [id], onDelete: Cascade)
   name        String
   ageGroup    AgeGroup          @default(ADULT)
+  /// Wedding-party role (decision 100); most guests have none.
+  role        GuestRole?
   sortOrder   Int               @default(0)
   createdAt   DateTime          @default(now())
   invitations GuestInvitation[]

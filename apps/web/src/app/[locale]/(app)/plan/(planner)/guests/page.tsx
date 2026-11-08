@@ -45,7 +45,7 @@ export default async function GuestsPage({ params }: { params: Promise<{ locale:
         guestNote: h.guestNote,
         respondedAt: h.respondedAt ? formatDate(h.respondedAt) : null,
         rsvpToken: h.rsvpToken,
-        guests: h.guests.map((g) => ({ id: g.id, name: g.name, ageGroup: g.ageGroup, invitations: g.invitations })),
+        guests: h.guests.map((g) => ({ id: g.id, name: g.name, ageGroup: g.ageGroup, role: g.role, invitations: g.invitations })),
       }))}
     />
   );

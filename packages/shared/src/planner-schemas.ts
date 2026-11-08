@@ -3,6 +3,7 @@ import {
   AGE_GROUPS,
   COST_TYPES,
   EVENT_TYPES,
+  GUEST_ROLES,
   GUEST_SIDES,
   PAYERS,
   PAYMENT_KINDS,
@@ -62,7 +63,14 @@ export const householdSchema = z.object({
   notes: optionalText(500),
   eventIds: z.array(z.string()).max(20),
   guests: z
-    .array(z.object({ id: z.string().optional(), name: text(80), ageGroup: z.enum(AGE_GROUPS) }))
+    .array(
+      z.object({
+        id: z.string().optional(),
+        name: text(80),
+        ageGroup: z.enum(AGE_GROUPS),
+        role: z.enum(GUEST_ROLES).nullable().optional(),
+      }),
+    )
     .min(1, "guestRequired")
     .max(30),
 });
@@ -79,6 +87,12 @@ export const importSchema = z
   )
   .min(1, "required")
   .max(500, "tooMany");
+
+/** First step of a new plan (decision 100): wedding party by role + quick guest lines per side. */
+export const planStartSchema = z.object({
+  party: z.array(z.object({ role: z.enum(GUEST_ROLES), name: text(80) })).max(GUEST_ROLES.length),
+  lines: z.array(z.object({ side: z.enum(GUEST_SIDES), text: z.string().trim().min(1).max(600) })).max(300),
+});
 
 export const tableSchema = z.object({
   name: text(40),
