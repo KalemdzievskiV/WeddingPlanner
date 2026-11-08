@@ -5,7 +5,9 @@ dist
 *.tsbuildinfo
 .env
 .env.local
-uploads
+# Uploaded images (local storage). Anchored so it does not hide src/app/uploads (the route that serves them).
+/uploads/
+/apps/web/uploads/
 packages/db/src/generated
 next-env.d.ts
 .DS_Store
