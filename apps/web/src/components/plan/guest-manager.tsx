@@ -12,6 +12,7 @@ import { Checkbox, Field, Input, inputClass, Select } from "@/components/ui/fiel
 import type { ErrorKey } from "@/lib/form";
 import { cn } from "@/lib/utils";
 import { GuestImport } from "./guest-import";
+import { InvitationCard } from "./invitation-card";
 
 export type GuestRow = { id: string; name: string; ageGroup: AgeGroup; invitations: { eventId: string; rsvp: Rsvp }[] };
 export type HouseholdRow = {
@@ -39,12 +40,14 @@ export function GuestManager({
   editable,
   rsvpBase,
   couple,
+  invitationUrl,
 }: {
   households: HouseholdRow[];
   events: EventOption[];
   editable: boolean;
   rsvpBase: string;
   couple: string;
+  invitationUrl: string | null;
 }) {
   const t = useTranslations("plan.guests");
   const [query, setQuery] = useState("");
@@ -90,6 +93,8 @@ export function GuestManager({
           </div>
         )}
       </div>
+
+      <InvitationCard url={invitationUrl} editable={editable} />
 
       {importing && <GuestImport events={events} onClose={() => setImporting(false)} />}
       {editing === "new" && (

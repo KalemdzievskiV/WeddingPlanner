@@ -146,7 +146,8 @@ export async function eraseUser(userId: string) {
     } else {
       const reviews = await prisma.review.findMany({ where: { weddingId: member.weddingId }, select: { businessId: true } });
       reviews.forEach((r) => ratingsToSync.add(r.businessId));
-      await prisma.wedding.delete({ where: { id: member.weddingId } });
+      const wedding = await prisma.wedding.delete({ where: { id: member.weddingId }, select: { invitationUrl: true } });
+      if (wedding.invitationUrl) await deleteImage(wedding.invitationUrl);
     }
   }
 

@@ -170,6 +170,7 @@ _(Filled in as we agree on each question.)_
 | 96 | Share previews | Vendor cover photo + name, city, "from" price in OG tags. | AGREED |
 | 97 | Nightly jobs | Protected API routes (CRON_SECRET) called by a Railway cron service. | AGREED |
 | 98 | Vendor seeding | Existing admin pre-fill + claim link is enough; no bulk import. | AGREED |
+| 99 | Invitation picture | One picture per wedding (JPG/PNG/WebP, kept up to 2400px), uploaded on the Guests page. Shown full width at the top of every RSVP page (tap to open full size) and used as the link preview on Viber/WhatsApp. Full online invitation page stays for later. | AGREED |
 
 ---
 

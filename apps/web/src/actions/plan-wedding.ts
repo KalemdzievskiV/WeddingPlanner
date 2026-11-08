@@ -15,6 +15,7 @@ import { redirect } from "next/navigation";
 import { newToken } from "@/lib/business";
 import { zodFieldErrors, type FormState } from "@/lib/form";
 import { getCurrentUser } from "@/lib/session";
+import { deleteImage } from "@/lib/storage";
 import { canManage, editableWedding, getWeddingAccess } from "@/lib/wedding";
 
 const refresh = () => revalidatePath("/", "layout");
@@ -95,6 +96,7 @@ export async function deleteWeddingAction(locale: string): Promise<FormState> {
   const access = await getWeddingAccess();
   if (!access || access.role !== "OWNER" || !isLocale(locale)) return { formError: "forbidden" };
   await prisma.wedding.delete({ where: { id: access.wedding.id } });
+  if (access.wedding.invitationUrl) await deleteImage(access.wedding.invitationUrl);
   refresh();
   redirect(`/${locale}/app`);
 }

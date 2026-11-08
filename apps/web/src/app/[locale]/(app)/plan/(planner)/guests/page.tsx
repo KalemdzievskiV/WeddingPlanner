@@ -34,6 +34,7 @@ export default async function GuestsPage({ params }: { params: Promise<{ locale:
     <GuestManager
       editable={canEdit(role)}
       couple={coupleNames(wedding)}
+      invitationUrl={wedding.invitationUrl}
       rsvpBase={`${env.appUrl}/${locale}/rsvp`}
       events={events.map((e) => ({ id: e.id, name: eventName(e, te) }))}
       households={households.map((h) => ({

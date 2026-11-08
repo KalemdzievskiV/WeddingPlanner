@@ -571,6 +571,8 @@ model Wedding {
   currency        Currency  @default(EUR)
   /// Paid plan. Limits only apply when the paywall is switched on (decision 22a).
   premium         Boolean   @default(false)
+  /// Invitation picture: shown on RSVP pages and as their link preview.
+  invitationUrl   String?
   /// Read-only from 6 months after the date (decision 90).
   archivedAt        DateTime?
   /// Owners were emailed that guest data will be erased soon (decision 92).

@@ -12,7 +12,18 @@ import { coupleNames, eventName } from "@/lib/plan-helpers";
 export async function generateMetadata({ params }: { params: Promise<{ token: string }> }): Promise<Metadata> {
   const { token } = await params;
   const h = await prisma.household.findUnique({ where: { rsvpToken: token }, include: { wedding: true } });
-  return { title: h ? coupleNames(h.wedding) : undefined, robots: { index: false } };
+  if (!h) return { robots: { index: false } };
+  const title = coupleNames(h.wedding);
+  const description = (await getTranslations("rsvp"))("lead");
+  // The invitation becomes the preview when the link is shared in Viber / WhatsApp.
+  const image = h.wedding.archivedAt ? null : h.wedding.invitationUrl;
+  return {
+    title,
+    description,
+    robots: { index: false },
+    openGraph: { title, description, images: image ? [{ url: image, alt: title }] : [] },
+    twitter: { card: image ? "summary_large_image" : "summary", title, description },
+  };
 }
 
 /** Public page for one household to confirm who's coming. No login; the token is the key. */
@@ -41,6 +52,19 @@ export default async function RsvpPage({ params }: { params: Promise<{ token: st
         <Alert className="mt-10">{t("closed")}</Alert>
       ) : (
         <>
+          {household.wedding.invitationUrl && (
+            <figure className="mt-4">
+              <a href={household.wedding.invitationUrl} target="_blank" rel="noreferrer" className="block">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={household.wedding.invitationUrl}
+                  alt={t("invitationAlt", { couple: coupleNames(household.wedding) })}
+                  className="w-full rounded-2xl border border-line bg-surface shadow-sm"
+                />
+              </a>
+              <figcaption className="mt-2 text-center text-xs text-stone">{t("invitationZoom")}</figcaption>
+            </figure>
+          )}
           <header className="mt-6 text-center">
             <h1 className="font-display text-4xl sm:text-5xl">{coupleNames(household.wedding)}</h1>
             {household.wedding.date && (

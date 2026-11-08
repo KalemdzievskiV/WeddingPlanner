@@ -879,7 +879,18 @@
       "shareText": "{couple} invite you to their wedding. Please let them know who's coming: {url}",
       "answered": "Answered {date}",
       "guestNote": "Note from the guests",
-      "limit": "The free plan includes up to {count} guests."
+      "limit": "The free plan includes up to {count} guests.",
+      "invitation": {
+        "title": "Invitation",
+        "hintEmpty": "Add a picture of your invitation. Guests will see it on their RSVP link, and as the preview when you send it on Viber or WhatsApp.",
+        "hintSet": "Guests see it on their RSVP link and as the preview when you send it on Viber or WhatsApp.",
+        "add": "Add picture",
+        "change": "Change",
+        "uploading": "Uploading…",
+        "remove": "Remove invitation",
+        "confirmRemove": "Remove the invitation picture? Guests won't see it anymore.",
+        "alt": "Invitation picture"
+      }
     },
     "import": {
       "title": "Import guests",
@@ -1134,7 +1145,9 @@
     "thanks": "Thank you! Your answer was sent.",
     "change": "Change answer",
     "invalid": "This link isn't valid. Ask the couple for a new one.",
-    "closed": "This wedding is over, so answers are closed. Thank you!"
+    "closed": "This wedding is over, so answers are closed. Thank you!",
+    "invitationAlt": "Invitation to {couple}'s wedding",
+    "invitationZoom": "Tap the invitation to see it larger."
   },
   "search": {
     "favorite": {

@@ -879,7 +879,18 @@
       "shareText": "{couple} ju ftojnë në dasmën e tyre. Ju lutemi konfirmoni kush vjen: {url}",
       "answered": "U përgjigj më {date}",
       "guestNote": "Mesazh nga të ftuarit",
-      "limit": "Plani falas përfshin deri në {count} të ftuar."
+      "limit": "Plani falas përfshin deri në {count} të ftuar.",
+      "invitation": {
+        "title": "Ftesa",
+        "hintEmpty": "Shtoni një foto të ftesës. Të ftuarit do ta shohin te lidhja e konfirmimit dhe në pamjen paraprake kur e dërgoni në Viber ose WhatsApp.",
+        "hintSet": "Të ftuarit e shohin te lidhja e konfirmimit dhe në pamjen paraprake kur e dërgoni në Viber ose WhatsApp.",
+        "add": "Shto foto",
+        "change": "Ndrysho",
+        "uploading": "Po ngarkohet…",
+        "remove": "Hiqe ftesën",
+        "confirmRemove": "Të hiqet fotoja e ftesës? Të ftuarit nuk do ta shohin më.",
+        "alt": "Foto e ftesës"
+      }
     },
     "import": {
       "title": "Fut të ftuar",
@@ -1134,7 +1145,9 @@
     "thanks": "Faleminderit! Përgjigja u dërgua.",
     "change": "Ndrysho përgjigjen",
     "invalid": "Kjo lidhje nuk është e vlefshme. Kërkojini çiftit një të re.",
-    "closed": "Dasma ka kaluar, prandaj përgjigjet janë mbyllur. Faleminderit!"
+    "closed": "Dasma ka kaluar, prandaj përgjigjet janë mbyllur. Faleminderit!",
+    "invitationAlt": "Ftesë për dasmën e {couple}",
+    "invitationZoom": "Prekni ftesën për ta parë më të madhe."
   },
   "search": {
     "favorite": {
