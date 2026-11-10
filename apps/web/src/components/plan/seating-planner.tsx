@@ -70,6 +70,7 @@ import { Link } from "@/i18n/navigation";
 import type { FormState } from "@/lib/form";
 import { useFormAction } from "@/lib/use-form-action";
 import { cn } from "@/lib/utils";
+import { SeatingListActions, SeatingPrintList } from "./seating-export";
 
 export type SeatGuest = {
   id: string;
@@ -222,7 +223,12 @@ export function SeatingPlanner({
   editable,
   mode = "page",
   events = [],
+  couple = "",
+  eventName = "",
 }: {
+  /** For the printed and downloaded table list. */
+  couple?: string;
+  eventName?: string;
   eventId: string;
   locale: string;
   tables: TableRow[];
@@ -617,31 +623,37 @@ export function SeatingPlanner({
   }
 
   return (
-    <div className="space-y-5">
+    <>
+    {/* What the restaurant gets when the page is printed: tables and their guests only. */}
+    <SeatingPrintList tables={tables} byId={byId} couple={couple} eventName={eventName} />
+    <div className="space-y-5 print:hidden">
       {picker}
-      {editable && (
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="hidden text-sm text-stone lg:block">{t("dragHint")}</p>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant="secondary"
-              title={t("headTableHint")}
-              disabled={pending}
-              onClick={() => start(async () => void (await headTableAction(eventId, locale)))}
-            >
-              <Crown aria-hidden className="size-4" /> {t("headTable")}
-            </Button>
-            <Button variant="secondary" onClick={() => setPicking(true)} className="hidden lg:inline-flex">
-              <Shapes aria-hidden className="size-4" /> {t("addElement")}
-            </Button>
-            {!adding && (
-              <Button onClick={() => setAdding(true)}>
-                <Plus aria-hidden className="size-4" /> {t("addTable")}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="hidden text-sm text-stone lg:block">{editable && t("dragHint")}</p>
+        <div className="flex flex-wrap gap-2">
+          <SeatingListActions tables={tables} byId={byId} eventName={eventName} />
+          {editable && (
+            <>
+              <Button
+                variant="secondary"
+                title={t("headTableHint")}
+                disabled={pending}
+                onClick={() => start(async () => void (await headTableAction(eventId, locale)))}
+              >
+                <Crown aria-hidden className="size-4" /> {t("headTable")}
               </Button>
-            )}
-          </div>
+              <Button variant="secondary" onClick={() => setPicking(true)} className="hidden lg:inline-flex">
+                <Shapes aria-hidden className="size-4" /> {t("addElement")}
+              </Button>
+              {!adding && (
+                <Button onClick={() => setAdding(true)}>
+                  <Plus aria-hidden className="size-4" /> {t("addTable")}
+                </Button>
+              )}
+            </>
+          )}
         </div>
-      )}
+      </div>
       {adding && (
         <Card className="border-vranec/30 p-5">
           <TableForm eventId={eventId} table={null} onDone={() => setAdding(false)} />
@@ -682,6 +694,7 @@ export function SeatingPlanner({
         </div>
       )}
     </div>
+    </>
   );
 }
 

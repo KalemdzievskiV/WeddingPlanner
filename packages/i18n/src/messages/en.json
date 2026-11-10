@@ -1118,7 +1118,23 @@
       "pickBuffet": "Buffet tables (no seats)",
       "pickAreas": "Areas",
       "pickStructure": "Room",
-      "pickIcons": "Services and decor"
+      "pickIcons": "Services and decor",
+      "export": {
+        "title": "Seating",
+        "totals": "{tables, plural, one {# table} other {# tables}} · {guests} guests ({adults} adults, {children} children)",
+        "count": "{count, plural, one {# guest} other {# guests}}",
+        "child": "child",
+        "table": "Table",
+        "number": "No.",
+        "guest": "Guest",
+        "family": "Family",
+        "note": "Note",
+        "sheet": "Seating",
+        "file": "seating",
+        "download": "Download Excel",
+        "print": "Print",
+        "hint": "Each table with its guests, for the restaurant."
+      }
     },
     "budget": {
       "title": "Budget",

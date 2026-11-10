@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Link } from "@/i18n/navigation";
 import { localeFrom } from "@/lib/locale";
 import { ensureCoupleSeated } from "@/lib/head-table";
-import { eventName } from "@/lib/plan-helpers";
+import { coupleNames, eventName } from "@/lib/plan-helpers";
 import { loadSeating, seatingEvents } from "@/lib/seating";
 import { canEdit, premiumLocked, requireWedding } from "@/lib/wedding";
 import { cn } from "@/lib/utils";
@@ -49,7 +49,7 @@ export default async function SeatingPage({
   return (
     <div className="space-y-5">
       {events.length > 1 && (
-        <nav className="flex flex-wrap gap-1.5" aria-label={t("event")}>
+        <nav className="flex flex-wrap gap-1.5 print:hidden" aria-label={t("event")}>
           {events.map((e) => (
             <Link
               key={e.id}
@@ -70,6 +70,8 @@ export default async function SeatingPage({
         eventId={event.id}
         locale={locale}
         editable={canEdit(role)}
+        couple={coupleNames(wedding)}
+        eventName={eventName(event, te)}
         {...data}
       />
     </div>

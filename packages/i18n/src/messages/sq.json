@@ -1118,7 +1118,23 @@
       "pickBuffet": "Tavolina bufeje (pa ulëse)",
       "pickAreas": "Hapësirat",
       "pickStructure": "Salla",
-      "pickIcons": "Shërbime dhe dekor"
+      "pickIcons": "Shërbime dhe dekor",
+      "export": {
+        "title": "Vendosja në tavolina",
+        "totals": "{tables, plural, one {# tavolinë} other {# tavolina}} · {guests} të ftuar ({adults} të rritur, {children} fëmijë)",
+        "count": "{count, plural, one {# i ftuar} other {# të ftuar}}",
+        "child": "fëmijë",
+        "table": "Tavolina",
+        "number": "Nr.",
+        "guest": "I ftuari",
+        "family": "Familja",
+        "note": "Shënim",
+        "sheet": "Vendosja",
+        "file": "vendosja-ne-tavolina",
+        "download": "Shkarko Excel",
+        "print": "Printo",
+        "hint": "Çdo tavolinë me të ftuarit e saj, për restorantin."
+      }
     },
     "budget": {
       "title": "Buxheti",

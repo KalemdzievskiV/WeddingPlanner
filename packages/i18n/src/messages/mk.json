@@ -1118,7 +1118,23 @@
       "pickBuffet": "Шведски маси (без седишта)",
       "pickAreas": "Простори",
       "pickStructure": "Сала",
-      "pickIcons": "Услуги и декор"
+      "pickIcons": "Услуги и декор",
+      "export": {
+        "title": "Распоред на седење",
+        "totals": "{tables, plural, one {# маса} other {# маси}} · {guests} гости ({adults} возрасни, {children} деца)",
+        "count": "{count, plural, one {# гостин} other {# гости}}",
+        "child": "дете",
+        "table": "Маса",
+        "number": "Бр.",
+        "guest": "Гостин",
+        "family": "Семејство",
+        "note": "Забелешка",
+        "sheet": "Распоред",
+        "file": "raspored-sedenje",
+        "download": "Преземи Excel",
+        "print": "Печати",
+        "hint": "Секоја маса со нејзините гости, за ресторанот."
+      }
     },
     "budget": {
       "title": "Буџет",
