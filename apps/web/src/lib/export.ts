@@ -52,7 +52,8 @@ export async function buildAccountExport(userId: string, locale: Locale) {
         include: {
           city: { select: { nameEn: true } },
           members: { select: { role: true, user: { select: { name: true } } } },
-          events: { orderBy: { sortOrder: "asc" }, include: { scheduleItems: true } },
+          events: { orderBy: { sortOrder: "asc" } },
+          scheduleDays: { include: { items: { orderBy: { sortOrder: "asc" }, include: { guests: true } } } },
           households: {
             orderBy: { createdAt: "asc" },
             include: { guests: { orderBy: { sortOrder: "asc" }, include: { invitations: true, seats: { include: { table: true } } } } },

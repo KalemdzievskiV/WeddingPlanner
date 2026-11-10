@@ -8,6 +8,7 @@ import {
   PAYERS,
   PAYMENT_KINDS,
   PLANNED_VENDOR_STATUSES,
+  MAX_ITEM_MINUTES,
   TABLE_SHAPES,
   TASK_BUCKETS,
 } from "./planner";
@@ -54,6 +55,8 @@ export const eventSchema = z.object({
   date: optionalDate,
   time: optionalTime,
   place: optionalText(150),
+  lat: z.union([z.literal(""), z.coerce.number().min(-90).max(90)]).transform((v) => (v === "" ? null : v)),
+  lng: z.union([z.literal(""), z.coerce.number().min(-180).max(180)]).transform((v) => (v === "" ? null : v)),
   hasSeating: z.boolean(),
 });
 
@@ -133,14 +136,24 @@ export const taskSchema = z.object({
   assignee: optionalText(60),
 });
 
-export const scheduleItemSchema = z.object({
-  time: z
+export const scheduleDaySchema = z.object({
+  date: optionalDate,
+  startTime: z
     .string()
     .trim()
     .refine((v) => /^([01]\d|2[0-3]):[0-5]\d$/.test(v), "time"),
+});
+
+export const scheduleItemSchema = z.object({
   title: text(150),
+  durationMin: z.coerce.number("number").int("wholeNumber").min(0, "positive").max(MAX_ITEM_MINUTES, "tooLarge"),
   responsible: optionalText(80),
   place: optionalText(150),
+  eventId: z.string().transform((v) => (v === "" ? null : v)),
+  forAll: z.boolean(),
+  forSides: z.array(z.enum(GUEST_SIDES)).max(3),
+  forRoles: z.array(z.enum(GUEST_ROLES)).max(GUEST_ROLES.length),
+  guestIds: z.array(z.string()).max(2000),
 });
 
 export const plannedVendorSchema = z.object({

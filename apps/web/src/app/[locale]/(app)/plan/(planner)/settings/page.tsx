@@ -64,6 +64,8 @@ export default async function PlanSettingsPage({ params }: { params: Promise<{ l
             dateLabel: formatDate(e.date),
             time: e.time,
             place: e.place,
+            lat: e.lat,
+            lng: e.lng,
             hasSeating: e.hasSeating,
           }))}
         />

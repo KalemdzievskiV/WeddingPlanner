@@ -1,7 +1,8 @@
 "use client";
 
 import { EVENT_TYPES, type EventType } from "@svadba/shared";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { MapPin, Pencil, Plus, Trash2 } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { useEffect, useState, useTransition } from "react";
 import { deleteEventAction, saveEventAction } from "@/actions/plan-wedding";
@@ -9,6 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Checkbox, Field, Input, Select } from "@/components/ui/field";
 import type { FormState } from "@/lib/form";
 import { useFormAction } from "@/lib/use-form-action";
+
+// MapLibre is heavy: load it only when an event form opens.
+const MapView = dynamic(() => import("@/components/map-view").then((m) => m.MapView), { ssr: false });
 
 export type EventRow = {
   id: string;
@@ -19,6 +23,8 @@ export type EventRow = {
   dateLabel: string;
   time: string | null;
   place: string | null;
+  lat: number | null;
+  lng: number | null;
   hasSeating: boolean;
 };
 
@@ -40,7 +46,10 @@ export function EventsEditor({ events, editable }: { events: EventRow[]; editabl
           ) : (
             <li key={e.id} className="flex flex-wrap items-center gap-3 py-3">
               <div className="min-w-0 flex-1">
-                <p className="font-medium">{e.displayName}</p>
+                <p className="flex items-center gap-1.5 font-medium">
+                  {e.displayName}
+                  {e.lat != null && <MapPin aria-label={t("pinSet")} className="size-3.5 text-vranec" />}
+                </p>
                 <p className="text-sm text-stone tabular-nums">
                   {[e.dateLabel || t("noDate"), e.time, e.place].filter(Boolean).join(" · ")}
                 </p>
@@ -90,6 +99,7 @@ function EventForm({ event, onDone }: { event: EventRow | null; onDone: () => vo
   const te = useTranslations("errors");
   const [state, onSubmit, pending] = useFormAction(saveEventAction.bind(null, event?.id ?? null), {} as FormState);
   const [type, setType] = useState<EventType>(event?.type ?? "ENGAGEMENT");
+  const [point, setPoint] = useState(event?.lat != null && event.lng != null ? { lat: event.lat, lng: event.lng } : null);
   const fe = state.fieldErrors ?? {};
   const p = event?.id ?? "new";
   useEffect(() => {
@@ -121,6 +131,20 @@ function EventForm({ event, onDone }: { event: EventRow | null; onDone: () => vo
       <Field id={`${p}-place`} label={t("place")}>
         <Input id={`${p}-place`} name="place" defaultValue={event?.place ?? ""} />
       </Field>
+      <div className="space-y-2">
+        <div className="flex items-baseline justify-between gap-3">
+          <p className="text-sm font-medium">{t("pin")}</p>
+          {point && (
+            <button type="button" onClick={() => setPoint(null)} className="text-sm text-vranec hover:underline">
+              {t("pinClear")}
+            </button>
+          )}
+        </div>
+        <MapView value={point} onChange={setPoint} label={t("pin")} className="h-64" />
+        <p className="text-sm text-stone">{t("pinHint")}</p>
+        <input type="hidden" name="lat" value={point?.lat ?? ""} />
+        <input type="hidden" name="lng" value={point?.lng ?? ""} />
+      </div>
       <label className="flex items-center gap-2 text-sm">
         <Checkbox name="hasSeating" defaultChecked={event?.hasSeating ?? type === "RECEPTION"} />
         {t("hasSeating")}

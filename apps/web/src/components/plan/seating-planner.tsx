@@ -1,7 +1,7 @@
 "use client";
 
 import { HEAD_TABLE_ROLES, PLAN_HEIGHT, PLAN_WIDTH, TABLE_SHAPES, type GuestRole, type TableShape } from "@svadba/shared";
-import { Crown, Pencil, Plus, RotateCw, Search, Trash2, UserMinus, UserPlus, Users } from "lucide-react";
+import { Crown, Maximize2, Minimize2, Pencil, Plus, RotateCw, Search, Trash2, UserMinus, UserPlus, Users, ZoomIn, ZoomOut } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState, useTransition } from "react";
 import {
@@ -41,6 +41,11 @@ export type TableRow = {
 /** Chair diameter and the gap between chairs / chair and table, in plan units. */
 const CHAIR = 28;
 const GAP = 3;
+/** Table label size, in plan units. */
+const LABEL = 13;
+/** Floor plan zoom (decision 104): 100% fits the whole plan in the width. */
+const MAX_ZOOM = 4;
+const ZOOM_STEP = 1.25;
 
 /** Table footprint on the floor plan, in plan units. Grows so `chairs` chairs fit around it. */
 function tableSize(shape: TableShape, chairs: number) {
@@ -178,7 +183,7 @@ export function SeatingPlanner({
       {tables.length === 0 ? (
         <Card className="p-10 text-center text-ink-soft">{t("noTables")}</Card>
       ) : (
-        <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
+        <div data-seating-root className="grid gap-5 lg:grid-cols-[1fr_320px] [&:fullscreen]:content-start [&:fullscreen]:overflow-auto [&:fullscreen]:bg-linen [&:fullscreen]:p-4">
           <div className="min-w-0 space-y-4">
             {/* Floor plan: tablet/desktop only (decision 68). */}
             <FloorPlan
@@ -420,8 +425,55 @@ function FloorPlan({
   nameOf: (guestId: string) => string | undefined;
   highlight: Set<string>;
 }) {
+  const t = useTranslations("plan.seating");
   const ref = useRef<HTMLDivElement>(null);
+  const viewport = useRef<HTMLDivElement>(null);
   const [drag, setDrag] = useState<{ id: string; x: number; y: number; startX: number; startY: number; moved: boolean } | null>(null);
+  const [zoom, setZoom] = useState(1);
+  const [fullscreen, setFullscreen] = useState(false);
+
+  // Zoom around the middle of what's visible, so the view doesn't jump.
+  const zoomRef = useRef(zoom);
+  const zoomTo = (next: number) => {
+    const z = Math.round(Math.min(MAX_ZOOM, Math.max(1, next)) * 100) / 100;
+    const v = viewport.current;
+    if (!v || z === zoomRef.current) return;
+    const cx = (v.scrollLeft + v.clientWidth / 2) / v.scrollWidth;
+    const cy = (v.scrollTop + v.clientHeight / 2) / v.scrollHeight;
+    zoomRef.current = z;
+    setZoom(z);
+    requestAnimationFrame(() => {
+      v.scrollLeft = cx * v.scrollWidth - v.clientWidth / 2;
+      v.scrollTop = cy * v.scrollHeight - v.clientHeight / 2;
+    });
+  };
+  const zoomToRef = useRef(zoomTo);
+  useEffect(() => {
+    zoomToRef.current = zoomTo;
+  });
+
+  // Ctrl + scroll (and trackpad pinch) zooms; plain scroll pans.
+  useEffect(() => {
+    const v = viewport.current;
+    if (!v) return;
+    const onWheel = (e: WheelEvent) => {
+      if (!e.ctrlKey && !e.metaKey) return;
+      e.preventDefault();
+      zoomToRef.current(zoomRef.current * (e.deltaY < 0 ? 1.1 : 1 / 1.1));
+    };
+    v.addEventListener("wheel", onWheel, { passive: false });
+    return () => v.removeEventListener("wheel", onWheel);
+  }, []);
+
+  useEffect(() => {
+    const onChange = () => setFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
+  const toggleFullscreen = () => {
+    if (document.fullscreenElement) void document.exitFullscreen();
+    else void ref.current?.closest<HTMLElement>("[data-seating-root]")?.requestFullscreen();
+  };
 
   const toPlan = (clientX: number, clientY: number) => {
     const r = ref.current!.getBoundingClientRect();
@@ -432,106 +484,138 @@ function FloorPlan({
   };
 
   return (
-    <div
-      ref={ref}
-      className="@container relative hidden w-full select-none overflow-hidden rounded-[var(--radius-card)] border border-line bg-surface lg:block"
-      style={{
-        aspectRatio: `${PLAN_WIDTH} / ${PLAN_HEIGHT}`,
-        backgroundImage: "radial-gradient(circle, rgb(35 26 29 / 0.09) 1px, transparent 1px)",
-        backgroundSize: "24px 24px",
-      }}
-    >
-      {tables.map((tb) => {
-        const p = drag?.id === tb.id ? { ...pos(tb), x: drag.x, y: drag.y } : pos(tb);
-        const seated = occupancy(tb);
-        const chairs = Math.max(tb.seats, seated);
-        const size = tableSize(tb.shape, chairs);
-        const over = seated > tb.seats;
-        const color = fillColor(seated, tb.seats);
-        return (
-          <button
-            key={tb.id}
-            type="button"
-            onPointerDown={(e) => {
-              onSelect(tb.id);
-              if (!editable) return;
-              try {
-                e.currentTarget.setPointerCapture(e.pointerId);
-              } catch {
-                // Synthetic or already-released pointers can't be captured; dragging still works without it.
-              }
-              setDrag({ id: tb.id, x: p.x, y: p.y, startX: e.clientX, startY: e.clientY, moved: false });
-            }}
-            onPointerMove={(e) => {
-              if (!drag || drag.id !== tb.id) return;
-              const moved = drag.moved || Math.abs(e.clientX - drag.startX) + Math.abs(e.clientY - drag.startY) > 4;
-              setDrag({ ...drag, ...toPlan(e.clientX, e.clientY), moved });
-            }}
-            onPointerUp={() => {
-              if (drag?.id === tb.id && drag.moved) onMove(tb.id, { x: drag.x, y: drag.y, rotation: p.rotation });
-              setDrag(null);
-            }}
-            onKeyDown={(e) => {
-              // Arrow keys nudge the table (keyboard alternative to dragging).
-              const step = e.shiftKey ? 50 : 10;
-              const d = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] }[e.key];
-              if (!d || !editable) return;
-              e.preventDefault();
-              onMove(tb.id, { x: p.x + d[0]!, y: p.y + d[1]!, rotation: p.rotation });
-            }}
-            aria-pressed={selectedId === tb.id}
-            className={cn(
-              "absolute flex touch-none flex-col items-center justify-center border-2 text-center shadow-sm transition-shadow",
-              editable ? "cursor-grab active:cursor-grabbing" : "cursor-pointer",
-              tb.shape === "ROUND" ? "rounded-full" : "rounded-lg",
-              tb.shape === "HEAD" ? "border-vranec bg-rosehip" : "border-line-strong bg-linen",
-              selectedId === tb.id && "z-10 ring-4 ring-vranec/25",
-              over && "border-danger",
-            )}
-            style={{
-              left: `${(p.x / PLAN_WIDTH) * 100}%`,
-              top: `${(p.y / PLAN_HEIGHT) * 100}%`,
-              width: `${(size.w / PLAN_WIDTH) * 100}%`,
-              height: `${(size.h / PLAN_HEIGHT) * 100}%`,
-              transform: `translate(-50%, -50%) rotate(${p.rotation}deg)`,
-            }}
-          >
-            {chairSpots(tb.shape, chairs, size.w, size.h).map((c, i) => {
-              const guestId = tb.guestIds[i];
-              const name = guestId ? nameOf(guestId) : undefined;
-              return (
+    <div className="hidden space-y-2 lg:block">
+      <div className="flex items-center justify-end gap-1">
+        <Button variant="ghost" size="sm" aria-label={t("zoomOut")} title={t("zoomOut")} disabled={zoom <= 1} onClick={() => zoomTo(zoom / ZOOM_STEP)}>
+          <ZoomOut aria-hidden className="size-4" />
+        </Button>
+        <button
+          type="button"
+          onClick={() => zoomTo(1)}
+          title={t("zoomReset")}
+          className="min-w-14 rounded-md px-2 py-1 text-sm tabular-nums text-ink-soft hover:bg-linen"
+        >
+          {Math.round(zoom * 100)}%
+        </button>
+        <Button variant="ghost" size="sm" aria-label={t("zoomIn")} title={t("zoomIn")} disabled={zoom >= MAX_ZOOM} onClick={() => zoomTo(zoom * ZOOM_STEP)}>
+          <ZoomIn aria-hidden className="size-4" />
+        </Button>
+        <Button variant="secondary" size="sm" onClick={toggleFullscreen}>
+          {fullscreen ? <Minimize2 aria-hidden className="size-4" /> : <Maximize2 aria-hidden className="size-4" />}
+          {fullscreen ? t("exitFullscreen") : t("fullscreen")}
+        </Button>
+      </div>
+      <div
+        ref={viewport}
+        className="overflow-auto rounded-[var(--radius-card)] border border-line bg-surface"
+        style={{ maxHeight: fullscreen ? "calc(100vh - 6rem)" : "75vh" }}
+      >
+        <div
+          ref={ref}
+          className="@container relative select-none overflow-hidden"
+          style={{
+            width: `${zoom * 100}%`,
+            aspectRatio: `${PLAN_WIDTH} / ${PLAN_HEIGHT}`,
+            backgroundImage: "radial-gradient(circle, rgb(35 26 29 / 0.09) 1px, transparent 1px)",
+            backgroundSize: "24px 24px",
+          }}
+        >
+          {tables.map((tb) => {
+            const p = drag?.id === tb.id ? { ...pos(tb), x: drag.x, y: drag.y } : pos(tb);
+            const seated = occupancy(tb);
+            const chairs = Math.max(tb.seats, seated);
+            const size = tableSize(tb.shape, chairs);
+            const over = seated > tb.seats;
+            const color = fillColor(seated, tb.seats);
+            return (
+              <button
+                key={tb.id}
+                type="button"
+                onPointerDown={(e) => {
+                  onSelect(tb.id);
+                  if (!editable) return;
+                  try {
+                    e.currentTarget.setPointerCapture(e.pointerId);
+                  } catch {
+                    // Synthetic or already-released pointers can't be captured; dragging still works without it.
+                  }
+                  setDrag({ id: tb.id, x: p.x, y: p.y, startX: e.clientX, startY: e.clientY, moved: false });
+                }}
+                onPointerMove={(e) => {
+                  if (!drag || drag.id !== tb.id) return;
+                  const moved = drag.moved || Math.abs(e.clientX - drag.startX) + Math.abs(e.clientY - drag.startY) > 4;
+                  setDrag({ ...drag, ...toPlan(e.clientX, e.clientY), moved });
+                }}
+                onPointerUp={() => {
+                  if (drag?.id === tb.id && drag.moved) onMove(tb.id, { x: drag.x, y: drag.y, rotation: p.rotation });
+                  setDrag(null);
+                }}
+                onKeyDown={(e) => {
+                  // Arrow keys nudge the table (keyboard alternative to dragging).
+                  const step = e.shiftKey ? 50 : 10;
+                  const d = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] }[e.key];
+                  if (!d || !editable) return;
+                  e.preventDefault();
+                  onMove(tb.id, { x: p.x + d[0]!, y: p.y + d[1]!, rotation: p.rotation });
+                }}
+                aria-pressed={selectedId === tb.id}
+                className={cn(
+                  "absolute flex touch-none flex-col items-center justify-center border-2 text-center shadow-sm transition-shadow",
+                  editable ? "cursor-grab active:cursor-grabbing" : "cursor-pointer",
+                  tb.shape === "ROUND" ? "rounded-full" : "rounded-lg",
+                  tb.shape === "HEAD" ? "border-vranec bg-rosehip" : "border-line-strong bg-linen",
+                  selectedId === tb.id && "z-10 ring-4 ring-vranec/25",
+                  over && "border-danger",
+                )}
+                style={{
+                  left: `${(p.x / PLAN_WIDTH) * 100}%`,
+                  top: `${(p.y / PLAN_HEIGHT) * 100}%`,
+                  width: `${(size.w / PLAN_WIDTH) * 100}%`,
+                  height: `${(size.h / PLAN_HEIGHT) * 100}%`,
+                  transform: `translate(-50%, -50%) rotate(${p.rotation}deg)`,
+                }}
+              >
+                {chairSpots(tb.shape, chairs, size.w, size.h).map((c, i) => {
+                  const guestId = tb.guestIds[i];
+                  const name = guestId ? nameOf(guestId) : undefined;
+                  return (
+                    <span
+                      key={i}
+                      aria-hidden
+                      title={name}
+                      className={cn(
+                        "absolute grid place-items-center rounded-full border-[1.5px] font-semibold leading-none text-white",
+                        i >= tb.seats && "ring-2 ring-danger ring-offset-1",
+                        guestId && highlight.has(guestId) && "z-10 scale-125 ring-2 ring-ink ring-offset-1",
+                      )}
+                      style={{
+                        left: `${((c.x - CHAIR / 2) / size.w) * 100}%`,
+                        top: `${((c.y - CHAIR / 2) / size.h) * 100}%`,
+                        width: `${(CHAIR / size.w) * 100}%`,
+                        height: `${(CHAIR / size.h) * 100}%`,
+                        borderColor: color,
+                        backgroundColor: guestId ? color : "var(--color-surface)",
+                        fontSize: `${(CHAIR * 0.48) / (PLAN_WIDTH / 100)}cqw`,
+                      }}
+                    >
+                      {name && <span style={{ transform: `rotate(${-p.rotation}deg)` }}>{initials(name)}</span>}
+                    </span>
+                  );
+                })}
                 <span
-                  key={i}
-                  aria-hidden
-                  title={name}
-                  className={cn(
-                    "absolute grid place-items-center rounded-full border-[1.5px] font-semibold leading-none text-white",
-                    i >= tb.seats && "ring-2 ring-danger ring-offset-1",
-                    guestId && highlight.has(guestId) && "z-10 scale-125 ring-2 ring-ink ring-offset-1",
-                  )}
-                  style={{
-                    left: `${((c.x - CHAIR / 2) / size.w) * 100}%`,
-                    top: `${((c.y - CHAIR / 2) / size.h) * 100}%`,
-                    width: `${(CHAIR / size.w) * 100}%`,
-                    height: `${(CHAIR / size.h) * 100}%`,
-                    borderColor: color,
-                    backgroundColor: guestId ? color : "var(--color-surface)",
-                    fontSize: `${(CHAIR * 0.48) / 10}cqw`,
-                  }}
+                  className="max-w-full truncate px-1 font-medium leading-tight"
+                  style={{ transform: `rotate(${-p.rotation}deg)`, fontSize: `${LABEL / (PLAN_WIDTH / 100)}cqw` }}
                 >
-                  {name && <span style={{ transform: `rotate(${-p.rotation}deg)` }}>{initials(name)}</span>}
+                  {tb.name}
+                  <span className={cn("block tabular-nums", over ? "text-danger" : "text-stone")}>
+                    {occupancy(tb)}/{tb.seats}
+                  </span>
                 </span>
-              );
-            })}
-            <span className="max-w-full truncate px-1 text-xs font-medium leading-tight" style={{ transform: `rotate(${-p.rotation}deg)` }}>
-              {tb.name}
-              <span className={cn("block tabular-nums", over ? "text-danger" : "text-stone")}>
-                {occupancy(tb)}/{tb.seats}
-              </span>
-            </span>
-          </button>
-        );
-      })}
+              </button>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }

@@ -55,7 +55,14 @@ export async function createWeddingAction(_prev: FormState, fd: FormData): Promi
     data: {
       ...data,
       members: { create: { userId: user.id, role: "OWNER" } },
-      events: { create: { type: "RECEPTION", date: data.date, hasSeating: true } },
+      // Groom's home → bride's home → reception (decision 103).
+      events: {
+        create: [
+          { type: "GROOM_HOME", date: data.date, sortOrder: 0 },
+          { type: "BRIDE_HOME", date: data.date, sortOrder: 1 },
+          { type: "RECEPTION", date: data.date, hasSeating: true, sortOrder: 2 },
+        ],
+      },
       budgetCategories: {
         create: categories.map((c, i) => ({ name: pickLocalized(c, "name", locale), slug: c.slug, sortOrder: i })),
       },
@@ -99,9 +106,9 @@ export async function updateWeddingAction(_prev: FormState, fd: FormData): Promi
   const old = access.wedding;
   await prisma.$transaction([
     prisma.wedding.update({ where: { id: old.id }, data: parsed.data }),
-    // Keep the reception on the wedding day unless the couple gave it its own date.
+    // Keep the reception and home events on the wedding day unless the couple gave them their own date.
     prisma.weddingEvent.updateMany({
-      where: { weddingId: old.id, type: "RECEPTION", OR: [{ date: null }, { date: old.date ?? undefined }] },
+      where: { weddingId: old.id, type: { in: ["RECEPTION", "GROOM_HOME", "BRIDE_HOME"] }, OR: [{ date: null }, { date: old.date ?? undefined }] },
       data: { date: parsed.data.date },
     }),
   ]);
@@ -129,6 +136,8 @@ export async function saveEventAction(id: string | null, _prev: FormState, fd: F
     date: fd.get("date") ?? "",
     time: fd.get("time") ?? "",
     place: fd.get("place") ?? "",
+    lat: fd.get("lat") ?? "",
+    lng: fd.get("lng") ?? "",
     hasSeating: fd.get("hasSeating") === "on",
   });
   if (!parsed.success) return { fieldErrors: zodFieldErrors(parsed.error) };

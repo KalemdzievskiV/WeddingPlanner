@@ -59,6 +59,7 @@ Without `RESEND_API_KEY`, confirmation and password-reset emails are printed in 
 | `pnpm db:migrate` | Create/apply a migration after editing `schema.prisma` |
 | `pnpm db:seed` | Seed reference data (safe to re-run; never overwrites existing rows or the admin) |
 | `pnpm db:studio` | Browse the database |
+| `pnpm db:pull` | Copy the live database into your local one (see below) |
 
 ## Translations
 
@@ -96,6 +97,16 @@ curl -X POST -H "Authorization: Bearer $CRON_SECRET" http://localhost:3100/api/c
 ```
 
 - **Backups** run `pg_dump` and upload to `BACKUP_BUCKET`, keeping 30 days. Use a **private** R2 bucket (not the public image bucket): backups hold every guest list and email. Also turn on Railway's own Postgres backups. To restore: download a `.dump` file and run `pg_restore --clean --no-owner -d "$DATABASE_URL" file.dump`.
+
+### Copy the live database to your machine
+
+`pnpm db:pull` dumps the live database (read-only) into `backups/`, wipes your **local** Docker database, loads the dump and applies any newer local migrations. It needs Docker only (it runs the Postgres 18 tools in a container).
+
+1. In Railway → Postgres → Variables, copy `DATABASE_PUBLIC_URL`.
+2. Put it in a `.env.live` file in the repo root (git-ignored): `LIVE_DATABASE_URL=postgresql://...`
+3. Run `pnpm db:pull` (add `--yes` to skip the question), then restart the dev server.
+
+To load a nightly backup instead: `pnpm db:pull --file path/to/svadba-….dump`. The script only ever writes to a database on localhost. The copy holds real users' emails and guest lists: keep `backups/` off shared drives and delete old dumps you don't need. Dev emails only print to the server log, so nobody gets mailed from your local copy.
 
 ## Error tracking
 

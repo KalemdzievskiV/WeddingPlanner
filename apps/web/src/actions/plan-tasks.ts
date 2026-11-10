@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@svadba/db";
-import { pickLocalized, plannedVendorSchema, PLANNED_VENDOR_STATUSES, scheduleItemSchema, taskSchema, type Locale } from "@svadba/shared";
+import { pickLocalized, plannedVendorSchema, PLANNED_VENDOR_STATUSES, taskSchema, type Locale } from "@svadba/shared";
 import { revalidatePath } from "next/cache";
 import { zodFieldErrors, type FormState } from "@/lib/form";
 import { createVendorExpense } from "@/lib/plan-vendors";
@@ -43,39 +43,6 @@ export async function deleteTaskAction(id: string): Promise<FormState> {
   const access = await editableWedding();
   if (!access) return { formError: "forbidden" };
   await prisma.task.deleteMany({ where: { id, weddingId: access.wedding.id } });
-  refresh();
-  return { ok: true };
-}
-
-// ─── Day-of schedule ───
-
-export async function saveScheduleItemAction(
-  eventId: string,
-  id: string | null,
-  _prev: FormState,
-  fd: FormData,
-): Promise<FormState> {
-  const access = await editableWedding();
-  if (!access) return { formError: "forbidden" };
-  const weddingId = access.wedding.id;
-  if (!(await prisma.weddingEvent.findFirst({ where: { id: eventId, weddingId } }))) return { formError: "generic" };
-  const parsed = scheduleItemSchema.safeParse({
-    time: fd.get("time") ?? "",
-    title: fd.get("title") ?? "",
-    responsible: fd.get("responsible") ?? "",
-    place: fd.get("place") ?? "",
-  });
-  if (!parsed.success) return { fieldErrors: zodFieldErrors(parsed.error) };
-  if (id) await prisma.scheduleItem.updateMany({ where: { id, weddingId }, data: parsed.data });
-  else await prisma.scheduleItem.create({ data: { ...parsed.data, weddingId, eventId } });
-  refresh();
-  return { ok: true };
-}
-
-export async function deleteScheduleItemAction(id: string): Promise<FormState> {
-  const access = await editableWedding();
-  if (!access) return { formError: "forbidden" };
-  await prisma.scheduleItem.deleteMany({ where: { id, weddingId: access.wedding.id } });
   refresh();
   return { ok: true };
 }

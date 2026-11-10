@@ -12,3 +12,7 @@ packages/db/src/generated
 next-env.d.ts
 .DS_Store
 apps/web/public/vendor
+
+# Live database copies (db:pull): real users' data, never commit
+.env.live
+backups/

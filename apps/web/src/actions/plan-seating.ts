@@ -36,16 +36,16 @@ export async function saveTableAction(
   } else {
     const n = await prisma.seatingTable.count({ where: { eventId } });
     // New tables appear in a loose grid so they don't stack on top of each other.
-    const col = n % 5;
-    const row = Math.floor(n / 5) % 4;
+    const col = n % 9;
+    const row = Math.floor(n / 9) % 8;
     await prisma.seatingTable.create({
       data: {
         ...parsed.data,
         weddingId,
         eventId,
         sortOrder: n,
-        x: parsed.data.shape === "HEAD" ? PLAN_WIDTH / 2 : 110 + col * 190,
-        y: parsed.data.shape === "HEAD" ? 70 : 220 + row * 130,
+        x: parsed.data.shape === "HEAD" ? PLAN_WIDTH / 2 : 130 + col * 215,
+        y: parsed.data.shape === "HEAD" ? 70 : 230 + row * 145,
       },
     });
   }

@@ -502,6 +502,8 @@ enum WeddingRole {
 
 enum EventType {
   RECEPTION
+  BRIDE_HOME
+  GROOM_HOME
   ENGAGEMENT
   BACHELORETTE
   CHURCH
@@ -603,6 +605,7 @@ model Wedding {
   expenses         Expense[]
   tasks            Task[]
   plannedVendors   PlannedVendor[]
+  scheduleDays     ScheduleDay[]
   scheduleItems    ScheduleItem[]
   favorites        Favorite[]
   inquiries        Inquiry[]
@@ -647,7 +650,11 @@ model WeddingEvent {
   date          DateTime?         @db.Date
   /// "HH:MM"
   time          String?
+  /// Address, free text.
   place         String?
+  /// Optional map pin for the address (decision 103).
+  lat           Float?
+  lng           Float?
   hasSeating    Boolean           @default(false)
   sortOrder     Int               @default(0)
   createdAt     DateTime          @default(now())
@@ -695,6 +702,7 @@ model Guest {
   createdAt   DateTime          @default(now())
   invitations GuestInvitation[]
   seats       TableSeat[]
+  scheduleFor ScheduleItemGuest[]
 
   @@index([weddingId])
   @@index([householdId])
@@ -832,21 +840,54 @@ model Task {
   @@map("task")
 }
 
-model ScheduleItem {
-  id          String       @id @default(cuid())
-  weddingId   String
-  wedding     Wedding      @relation(fields: [weddingId], references: [id], onDelete: Cascade)
-  eventId     String
-  event       WeddingEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+/// One day of the timeline (decision 105). Item times run from `startTime` through each item's duration.
+model ScheduleDay {
+  id        String         @id @default(cuid())
+  weddingId String
+  wedding   Wedding        @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  date      DateTime?      @db.Date
   /// "HH:MM"
-  time        String
+  startTime String         @default("10:00")
+  items     ScheduleItem[]
+
+  @@index([weddingId])
+  @@map("schedule_day")
+}
+
+model ScheduleItem {
+  id          String              @id @default(cuid())
+  weddingId   String
+  wedding     Wedding             @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  dayId       String
+  day         ScheduleDay         @relation(fields: [dayId], references: [id], onDelete: Cascade)
+  /// Optional event tag; supplies the place and pin when the item has no own place.
+  eventId     String?
+  event       WeddingEvent?       @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  sortOrder   Int                 @default(0)
+  durationMin Int                 @default(30)
   title       String
   responsible String?
   place       String?
-  createdAt   DateTime     @default(now())
+  /// Who the item is for (decision 106): everyone, whole sides, roles, and/or picked guests.
+  forAll      Boolean             @default(false)
+  forSides    GuestSide[]
+  forRoles    GuestRole[]
+  guests      ScheduleItemGuest[]
+  createdAt   DateTime            @default(now())
 
-  @@index([eventId])
+  @@index([dayId])
   @@map("schedule_item")
+}
+
+model ScheduleItemGuest {
+  itemId  String
+  item    ScheduleItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  guestId String
+  guest   Guest        @relation(fields: [guestId], references: [id], onDelete: Cascade)
+
+  @@id([itemId, guestId])
+  @@index([guestId])
+  @@map("schedule_item_guest")
 }
 
 /// A vendor in the couple's plan: from the catalog (businessId) or a private entry.
