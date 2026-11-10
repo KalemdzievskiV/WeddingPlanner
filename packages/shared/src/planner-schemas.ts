@@ -215,4 +215,6 @@ export const videoInviteSchema = z.object({
   headline: optionalText(80),
   message: optionalText(600),
   overlay: z.coerce.number("number").int("wholeNumber").min(0, "positive").max(INVITE_OVERLAY_MAX, "tooLarge"),
+  /** Events to show on the invitation; empty shows none. */
+  eventIds: z.array(z.string()).max(50),
 });

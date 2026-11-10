@@ -87,7 +87,9 @@ export default async function RsvpPage({ params }: { params: Promise<{ token: st
             partner2={video.partner2}
             dateLabel={video.date ? formatDate(video.date) : ""}
             greeting={personal ? household.guests[0]?.name : household.name}
-            events={invited.map((e) => ({ id: e.id, name: eventName(e, te), when: [e.time ?? "", e.place ?? ""].filter(Boolean).join(" · ") }))}
+            events={invited
+              .filter((e) => video.inviteEventIds.includes(e.id))
+              .map((e) => ({ id: e.id, name: eventName(e, te), when: [e.time ?? "", e.place ?? ""].filter(Boolean).join(" · ") }))}
           />
         </div>
       )}

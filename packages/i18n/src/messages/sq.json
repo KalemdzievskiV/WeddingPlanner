@@ -1391,11 +1391,13 @@
       "messagePlaceholder": "Do të na gëzonte ta festonim këtë ditë me ju.",
       "overlay": "Errëso videon: {value}%",
       "overlayHint": "Më e errët e bën tekstin më të lexueshëm mbi një video të ndritshme.",
-      "detailsNote": "Emrat, data dhe ora e vendi i çdo ngjarjeje vijnë nga Cilësimet. Çdo i ftuar sheh vetëm ngjarjet ku është i ftuar.",
+      "detailsNote": "Emrat dhe data vijnë nga Cilësimet, po ashtu ora dhe vendi i çdo ngjarjeje.",
       "saved": "U ruajt.",
       "openAsGuest": "Hape si e sheh i ftuari",
       "openAsGuestOff": "Ndizeni videon dhe ruajeni për ta parë në faqen e të ftuarve.",
-      "preview": "Parapamje"
+      "preview": "Parapamje",
+      "events": "Ngjarjet në ftesë",
+      "eventsHint": "Asnjë nuk shfaqet nëse nuk e shënoni. Çdo i ftuar sheh vetëm ngjarjet e shënuara ku është i ftuar."
     }
   },
   "rsvp": {

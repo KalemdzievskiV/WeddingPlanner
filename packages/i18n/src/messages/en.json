@@ -1391,11 +1391,13 @@
       "messagePlaceholder": "We would love to celebrate this day with you.",
       "overlay": "Darken the video: {value}%",
       "overlayHint": "Darker makes the text easier to read over a bright video.",
-      "detailsNote": "Your names, the date and each event's time and place come from Settings. Every guest only sees the events they're invited to.",
+      "detailsNote": "Your names and the date come from Settings, and so do each event's time and place.",
       "saved": "Saved.",
       "openAsGuest": "Open as a guest sees it",
       "openAsGuestOff": "Switch the video on and save to see it on the guest page.",
-      "preview": "Preview"
+      "preview": "Preview",
+      "events": "Events on the invitation",
+      "eventsHint": "None are shown unless you tick them. Each guest only sees the ticked events they're invited to."
     }
   },
   "rsvp": {

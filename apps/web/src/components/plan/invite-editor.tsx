@@ -14,7 +14,7 @@ import type { FormState } from "@/lib/form";
 import { useFormAction } from "@/lib/use-form-action";
 import { type InviteEvent, VideoInvite } from "./video-invite";
 
-type Draft = { enabled: boolean; videoUrl: string; headline: string; message: string; overlay: number };
+type Draft = { enabled: boolean; videoUrl: string; headline: string; message: string; overlay: number; eventIds: string[] };
 
 const textareaClass =
   "block w-full rounded-lg border border-line-strong bg-surface px-3 py-2 text-[15px] focus:border-vranec focus:outline-none focus:ring-2 focus:ring-vranec/15";
@@ -128,6 +128,28 @@ export function InviteEditor({
               />
             </Field>
 
+            {events.length > 0 && (
+              <fieldset className="space-y-2">
+                <legend className="text-sm font-medium">{t("events")}</legend>
+                <p className="text-sm text-stone">{t("eventsHint")}</p>
+                <div className="flex flex-wrap gap-x-5 gap-y-2 pt-1">
+                  {events.map((e) => (
+                    <label key={e.id} className="flex items-center gap-2 text-sm">
+                      <Checkbox
+                        name="eventIds"
+                        value={e.id}
+                        checked={draft.eventIds.includes(e.id)}
+                        onChange={(ev) =>
+                          set("eventIds", ev.target.checked ? [...draft.eventIds, e.id] : draft.eventIds.filter((id) => id !== e.id))
+                        }
+                      />
+                      {e.name}
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+            )}
+
             <p className="text-sm text-stone">{t("detailsNote")}</p>
           </fieldset>
 
@@ -161,7 +183,7 @@ export function InviteEditor({
           partner1={partner1}
           partner2={partner2}
           dateLabel={dateLabel}
-          events={events}
+          events={events.filter((e) => draft.eventIds.includes(e.id))}
         />
       </div>
     </div>

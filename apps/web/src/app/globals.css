@@ -115,6 +115,60 @@
 .invite-cue {
   animation: invite-cue 1.8s ease-in-out infinite;
 }
+/* The line above the names fills in letter by letter. */
+@keyframes invite-letter {
+  from {
+    opacity: 0;
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    filter: none;
+  }
+}
+.invite-letter {
+  display: inline-block;
+  white-space: pre;
+  animation: invite-letter 0.7s ease-out both;
+}
+/* Then the names come into focus. */
+@keyframes invite-name {
+  from {
+    opacity: 0;
+    filter: blur(10px);
+    transform: translateY(12px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    filter: none;
+    transform: none;
+  }
+}
+.invite-name {
+  display: inline-block;
+  animation: invite-name 1.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+@keyframes invite-line {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+.invite-line {
+  animation: invite-line 1.2s cubic-bezier(0.6, 0, 0.2, 1) both;
+}
+/* The global reduced-motion rule keeps animation delays, which would leave the text hidden: show it at once. */
+@media (prefers-reduced-motion: reduce) {
+  .invite-rise,
+  .invite-letter,
+  .invite-name,
+  .invite-line,
+  .invite-cue {
+    animation: none !important;
+  }
+}
 
 @media (prefers-reduced-motion: reduce) {
   *,

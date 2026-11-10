@@ -3,10 +3,13 @@
 import { SAMPLE_INVITE_VIDEO } from "@svadba/shared";
 import { ChevronDown, Play, RotateCcw, Volume2, VolumeX } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 export type InviteEvent = { id: string; name: string; when: string };
+
+/** Seconds between letters as the line above the names fills in. */
+const LETTER = 0.08;
 
 /**
  * Video invitation: a full-screen video with the key details in front, then a smooth hand-over
@@ -48,6 +51,7 @@ export function VideoInvite({
   const [ended, setEnded] = useState(false);
   const [waiting, setWaiting] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [run, setRun] = useState(0);
   const src = videoUrl || SAMPLE_INVITE_VIDEO;
 
   // Start playing (muted) unless the guest prefers less motion; fall back to a play button if blocked.
@@ -78,11 +82,34 @@ export function VideoInvite({
     if (!v) return;
     v.currentTime = 0;
     setEnded(false);
+    setRun((n) => n + 1);
     void v.play().then(() => setWaiting(false));
   }
 
   const names = `${partner1} & ${partner2}`;
   const shade = Math.min(80, Math.max(0, overlay)) / 100;
+
+  // The reveal, in order: greeting, the line above the names letter by letter, the names, then the rest.
+  const line = headline || t("defaultHeadline");
+  // Words keep their letters together, so a long line wraps between words; `at` is each letter's place in the line.
+  let at = 0;
+  const words = line.split(" ").map((w) => {
+    const letters = Array.from(w).map((ch) => ({ ch, at: at++ }));
+    at++; // a beat for the space
+    return letters;
+  });
+  const start = greeting ? 0.9 : 0.4;
+  const namesAt = start + at * LETTER + 0.5;
+  const after = namesAt + 0.8 + 1.2; // once the second name has come into focus
+  const T = {
+    greeting: 0.2,
+    line: start,
+    names: namesAt,
+    date: after,
+    divider: after + 0.4,
+    events: after + 0.8,
+    message: after + 0.8 + events.length * 0.35 + (events.length ? 0.3 : 0),
+  };
 
   return (
     <section
@@ -114,33 +141,52 @@ export function VideoInvite({
       {/* Fades the bottom into the page colour, so the hand-over to the RSVP form is seamless. */}
       {!preview && <div aria-hidden className="absolute inset-x-0 bottom-0 -z-10 h-12 bg-gradient-to-b from-transparent to-linen" />}
 
-      <div className="flex flex-1 flex-col items-center justify-center px-6 text-center [text-shadow:0_2px_18px_rgb(0_0_0/0.45)]">
+      {/* Keyed by `run`, so "Watch again" plays the text sequence again too. */}
+      <div key={run} className="flex flex-1 flex-col items-center justify-center px-6 text-center [text-shadow:0_2px_18px_rgb(0_0_0/0.45)]">
         {greeting && (
-          <p className="invite-rise mb-4 text-sm tracking-wide text-white/85" style={{ animationDelay: "0.2s" }}>
+          <p className="invite-rise mb-4 text-sm tracking-wide text-white/85" style={{ animationDelay: `${T.greeting}s` }}>
             {t("dear", { name: greeting })}
           </p>
         )}
-        <p className="invite-rise text-xs font-medium uppercase tracking-[0.3em] text-white/85 sm:text-sm" style={{ animationDelay: "0.4s" }}>
-          {headline || t("defaultHeadline")}
+        <p aria-label={line} className="text-xs font-medium uppercase tracking-[0.3em] text-white/85 sm:text-sm">
+          {words.map((word, w) => (
+            <Fragment key={w}>
+              {w > 0 && " "}
+              <span aria-hidden className="inline-block whitespace-nowrap">
+                {word.map(({ ch, at }) => (
+                  <span key={at} className="invite-letter" style={{ animationDelay: `${(T.line + at * LETTER).toFixed(3)}s` }}>
+                    {ch}
+                  </span>
+                ))}
+              </span>
+            </Fragment>
+          ))}
         </p>
-        <h1
-          className={cn("invite-rise mt-4 font-display font-light leading-[1.05]", preview ? "text-4xl" : "text-5xl sm:text-7xl")}
-          style={{ animationDelay: "0.7s" }}
-        >
-          {partner1}
-          <span className="mx-3 inline-block font-extralight text-white/80">&</span>
-          {partner2}
+        <h1 className={cn("mt-4 font-display font-light leading-[1.05]", preview ? "text-4xl" : "text-5xl sm:text-7xl")}>
+          <span className="invite-name" style={{ animationDelay: `${T.names}s` }}>
+            {partner1}
+          </span>
+          <span className="invite-name mx-3 font-extralight text-white/80" style={{ animationDelay: `${T.names + 0.4}s` }}>
+            &
+          </span>
+          <span className="invite-name" style={{ animationDelay: `${T.names + 0.8}s` }}>
+            {partner2}
+          </span>
         </h1>
         {dateLabel && (
-          <p className={cn("invite-rise mt-5 tabular-nums tracking-[0.15em]", preview ? "text-base" : "text-lg sm:text-xl")} style={{ animationDelay: "1s" }}>
+          <p className={cn("invite-rise mt-5 tabular-nums tracking-[0.15em]", preview ? "text-base" : "text-lg sm:text-xl")} style={{ animationDelay: `${T.date}s` }}>
             {dateLabel}
           </p>
         )}
-        <span aria-hidden className="invite-rise mt-6 block h-px w-24 bg-white/60" style={{ animationDelay: "1.2s" }} />
+        <span aria-hidden className="invite-line mt-6 block h-px w-24 bg-white/60" style={{ animationDelay: `${T.divider}s` }} />
         {events.length > 0 && (
-          <ul className="invite-rise mt-6 space-y-2.5" style={{ animationDelay: "1.4s" }}>
-            {events.map((e) => (
-              <li key={e.id} className={preview ? "text-sm" : "text-sm sm:text-base"}>
+          <ul className="mt-6 space-y-2.5">
+            {events.map((e, i) => (
+              <li
+                key={e.id}
+                className={cn("invite-rise", preview ? "text-sm" : "text-sm sm:text-base")}
+                style={{ animationDelay: `${(T.events + i * 0.35).toFixed(2)}s` }}
+              >
                 <span className="font-semibold">{e.name}</span>
                 {e.when && <span className="block text-white/85">{e.when}</span>}
               </li>
@@ -148,7 +194,7 @@ export function VideoInvite({
           </ul>
         )}
         {message && (
-          <p className={cn("invite-rise mt-6 max-w-md whitespace-pre-line text-white/90", preview ? "text-sm" : "text-base")} style={{ animationDelay: "1.7s" }}>
+          <p className={cn("invite-rise mt-6 max-w-md whitespace-pre-line text-white/90", preview ? "text-sm" : "text-base")} style={{ animationDelay: `${T.message}s` }}>
             {message}
           </p>
         )}

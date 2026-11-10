@@ -38,6 +38,7 @@ export default async function InvitationPage({ params }: { params: Promise<{ loc
           headline: wedding.inviteHeadline ?? "",
           message: wedding.inviteMessage ?? "",
           overlay: wedding.inviteOverlay,
+          eventIds: wedding.inviteEventIds,
         }}
       />
       <InvitationCard url={wedding.invitationUrl} editable={canEdit(role)} />

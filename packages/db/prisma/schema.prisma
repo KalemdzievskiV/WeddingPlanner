@@ -655,6 +655,8 @@ model Wedding {
   inviteMessage   String?
   /// How dark the layer over the video is, 0–80 (%), so the text stays readable.
   inviteOverlay   Int       @default(45)
+  /// Events shown on the video invitation (none by default). Each guest still only sees the ones they're invited to.
+  inviteEventIds  String[]  @default([])
   /// Read-only from 6 months after the date (decision 90).
   archivedAt        DateTime?
   /// Owners were emailed that guest data will be erased soon (decision 92).

@@ -51,12 +51,25 @@ export async function saveVideoInviteAction(_prev: FormState, fd: FormData): Pro
     headline: fd.get("headline") ?? "",
     message: fd.get("message") ?? "",
     overlay: fd.get("overlay") ?? "",
+    eventIds: fd.getAll("eventIds"),
   });
   if (!parsed.success) return { fieldErrors: zodFieldErrors(parsed.error) };
   const { enabled, videoUrl, headline, message, overlay } = parsed.data;
+  // Only this wedding's events.
+  const events = await prisma.weddingEvent.findMany({
+    where: { weddingId: access.wedding.id, id: { in: parsed.data.eventIds } },
+    select: { id: true },
+  });
   await prisma.wedding.update({
     where: { id: access.wedding.id },
-    data: { inviteEnabled: enabled, inviteVideoUrl: videoUrl, inviteHeadline: headline, inviteMessage: message, inviteOverlay: overlay },
+    data: {
+      inviteEnabled: enabled,
+      inviteVideoUrl: videoUrl,
+      inviteHeadline: headline,
+      inviteMessage: message,
+      inviteOverlay: overlay,
+      inviteEventIds: events.map((e) => e.id),
+    },
   });
   revalidatePath("/", "layout");
   return { ok: true };
