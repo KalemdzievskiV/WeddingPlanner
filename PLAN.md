@@ -182,6 +182,8 @@ _(Filled in as we agree on each question.)_
 | 108 | Guest counts per event | Client request: how many guests at the bride's home and at the groom's. The Guests page shows one summary card per event (when there is more than one): invited · coming (Да) · waiting, plus declined when any. Clicking a card filters the list to that event; clicking again clears it. When an event or answer filter is on, the list and totals count only the guests who match, not whole households. Existing custom events (e.g. "Гости дома Невеста") are left as the couple named them. | AGREED |
 | 109 | Download guest list | "Download Excel" on the Guests page saves the list as currently filtered (one row per matching guest: household, guest, side, age, role, an answer column per event, or only the picked event's, and the guests' note). File name includes the event when one is picked. | AGREED |
 | 110 | Print guest list | "Print" on the Guests page prints a clean list of the current filter: title with couple and event, totals, then guests grouped by household with side and answer. Screen controls are hidden in print. | AGREED |
+| 111 | Typical day in admin | Admins edit the "fill typical day" template (decision 107) on an admin page: one template for everyone. They can add, delete and reorder steps, and set each step's title (mk required; sq/en optional, falling back to mk), duration, linked event type and who it is for (everyone / sides / roles), plus the day's start time. One list with live clock times and one Save; nothing changes until saved. A "Reset to built-in default" button (with confirmation) restores the original 12 steps and 10:00 start. While nothing is saved, the built-in template is used. | AGREED |
+| 112 | Template changes and plans | Saving the template only affects future fills: timelines couples already filled stay as they are, and nobody is notified. A step linked to an event type the couple's plan doesn't have is still added, just without an event (as before). | AGREED |
 
 ---
 
@@ -314,7 +316,7 @@ Each phase ends with something working that you can click through.
 
 **Vendor:** onboarding (choose type, create business) · dashboard (stats, new inquiries) · profile editor · photos/portfolio · halls · menus & extras / packages · calendar · inquiries inbox · reviews · team · business switcher.
 
-**Admin:** dashboard stats · pending vendors · all businesses (pre-create, claim link) · users · reviews moderation · cities · categories · venue features · default checklist/budget templates.
+**Admin:** dashboard stats · pending vendors · all businesses (pre-create, claim link) · users · reviews moderation · cities · categories · venue features · default checklist/budget templates · typical day template (decision 111).
 
 ---
 

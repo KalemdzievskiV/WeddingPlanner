@@ -172,6 +172,37 @@ model ChecklistTemplateItem {
   @@map("checklist_template_item")
 }
 
+/// Admin-edited "fill typical day" template (decisions 107, 111). One row (id "default"); no row = built-in template in code.
+model TypicalDayTemplate {
+  id        String           @id @default("default")
+  /// "HH:MM"
+  startTime String
+  steps     TypicalDayStep[]
+  updatedAt DateTime         @updatedAt
+
+  @@map("typical_day_template")
+}
+
+model TypicalDayStep {
+  id          String             @id @default(cuid())
+  templateId  String
+  template    TypicalDayTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  sortOrder   Int                @default(0)
+  titleMk     String
+  /// Empty = falls back to titleMk.
+  titleSq     String?
+  titleEn     String?
+  durationMin Int
+  /// Tags the plan's event of this type when filling.
+  eventType   EventType?
+  forAll      Boolean            @default(false)
+  forSides    GuestSide[]
+  forRoles    GuestRole[]
+
+  @@index([templateId])
+  @@map("typical_day_step")
+}
+
 model MusicGenre {
   id         String          @id @default(cuid())
   slug       String          @unique

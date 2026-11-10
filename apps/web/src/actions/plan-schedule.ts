@@ -1,10 +1,10 @@
 "use server";
 
 import { prisma } from "@svadba/db";
-import { isLocale, scheduleDaySchema, scheduleItemSchema, TYPICAL_DAY, TYPICAL_DAY_START } from "@svadba/shared";
-import { getTranslations } from "next-intl/server";
+import { isLocale, pickLocalized, scheduleDaySchema, scheduleItemSchema } from "@svadba/shared";
 import { revalidatePath } from "next/cache";
 import { zodFieldErrors, type FormState } from "@/lib/form";
+import { getTypicalDay } from "@/lib/typical-day";
 import { editableWedding } from "@/lib/wedding";
 
 // Day timeline (decisions 105–107).
@@ -102,31 +102,31 @@ export async function reorderScheduleAction(dayId: string, ids: string[]): Promi
   return { ok: true };
 }
 
-/** Replaces a day's items with a typical MK wedding day (decision 107). */
+/** Replaces a day's items with the typical MK wedding day: the admin template, or the built-in one (decisions 107, 111). */
 export async function fillTypicalDayAction(dayId: string, locale: string): Promise<FormState> {
   const access = await editableWedding();
   if (!access || !isLocale(locale)) return { formError: "forbidden" };
   const weddingId = access.wedding.id;
   const day = await prisma.scheduleDay.findFirst({ where: { id: dayId, weddingId } });
   if (!day) return { formError: "generic" };
-  const t = await getTranslations({ locale, namespace: "plan.schedule.typical" });
+  const template = await getTypicalDay();
   const events = await prisma.weddingEvent.findMany({ where: { weddingId }, orderBy: { sortOrder: "asc" }, select: { id: true, type: true } });
-  const eventOf = (type?: string) => (type ? (events.find((e) => e.type === type)?.id ?? null) : null);
+  const eventOf = (type: string | null) => (type ? (events.find((e) => e.type === type)?.id ?? null) : null);
 
   await prisma.$transaction([
     prisma.scheduleItem.deleteMany({ where: { dayId } }),
-    prisma.scheduleDay.update({ where: { id: dayId }, data: { startTime: TYPICAL_DAY_START } }),
+    prisma.scheduleDay.update({ where: { id: dayId }, data: { startTime: template.startTime } }),
     prisma.scheduleItem.createMany({
-      data: TYPICAL_DAY.map((step, i) => ({
+      data: template.steps.map((step, i) => ({
         weddingId,
         dayId,
         sortOrder: i,
-        title: t(step.key as Parameters<typeof t>[0]),
+        title: pickLocalized(step, "title", locale),
         durationMin: step.durationMin,
         eventId: eventOf(step.eventType),
-        forAll: step.forAll ?? false,
-        forSides: step.forSides ?? [],
-        forRoles: step.forRoles ?? [],
+        forAll: step.forAll,
+        forSides: step.forSides,
+        forRoles: step.forRoles,
       })),
     }),
   ]);

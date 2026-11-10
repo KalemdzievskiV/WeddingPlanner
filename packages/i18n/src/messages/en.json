@@ -255,7 +255,8 @@
       "backToSite": "Back to site",
       "businesses": "Businesses",
       "genres": "Music genres",
-      "reviews": "Reviews"
+      "reviews": "Reviews",
+      "typicalDay": "Typical day"
     },
     "overview": {
       "title": "Overview",
@@ -367,6 +368,34 @@
       "hide": "Hide",
       "show": "Show again",
       "dismiss": "Dismiss report"
+    },
+    "typicalDay": {
+      "title": "Typical day",
+      "lead": "The schedule couples get when they click “Fill typical day”. Changes only apply to future fills: timelines already filled stay as they are.",
+      "builtIn": "Using the built-in schedule.",
+      "custom": "Using the schedule edited by an admin.",
+      "startTime": "Day starts at",
+      "step": "Step {n}",
+      "titleMk": "Title (Macedonian)",
+      "titleSq": "Title (Albanian)",
+      "titleEn": "Title (English)",
+      "fallbackHint": "Empty = the Macedonian title.",
+      "duration": "Duration (min)",
+      "eventType": "Event",
+      "noEvent": "No event",
+      "eventHint": "Links to the couple's event of this type, if their plan has one.",
+      "whoFor": "Who it's for",
+      "addStep": "Add step",
+      "deleteStep": "Delete step",
+      "save": "Save schedule",
+      "saved": "Schedule saved.",
+      "unsaved": "You have unsaved changes.",
+      "reset": "Reset to built-in",
+      "confirmReset": "Restore the built-in schedule (12 steps, starting 10:00)? All admin edits will be lost.",
+      "resetDone": "The built-in schedule is back.",
+      "ends": "Ends: {time}",
+      "noSteps": "Add at least one step.",
+      "stepsError": "Fix the highlighted fields."
     }
   },
   "errors": {

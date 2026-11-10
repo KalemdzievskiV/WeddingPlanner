@@ -163,3 +163,20 @@ export const plannedVendorSchema = z.object({
   status: z.enum(PLANNED_VENDOR_STATUSES),
   notes: optionalText(1000),
 });
+
+/** Admin-edited "fill typical day" template (decision 111). */
+export const typicalDayStepSchema = z.object({
+  titleMk: text(150),
+  titleSq: optionalText(150),
+  titleEn: optionalText(150),
+  durationMin: z.coerce.number("number").int("wholeNumber").min(0, "positive").max(MAX_ITEM_MINUTES, "tooLarge"),
+  eventType: z.enum(EVENT_TYPES).nullable(),
+  forAll: z.boolean(),
+  forSides: z.array(z.enum(GUEST_SIDES)).max(3),
+  forRoles: z.array(z.enum(GUEST_ROLES)).max(GUEST_ROLES.length),
+});
+export const typicalDaySchema = z.object({
+  startTime: scheduleDaySchema.shape.startTime,
+  steps: z.array(typicalDayStepSchema).min(1, "required").max(50, "tooLong"),
+});
+export type TypicalDayStepInput = z.input<typeof typicalDayStepSchema>;

@@ -255,7 +255,8 @@
       "backToSite": "Kthehu te faqja",
       "businesses": "Bizneset",
       "genres": "Zhanret muzikore",
-      "reviews": "Vlerësimet"
+      "reviews": "Vlerësimet",
+      "typicalDay": "Dita tipike"
     },
     "overview": {
       "title": "Përmbledhje",
@@ -367,6 +368,34 @@
       "hide": "Fshih",
       "show": "Shfaq përsëri",
       "dismiss": "Hidh poshtë raportin"
+    },
+    "typicalDay": {
+      "title": "Dita tipike",
+      "lead": "Orari që marrin çiftet kur klikojnë „Plotëso ditë tipike“. Ndryshimet vlejnë vetëm për plotësimet e ardhshme: oraret e plotësuara më parë nuk ndryshojnë.",
+      "builtIn": "Po përdoret orari i integruar.",
+      "custom": "Po përdoret orari i redaktuar nga administratori.",
+      "startTime": "Fillimi i ditës",
+      "step": "Hapi {n}",
+      "titleMk": "Titulli (maqedonisht)",
+      "titleSq": "Titulli (shqip)",
+      "titleEn": "Titulli (anglisht)",
+      "fallbackHint": "Bosh = titulli maqedonisht.",
+      "duration": "Kohëzgjatja (min.)",
+      "eventType": "Ngjarja",
+      "noEvent": "Pa ngjarje",
+      "eventHint": "Lidhet me ngjarjen e këtij lloji në planin e çiftit, nëse ekziston.",
+      "whoFor": "Për kë",
+      "addStep": "Shto hap",
+      "deleteStep": "Fshi hapin",
+      "save": "Ruaj orarin",
+      "saved": "Orari u ruajt.",
+      "unsaved": "Ka ndryshime të paruajtura.",
+      "reset": "Kthe në të integruarin",
+      "confirmReset": "Të kthehet orari i integruar (12 hapa, fillim 10:00)? Të gjitha ndryshimet e administratorëve do të humbasin.",
+      "resetDone": "U kthye orari i integruar.",
+      "ends": "Mbaron: {time}",
+      "noSteps": "Shtoni të paktën një hap.",
+      "stepsError": "Rregulloni fushat e shënuara."
     }
   },
   "errors": {

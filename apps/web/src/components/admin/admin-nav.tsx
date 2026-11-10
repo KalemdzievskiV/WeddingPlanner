@@ -1,6 +1,6 @@
 "use client";
 
-import { Building2, LayoutGrid, ListChecks, MapPin, MessageSquareWarning, Music, Store, Users } from "lucide-react";
+import { Building2, CalendarClock, LayoutGrid, ListChecks, MapPin, MessageSquareWarning, Music, Store, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
@@ -14,6 +14,7 @@ const items = [
   { href: "/admin/categories", key: "categories", Icon: Building2 },
   { href: "/admin/features", key: "features", Icon: ListChecks },
   { href: "/admin/genres", key: "genres", Icon: Music },
+  { href: "/admin/typical-day", key: "typicalDay", Icon: CalendarClock },
 ] as const;
 
 export function AdminNav() {
