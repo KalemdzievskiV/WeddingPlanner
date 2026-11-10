@@ -20,6 +20,7 @@ import { newToken } from "@/lib/business";
 import { parsePasted } from "@/lib/guest-import";
 import { fillHeadTable } from "@/lib/head-table";
 import { zodFieldErrors, type FormState } from "@/lib/form";
+import { resolveRsvp } from "@/lib/rsvp";
 import { beyondCouple, editableWedding, guestLimitReached } from "@/lib/wedding";
 
 const refresh = () => revalidatePath("/", "layout");
@@ -295,19 +296,26 @@ const rsvpAnswersSchema = z.object({
   note: z.string().trim().max(500),
 });
 
-/** Public RSVP page (no login): the household's token is the key. */
+/** Public RSVP page (no login): the household's token, or one guest's personal token, is the key. */
 export async function submitRsvpAction(token: string, input: unknown): Promise<FormState> {
   const parsed = rsvpAnswersSchema.safeParse(input);
   if (!parsed.success || typeof token !== "string") return { formError: "generic" };
-  const household = await prisma.household.findUnique({
-    where: { rsvpToken: token },
-    include: { guests: { include: { invitations: true } }, wedding: { select: { archivedAt: true } } },
-  });
+  const household = await resolveRsvp(token);
   if (!household) return { formError: "invalidLink" };
   if (household.wedding.archivedAt) return { formError: "rsvpClosed" };
 
+  // A personal link only answers for that guest (resolveRsvp already left the others out).
   const allowed = new Set(household.guests.flatMap((g) => g.invitations.map((i) => `${g.id}:${i.eventId}`)));
   const answers = parsed.data.answers.filter((a) => allowed.has(`${a.guestId}:${a.eventId}`));
+  const responded = household.personal
+    ? prisma.guest.update({
+        where: { id: household.personal.guestId },
+        data: { guestNote: parsed.data.note || null, respondedAt: new Date() },
+      })
+    : prisma.household.update({
+        where: { id: household.id },
+        data: { guestNote: parsed.data.note || null, respondedAt: new Date() },
+      });
   await prisma.$transaction([
     ...answers.map((a) =>
       prisma.guestInvitation.update({
@@ -318,11 +326,21 @@ export async function submitRsvpAction(token: string, input: unknown): Promise<F
     ...answers
       .filter((a) => a.rsvp === "NO")
       .map((a) => prisma.tableSeat.deleteMany({ where: { guestId: a.guestId, eventId: a.eventId } })),
-    prisma.household.update({
-      where: { id: household.id },
-      data: { guestNote: parsed.data.note || null, respondedAt: new Date() },
-    }),
+    responded,
   ]);
   refresh();
   return { ok: true };
+}
+
+/** A guest's personal RSVP link, to invite guests one by one instead of as a family. Made on first use. */
+export async function guestRsvpTokenAction(guestId: string): Promise<FormState & { token?: string }> {
+  const access = await editableWedding();
+  if (!access || typeof guestId !== "string") return { formError: "forbidden" };
+  const guest = await prisma.guest.findFirst({ where: { id: guestId, weddingId: access.wedding.id }, select: { rsvpToken: true } });
+  if (!guest) return { formError: "generic" };
+  if (guest.rsvpToken) return { ok: true, token: guest.rsvpToken };
+  const token = newToken();
+  await prisma.guest.update({ where: { id: guestId }, data: { rsvpToken: token } });
+  refresh();
+  return { ok: true, token };
 }

@@ -1,15 +1,16 @@
 "use client";
 
 import { EVENT_TYPES, type EventType } from "@svadba/shared";
-import { MapPin, Pencil, Plus, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, GripVertical, MapPin, Pencil, Plus, Trash2 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
-import { useEffect, useState, useTransition } from "react";
-import { deleteEventAction, saveEventAction } from "@/actions/plan-wedding";
+import { useEffect, useOptimistic, useState, useTransition } from "react";
+import { deleteEventAction, reorderEventsAction, saveEventAction } from "@/actions/plan-wedding";
 import { Button } from "@/components/ui/button";
 import { Checkbox, Field, Input, Select } from "@/components/ui/field";
 import type { FormState } from "@/lib/form";
 import { useFormAction } from "@/lib/use-form-action";
+import { cn } from "@/lib/utils";
 
 // MapLibre is heavy: load it only when an event form opens.
 const MapView = dynamic(() => import("@/components/map-view").then((m) => m.MapView), { ssr: false });
@@ -34,17 +35,56 @@ export function EventsEditor({ events, editable }: { events: EventRow[]; editabl
   const [editing, setEditing] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
+  const [list, setOptimisticList] = useOptimistic(events);
+  const [dragId, setDragId] = useState<string | null>(null);
+
+  // The order here is the order everywhere else (overview, guest list, RSVP page).
+  const move = (from: number, to: number) => {
+    if (to < 0 || to >= list.length || from === to) return;
+    const next = [...list];
+    const [it] = next.splice(from, 1);
+    next.splice(to, 0, it!);
+    start(async () => {
+      setOptimisticList(next);
+      const res = await reorderEventsAction(next.map((x) => x.id));
+      setError(res.formError && res.formError !== "emailTaken" ? te(res.formError) : null);
+    });
+  };
 
   return (
     <div className="space-y-3">
+      {editable && list.length > 1 && <p className="text-sm text-stone">{t("orderHint")}</p>}
       <ul className="divide-y divide-line border-y border-line">
-        {events.map((e) =>
+        {list.map((e, idx) =>
           editing === e.id ? (
             <li key={e.id} className="py-4">
               <EventForm event={e} onDone={() => setEditing(null)} />
             </li>
           ) : (
-            <li key={e.id} className="flex flex-wrap items-center gap-3 py-3">
+            <li
+              key={e.id}
+              draggable={editable && !editing}
+              onDragStart={(ev) => {
+                setDragId(e.id);
+                ev.dataTransfer.effectAllowed = "move";
+              }}
+              onDragOver={(ev) => {
+                if (dragId) ev.preventDefault();
+              }}
+              onDrop={(ev) => {
+                ev.preventDefault();
+                const from = list.findIndex((x) => x.id === dragId);
+                if (from >= 0) move(from, idx);
+                setDragId(null);
+              }}
+              onDragEnd={() => setDragId(null)}
+              className={cn("flex flex-wrap items-center gap-3 py-3", dragId === e.id && "opacity-40")}
+            >
+              {editable && (
+                <span title={t("drag")} className="hidden shrink-0 cursor-grab text-stone sm:block">
+                  <GripVertical aria-hidden className="size-4" />
+                </span>
+              )}
               <div className="min-w-0 flex-1">
                 <p className="flex items-center gap-1.5 font-medium">
                   {e.displayName}
@@ -56,6 +96,26 @@ export function EventsEditor({ events, editable }: { events: EventRow[]; editabl
               </div>
               {editable && (
                 <div className="flex gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    aria-label={`${t("moveUp")}: ${e.displayName}`}
+                    title={t("moveUp")}
+                    disabled={idx === 0 || pending}
+                    onClick={() => move(idx, idx - 1)}
+                  >
+                    <ArrowUp aria-hidden className="size-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    aria-label={`${t("moveDown")}: ${e.displayName}`}
+                    title={t("moveDown")}
+                    disabled={idx === list.length - 1 || pending}
+                    onClick={() => move(idx, idx + 1)}
+                  >
+                    <ArrowDown aria-hidden className="size-4" />
+                  </Button>
                   <Button variant="ghost" size="sm" onClick={() => setEditing(e.id)} aria-label={`${t("type")}: ${e.displayName}`}>
                     <Pencil aria-hidden className="size-4" />
                   </Button>

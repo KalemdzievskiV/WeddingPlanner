@@ -53,6 +53,7 @@ export async function saveScheduleItemAction(dayId: string, id: string | null, _
     responsible: fd.get("responsible") ?? "",
     place: fd.get("place") ?? "",
     eventId: fd.get("eventId") ?? "",
+    isMain: fd.get("isMain") === "on",
     forAll: fd.get("forAll") === "on",
     forSides: fd.getAll("forSides"),
     forRoles: fd.getAll("forRoles"),
@@ -85,6 +86,16 @@ export async function deleteScheduleItemAction(id: string): Promise<FormState> {
   const access = await editableWedding();
   if (!access) return { formError: "forbidden" };
   await prisma.scheduleItem.deleteMany({ where: { id, weddingId: access.wedding.id } });
+  refresh();
+  return { ok: true };
+}
+
+/** Marks an item as a main moment of the day (shown on the overview) or clears the mark. */
+export async function setScheduleItemMainAction(id: string, isMain: boolean): Promise<FormState> {
+  const access = await editableWedding();
+  if (!access || typeof isMain !== "boolean") return { formError: "forbidden" };
+  const { count } = await prisma.scheduleItem.updateMany({ where: { id, weddingId: access.wedding.id }, data: { isMain } });
+  if (!count) return { formError: "generic" };
   refresh();
   return { ok: true };
 }

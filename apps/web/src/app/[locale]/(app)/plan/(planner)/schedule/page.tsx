@@ -56,6 +56,7 @@ export default async function SchedulePage({ params }: { params: Promise<{ local
             responsible: i.responsible,
             place: i.place,
             eventId: i.eventId,
+            isMain: i.isMain,
             forAll: i.forAll,
             forSides: i.forSides.filter((s) => s !== "BOTH"),
             forRoles: i.forRoles,

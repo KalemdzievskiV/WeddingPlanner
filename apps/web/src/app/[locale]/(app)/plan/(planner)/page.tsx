@@ -299,7 +299,11 @@ export default async function PlanOverviewPage({ params }: { params: Promise<{ l
       d.items.map((i) => i.durationMin),
     );
     const past = !!d.date && d.date < todayDate;
-    return d.items.map((item, k) => {
+    // Traditional days have many steps: once any item is marked main, the overview shows only the main ones.
+    // Times still come from the whole day, so they stay right.
+    const onlyMain = d.items.some((i) => i.isMain);
+    return d.items.flatMap((item, k) => {
+      if (onlyMain && !item.isMain) return [];
       const wordIcon = ITEM_WORDS.find(([re]) => re.test(item.title))?.[1] ?? null;
       return {
         id: item.id,
@@ -307,7 +311,7 @@ export default async function PlanOverviewPage({ params }: { params: Promise<{ l
         time: slots[k]!.label + (slots[k]!.dayOffset > 0 ? " (+1)" : ""),
         label: item.title,
         done: past,
-        accent: KEY_WORDS.test(item.title) || item.event?.type === "CHURCH",
+        accent: onlyMain || KEY_WORDS.test(item.title) || item.event?.type === "CHURCH",
       } satisfies JourneyDot;
     });
   });

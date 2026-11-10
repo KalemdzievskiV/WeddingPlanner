@@ -4,7 +4,12 @@ import { AGE_GROUPS, GUEST_ROLES, GUEST_SIDES, type AgeGroup, type GuestRole, ty
 import { Check, Link2, MessageCircle, Pencil, Plus, Search, Trash2, Upload, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState, useTransition } from "react";
-import { deleteAllGuestsAction, deleteHouseholdAction, saveHouseholdAction, setRsvpAction } from "@/actions/plan-guests";
+import {
+  deleteAllGuestsAction,
+  deleteHouseholdAction,
+  saveHouseholdAction,
+  setRsvpAction,
+} from "@/actions/plan-guests";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonClass } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -14,7 +19,7 @@ import { cn } from "@/lib/utils";
 import { GuestImport } from "./guest-import";
 import { GuestSides, GuestViewToggle, type GuestView, useGuestView } from "./guest-sides";
 import { EventSummary, GuestListActions, type GuestMatch, GuestPrintList } from "./guest-summary";
-import { InvitationCard } from "./invitation-card";
+import { PersonalLink } from "./personal-link";
 
 export type GuestRow = {
   id: string;
@@ -22,6 +27,11 @@ export type GuestRow = {
   ageGroup: AgeGroup;
   role: GuestRole | null;
   invitations: { eventId: string; rsvp: Rsvp }[];
+  /** Personal RSVP link (only this guest), made the first time the couple asks for it. */
+  rsvpToken: string | null;
+  /** Note and answer date from the personal link. */
+  guestNote: string | null;
+  respondedAt: string | null;
 };
 export type HouseholdRow = {
   id: string;
@@ -48,14 +58,12 @@ export function GuestManager({
   editable,
   rsvpBase,
   couple,
-  invitationUrl,
 }: {
   households: HouseholdRow[];
   events: EventOption[];
   editable: boolean;
   rsvpBase: string;
   couple: string;
-  invitationUrl: string | null;
 }) {
   const t = useTranslations("plan.guests");
   const [query, setQuery] = useState("");
@@ -141,8 +149,6 @@ export function GuestManager({
           <EventSummary households={households} events={events} active={eventId} onPick={setEventId} />
         )}
 
-        <InvitationCard url={invitationUrl} editable={editable} />
-
         {importing && <GuestImport events={events} onClose={() => setImporting(false)} />}
         {editing === "new" && (
           <HouseholdEditor household={null} events={events} takenRoles={rolesOutside(null)} onDone={() => setEditing(null)} />
@@ -214,6 +220,8 @@ export function GuestManager({
                   eventId={eventId}
                   visible={visible}
                   editable={editable}
+                  rsvpBase={rsvpBase}
+                  couple={couple}
                   onEditFamily={(id) => {
                     setEditing(id);
                     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -240,6 +248,7 @@ export function GuestManager({
                     events={events}
                     editable={editable}
                     rsvpUrl={`${rsvpBase}/${h.rsvpToken}`}
+                    rsvpBase={rsvpBase}
                     couple={couple}
                     onEdit={() => setEditing(h.id)}
                   />
@@ -258,6 +267,7 @@ function HouseholdCard({
   events,
   editable,
   rsvpUrl,
+  rsvpBase,
   couple,
   onEdit,
 }: {
@@ -265,6 +275,7 @@ function HouseholdCard({
   events: EventOption[];
   editable: boolean;
   rsvpUrl: string;
+  rsvpBase: string;
   couple: string;
   onEdit: () => void;
 }) {
@@ -347,7 +358,17 @@ function HouseholdCard({
                 <span className="ml-1.5 rounded-full bg-rosehip px-2 py-0.5 text-xs font-medium text-vranec">{t(`roles.${g.role}`)}</span>
               )}{" "}
               <span className="text-stone">· {t(`ageGroups.${g.ageGroup}`)}</span>
+              {g.respondedAt && <span className="block text-xs text-stone">{t("answeredSelf", { date: g.respondedAt })}</span>}
+              {g.guestNote && (
+                <span className="mt-1 block rounded-lg bg-rosehip/60 px-2.5 py-1.5 text-ink-soft">
+                  <span className="font-medium text-ink">{t("guestNote")}: </span>
+                  {g.guestNote}
+                </span>
+              )}
             </span>
+            {h.guests.length > 1 && (editable || g.rsvpToken) && (
+              <PersonalLink guest={g} rsvpBase={rsvpBase} couple={couple} editable={editable} />
+            )}
             <span className="flex flex-wrap gap-1.5">
               {events.map((e) => {
                 const value = answers[`${g.id}:${e.id}`] as Rsvp | undefined;

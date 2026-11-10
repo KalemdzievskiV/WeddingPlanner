@@ -1110,7 +1110,8 @@ function RotateHandle({
   lift?: string;
 }) {
   const t = useTranslations("plan.seating");
-  const [centre, setCentre] = useState<{ x: number; y: number; deg: number } | null>(null);
+  // deg stays null until the pointer moves, so a plain click on the handle doesn't reset the angle.
+  const [centre, setCentre] = useState<{ x: number; y: number; deg: number | null } | null>(null);
   return (
     <span
       aria-hidden
@@ -1125,9 +1126,11 @@ function RotateHandle({
         } catch {
           // Synthetic pointers can't be captured; turning still works.
         }
-        setCentre({ x: r.left + r.width / 2, y: r.top + r.height / 2, deg: 0 });
+        setCentre({ x: r.left + r.width / 2, y: r.top + r.height / 2, deg: null });
       }}
       onPointerMove={(e) => {
+        // Keep the move away from the item underneath, or its drag handler moves it and undoes the turn.
+        e.stopPropagation();
         if (!centre) return;
         const deg = pointerAngle(centre.x, centre.y, e);
         setCentre({ ...centre, deg });
@@ -1135,7 +1138,12 @@ function RotateHandle({
       }}
       onPointerUp={(e) => {
         e.stopPropagation();
-        if (centre) onDone(centre.deg);
+        if (centre && centre.deg !== null) onDone(centre.deg);
+        setCentre(null);
+      }}
+      onPointerCancel={(e) => {
+        e.stopPropagation();
+        if (centre && centre.deg !== null) onDone(centre.deg);
         setCentre(null);
       }}
     >
@@ -1171,7 +1179,8 @@ function FloorItemBox({
   onChange: (box: ItemBox) => void;
 }) {
   const t = useTranslations("plan.seating");
-  type Gesture = { mode: "move" | "resize"; startX: number; startY: number; start: ItemBox; box: ItemBox; moved: boolean };
+  // "turn" is driven by the rotate handle; the item's own move/resize handlers ignore it.
+  type Gesture = { mode: "move" | "resize" | "turn"; startX: number; startY: number; start: ItemBox; box: ItemBox; moved: boolean };
   const [gesture, setGesture] = useState<Gesture | null>(null);
   const b = gesture?.box ?? box;
   const Icon = itemIcon[item.kind];
@@ -1189,7 +1198,7 @@ function FloorItemBox({
     setGesture({ mode, startX: e.clientX, startY: e.clientY, start: box, box, moved: false });
   };
   const move = (e: React.PointerEvent) => {
-    if (!gesture) return;
+    if (!gesture || gesture.mode === "turn") return;
     const moved = gesture.moved || Math.abs(e.clientX - gesture.startX) + Math.abs(e.clientY - gesture.startY) > 4;
     const s = gesture.start;
     if (gesture.mode === "move") {
@@ -1216,6 +1225,7 @@ function FloorItemBox({
     });
   };
   const end = () => {
+    if (gesture?.mode === "turn") return;
     if (gesture?.moved) onChange(gesture.box);
     setGesture(null);
   };
@@ -1276,7 +1286,7 @@ function FloorItemBox({
       {selected && editable && (
         <>
           <RotateHandle
-            onTurn={(deg) => setGesture({ mode: "move", startX: 0, startY: 0, start: box, box: { ...box, rotation: deg }, moved: false })}
+            onTurn={(deg) => setGesture({ mode: "turn", startX: 0, startY: 0, start: box, box: { ...box, rotation: deg }, moved: false })}
             onDone={(deg) => {
               setGesture(null);
               onChange({ ...box, rotation: deg });

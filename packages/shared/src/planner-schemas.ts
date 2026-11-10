@@ -161,6 +161,7 @@ export const scheduleItemSchema = z.object({
   responsible: optionalText(80),
   place: optionalText(150),
   eventId: z.string().transform((v) => (v === "" ? null : v)),
+  isMain: z.boolean(),
   forAll: z.boolean(),
   forSides: z.array(z.enum(GUEST_SIDES)).max(3),
   forRoles: z.array(z.enum(GUEST_ROLES)).max(GUEST_ROLES.length),
@@ -196,4 +197,22 @@ export type TypicalDayStepInput = z.input<typeof typicalDayStepSchema>;
 export const floorItemSchema = z.object({
   kind: z.enum(FLOOR_ITEM_KINDS),
   name: text(40),
+});
+
+/** Placeholder video for the video invitation until the couple picks their own (Mixkit Stock Video Free License). */
+export const SAMPLE_INVITE_VIDEO = "https://assets.mixkit.co/videos/18204/18204-720.mp4";
+export const INVITE_OVERLAY_MAX = 80;
+
+/** Video invitation settings: full-screen video with the key details, then the RSVP form. */
+export const videoInviteSchema = z.object({
+  enabled: z.boolean(),
+  videoUrl: z
+    .string()
+    .trim()
+    .max(500, "tooLong")
+    .refine((v) => v === "" || /^https:\/\/[^\s"'<>]+$/i.test(v), "url")
+    .transform((v) => (v === "" ? null : v)),
+  headline: optionalText(80),
+  message: optionalText(600),
+  overlay: z.coerce.number("number").int("wholeNumber").min(0, "positive").max(INVITE_OVERLAY_MAX, "tooLarge"),
 });

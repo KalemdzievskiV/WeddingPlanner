@@ -646,6 +646,15 @@ model Wedding {
   premium         Boolean   @default(false)
   /// Invitation picture: shown on RSVP pages and as their link preview.
   invitationUrl   String?
+  /// Video invitation (full-screen video with the key details, then the RSVP form). Off until switched on.
+  inviteEnabled   Boolean   @default(false)
+  /// https link to an MP4/WebM; empty means the sample video.
+  inviteVideoUrl  String?
+  /// Small line above the names, e.g. "We're getting married".
+  inviteHeadline  String?
+  inviteMessage   String?
+  /// How dark the layer over the video is, 0–80 (%), so the text stays readable.
+  inviteOverlay   Int       @default(45)
   /// Read-only from 6 months after the date (decision 90).
   archivedAt        DateTime?
   /// Owners were emailed that guest data will be erased soon (decision 92).
@@ -761,6 +770,11 @@ model Guest {
   /// Wedding-party role (decision 100); most guests have none.
   role        GuestRole?
   sortOrder   Int               @default(0)
+  /// Personal RSVP link for this guest only (the household link covers the whole family). Made on first use.
+  rsvpToken   String?           @unique
+  /// Note and answer time from the guest's personal link.
+  guestNote   String?
+  respondedAt DateTime?
   createdAt   DateTime          @default(now())
   invitations GuestInvitation[]
   seats       TableSeat[]
@@ -947,6 +961,8 @@ model ScheduleItem {
   eventId     String?
   event       WeddingEvent?       @relation(fields: [eventId], references: [id], onDelete: SetNull)
   sortOrder   Int                 @default(0)
+  /// Main moment of the day: when a day has any, the overview shows only those.
+  isMain      Boolean             @default(false)
   durationMin Int                 @default(30)
   title       String
   responsible String?

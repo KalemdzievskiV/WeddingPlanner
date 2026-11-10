@@ -2,7 +2,8 @@
 
 import { prisma } from "@svadba/db";
 import { revalidatePath } from "next/cache";
-import type { FormState } from "@/lib/form";
+import { videoInviteSchema } from "@svadba/shared";
+import { zodFieldErrors, type FormState } from "@/lib/form";
 import { deleteImage, ImageError, saveImage } from "@/lib/storage";
 import { editableWedding } from "@/lib/wedding";
 
@@ -36,6 +37,27 @@ export async function removeInvitationAction(): Promise<FormState> {
   if (!old) return { ok: true };
   await prisma.wedding.update({ where: { id: access.wedding.id }, data: { invitationUrl: null } });
   await deleteImage(old);
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
+/** Saves the video invitation (new "Invitation" tab). */
+export async function saveVideoInviteAction(_prev: FormState, fd: FormData): Promise<FormState> {
+  const access = await editableWedding();
+  if (!access) return { formError: "forbidden" };
+  const parsed = videoInviteSchema.safeParse({
+    enabled: fd.get("enabled") === "on",
+    videoUrl: fd.get("videoUrl") ?? "",
+    headline: fd.get("headline") ?? "",
+    message: fd.get("message") ?? "",
+    overlay: fd.get("overlay") ?? "",
+  });
+  if (!parsed.success) return { fieldErrors: zodFieldErrors(parsed.error) };
+  const { enabled, videoUrl, headline, message, overlay } = parsed.data;
+  await prisma.wedding.update({
+    where: { id: access.wedding.id },
+    data: { inviteEnabled: enabled, inviteVideoUrl: videoUrl, inviteHeadline: headline, inviteMessage: message, inviteOverlay: overlay },
+  });
   revalidatePath("/", "layout");
   return { ok: true };
 }

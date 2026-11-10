@@ -1,7 +1,7 @@
 "use client";
 
 import { GUEST_ROLES, timelineSlots, type GuestRole } from "@svadba/shared";
-import { ArrowDown, ArrowUp, CalendarPlus, GripVertical, MapPin, Pencil, Plus, Printer, Sparkles, Trash2, Users } from "lucide-react";
+import { ArrowDown, ArrowUp, CalendarPlus, GripVertical, MapPin, Pencil, Plus, Printer, Sparkles, Star, Trash2, Users } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useOptimistic, useState, useTransition } from "react";
 import {
@@ -11,6 +11,7 @@ import {
   reorderScheduleAction,
   saveScheduleDayAction,
   saveScheduleItemAction,
+  setScheduleItemMainAction,
   startTimelineAction,
 } from "@/actions/plan-schedule";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,7 @@ export type ScheduleItemRow = {
   responsible: string | null;
   place: string | null;
   eventId: string | null;
+  isMain: boolean;
   forAll: boolean;
   forSides: Side[];
   forRoles: GuestRole[];
@@ -134,6 +136,12 @@ function DayCard({
     next.splice(to, 0, it!);
     reorder(next);
   };
+  const toggleMain = (item: ScheduleItemRow) =>
+    start(async () => {
+      setOptimisticItems(items.map((i) => (i.id === item.id ? { ...i, isMain: !i.isMain } : i)));
+      await setScheduleItemMainAction(item.id, !item.isMain);
+    });
+  const anyMain = items.some((i) => i.isMain);
 
   return (
     <Card className="break-inside-avoid p-6 print:border-0 print:p-0 print:shadow-none">
@@ -182,6 +190,12 @@ function DayCard({
         </div>
       )}
 
+      {editable && items.length > 0 && (
+        <p className="mb-3 flex items-center gap-1.5 text-sm text-stone print:hidden">
+          <Star aria-hidden className="size-3.5 shrink-0 fill-vranec text-vranec" />
+          {anyMain ? t("mainHintSome") : t("mainHint")}
+        </p>
+      )}
       {items.length === 0 && editing !== "new" ? (
         <p className="text-sm text-stone">{t("empty")}</p>
       ) : (
@@ -228,7 +242,10 @@ function DayCard({
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="font-medium">{item.title}</p>
+                  <p className="flex items-center gap-1.5 font-medium">
+                    {item.isMain && <Star aria-label={t("mainMark")} className="size-4 shrink-0 fill-vranec text-vranec" />}
+                    {item.title}
+                  </p>
                   <p className="text-sm text-stone tabular-nums">
                     {t("minutes", { count: item.durationMin })} · {t("until", { time: slot.endLabel })}
                     {slot.endDayOffset > slot.dayOffset && ` (${t("nextDay")})`}
@@ -244,6 +261,17 @@ function DayCard({
                 </div>
                 {editable && (
                   <div className="flex shrink-0 flex-wrap justify-end print:hidden">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      aria-pressed={item.isMain}
+                      aria-label={`${t(item.isMain ? "unmarkMain" : "markMain")}: ${item.title}`}
+                      title={t(item.isMain ? "unmarkMain" : "markMain")}
+                      disabled={pending}
+                      onClick={() => toggleMain(item)}
+                    >
+                      <Star aria-hidden className={cn("size-4", item.isMain ? "fill-vranec text-vranec" : "text-stone")} />
+                    </Button>
                     <Button variant="ghost" size="sm" aria-label={`${t("moveUp")}: ${item.title}`} title={t("moveUp")} disabled={idx === 0 || pending} onClick={() => move(idx, idx - 1)}>
                       <ArrowUp aria-hidden className="size-4" />
                     </Button>
@@ -405,6 +433,13 @@ function ItemForm({
           <Input id={`${p}-resp`} name="responsible" defaultValue={item?.responsible ?? ""} />
         </Field>
       </div>
+      <label className="flex items-start gap-2 text-sm">
+        <Checkbox name="isMain" defaultChecked={item?.isMain ?? false} className="mt-0.5" />
+        <span>
+          <span className="font-medium">{t("isMain")}</span>
+          <span className="block text-stone">{t("isMainHint")}</span>
+        </span>
+      </label>
 
       <fieldset className="space-y-3">
         <legend className="text-sm font-medium">{t("whoFor")}</legend>

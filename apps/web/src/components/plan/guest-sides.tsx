@@ -7,6 +7,7 @@ import { useRef, useState, useSyncExternalStore, useTransition } from "react";
 import { quickAddGuestAction, renameGuestAction, setRsvpAction } from "@/actions/plan-guests";
 import type { FormState } from "@/lib/form";
 import { cn } from "@/lib/utils";
+import { PersonalLink } from "./personal-link";
 import type { GuestRow, HouseholdRow } from "./guest-manager";
 
 /** The error to show for a failed quick edit ("emailTaken" never happens here and isn't in the errors namespace). */
@@ -86,6 +87,8 @@ export function GuestSides({
   visible,
   editable,
   onEditFamily,
+  rsvpBase,
+  couple,
 }: {
   households: HouseholdRow[];
   events: EventOption[];
@@ -93,6 +96,8 @@ export function GuestSides({
   visible: Set<string> | null;
   editable: boolean;
   onEditFamily: (householdId: string) => void;
+  rsvpBase: string;
+  couple: string;
 }) {
   const t = useTranslations("plan.guests.split");
   const [tab, setTab] = useState<Column>("BRIDE");
@@ -159,6 +164,8 @@ export function GuestSides({
                 guest={g}
                 label={i === 0 && !(guests.length === 1 && h.guests.length === 1 && h.name === g.name) ? h.name : null}
                 onEditFamily={i === 0 && editable ? () => onEditFamily(h.id) : undefined}
+                // Families of two or more can also invite each person on their own.
+                personal={h.guests.length > 1 ? { rsvpBase, couple } : undefined}
                 {...rowProps}
               />
             )),
@@ -213,6 +220,7 @@ function GuestLine({
   answers,
   onCycle,
   onEditFamily,
+  personal,
 }: {
   guest: GuestRow;
   label: string | null;
@@ -222,6 +230,7 @@ function GuestLine({
   answers: Record<string, Rsvp>;
   onCycle: (guestId: string, eventId: string, current: Rsvp) => void;
   onEditFamily?: () => void;
+  personal?: { rsvpBase: string; couple: string };
 }) {
   const t = useTranslations("plan.guests");
   const ts = useTranslations("plan.guests.split");
@@ -296,7 +305,7 @@ function GuestLine({
           )}
         </div>
       )}
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-x-2">
         {editable ? (
           <input
             key={g.name}
@@ -333,6 +342,7 @@ function GuestLine({
             <Pencil aria-hidden className="size-3.5" />
           </button>
         )}
+        {personal && <PersonalLink compact guest={g} rsvpBase={personal.rsvpBase} couple={personal.couple} editable={editable} />}
         {canCycle ? (
           <button
             type="button"

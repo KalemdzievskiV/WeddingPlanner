@@ -167,6 +167,19 @@ export async function deleteEventAction(id: string): Promise<FormState> {
   return { ok: true };
 }
 
+/** Saves a new order for the wedding's events (settings list, overview and everywhere events are listed). */
+export async function reorderEventsAction(ids: string[]): Promise<FormState> {
+  const access = await editableWedding();
+  if (!access || !Array.isArray(ids)) return { formError: "forbidden" };
+  const events = await prisma.weddingEvent.findMany({ where: { weddingId: access.wedding.id }, select: { id: true } });
+  const known = new Set(events.map((e) => e.id));
+  const order = ids.filter((id) => known.has(id));
+  if (order.length !== known.size || new Set(order).size !== order.length) return { formError: "generic" };
+  await prisma.$transaction(order.map((id, i) => prisma.weddingEvent.update({ where: { id }, data: { sortOrder: i } })));
+  refresh();
+  return { ok: true };
+}
+
 // ─── Members ───
 
 export async function createWeddingInviteAction(role: InviteRole): Promise<FormState & { token?: string }> {

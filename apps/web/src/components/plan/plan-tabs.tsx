@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 
-const TABS = ["", "guests", "seating", "budget", "checklist", "schedule", "vendors", "favourites", "inquiries", "settings"] as const;
+const TABS = ["", "guests", "invitation", "seating", "budget", "checklist", "schedule", "vendors", "favourites", "inquiries", "settings"] as const;
 
 /** `unread`: inquiries with something new for the couple. */
 export function PlanTabs({ unread = 0 }: { unread?: number }) {

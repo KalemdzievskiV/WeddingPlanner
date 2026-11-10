@@ -786,7 +786,8 @@
       "settings": "Cilësimet",
       "favourites": "Të preferuarat",
       "inquiries": "Kërkesat",
-      "unread": "të palexuara"
+      "unread": "të palexuara",
+      "invitation": "Ftesa"
     },
     "header": {
       "daysLeft": "{count, plural, one {edhe # ditë} other {edhe # ditë}}",
@@ -881,7 +882,11 @@
       "pin": "Vendndodhja në hartë",
       "pinHint": "Klikoni në hartë për të vendosur shenjën, tërhiqeni për ta lëvizur. Të ftuarit e shohin në linkun e ftesës.",
       "pinClear": "Hiq shenjën",
-      "pinSet": "Ka vendndodhje në hartë"
+      "pinSet": "Ka vendndodhje në hartë",
+      "orderHint": "Tërhiqni ose përdorni shigjetat për renditjen. Përmbledhja dhe ftesa e të ftuarve ndjekin këtë renditje.",
+      "moveUp": "Lëviz lart",
+      "moveDown": "Lëviz poshtë",
+      "drag": "Tërhiqni për ta ndryshuar renditjen"
     },
     "guests": {
       "title": "Të ftuarit",
@@ -990,7 +995,13 @@
         "answerHint": "Klikoni për të ndryshuar përgjigjen",
         "pickEvent": "Zgjidhni një ngjarje më lart për të ndryshuar përgjigjet",
         "child": "Fëmijë"
-      }
+      },
+      "personalLink": "Lidhje e veçantë",
+      "personalLinkHint": "Ftojeni këtë të ftuar veçmas: lidhja përgjigjet vetëm për të.",
+      "copyLink": "Kopjo lidhjen",
+      "copied": "U kopjua",
+      "answeredSelf": "U përgjigj me lidhjen e vet më {date}",
+      "shareTextPersonal": "I/e nderuar {name}, {couple} ju ftojnë në dasmën e tyre. Ju lutemi konfirmoni nëse vini: {url}"
     },
     "import": {
       "title": "Fut të ftuar",
@@ -1254,7 +1265,14 @@
         "dinner": "Darka dhe muzika",
         "cake": "Prerja e tortës",
         "party": "Festa"
-      }
+      },
+      "mainHint": "Shënoni momentet kryesore me yll. Pastaj përmbledhja shfaq vetëm ato.",
+      "mainHintSome": "Në përmbledhje shfaqen vetëm momentet me yll.",
+      "mainMark": "Moment kryesor",
+      "markMain": "Shfaq në përmbledhje",
+      "unmarkMain": "Fshih nga përmbledhja",
+      "isMain": "Moment kryesor",
+      "isMainHint": "Shfaqet në përmbledhje. Kur dita ka momente kryesore, pjesët e tjera nuk shfaqen atje."
     },
     "vendors": {
       "title": "Shërbimet",
@@ -1355,6 +1373,29 @@
       "save": "Ruaj dhe vazhdo",
       "saving": "Po ruhet…",
       "skip": "Kapërce"
+    },
+    "invite": {
+      "title": "Ftesë me video",
+      "lead": "Të ftuarit hapin lidhjen e tyre dhe shohin një video në ekran të plotë me emrat tuaj, datën dhe vendet. Kur video mbaron, faqja kalon te formulari i konfirmimit.",
+      "enabled": "Shfaqua të ftuarve ftesën me video",
+      "enabledHint": "Kur është e fikur, të ftuarit shohin faqen e zakonshme të konfirmimit.",
+      "videoUrl": "Lidhja e videos",
+      "videoUrlHint": "Lidhje e drejtpërdrejtë te një skedar MP4 ose WebM që fillon me https://. Lëreni bosh për videon shembull.",
+      "useSample": "Përdor videon shembull",
+      "sampleNote": "Për momentin shfaqet një video shembull nga",
+      "headline": "Rreshti mbi emrat tuaj",
+      "headlineHint": "Lëreni bosh për “Po martohemi”.",
+      "headlinePlaceholder": "Po martohemi",
+      "message": "Mesazhi",
+      "messageHint": "Disa fjalë për të ftuarit, nën detajet.",
+      "messagePlaceholder": "Do të na gëzonte ta festonim këtë ditë me ju.",
+      "overlay": "Errëso videon: {value}%",
+      "overlayHint": "Më e errët e bën tekstin më të lexueshëm mbi një video të ndritshme.",
+      "detailsNote": "Emrat, data dhe ora e vendi i çdo ngjarjeje vijnë nga Cilësimet. Çdo i ftuar sheh vetëm ngjarjet ku është i ftuar.",
+      "saved": "U ruajt.",
+      "openAsGuest": "Hape si e sheh i ftuari",
+      "openAsGuestOff": "Ndizeni videon dhe ruajeni për ta parë në faqen e të ftuarve.",
+      "preview": "Parapamje"
     }
   },
   "rsvp": {
@@ -1679,5 +1720,15 @@
     "retry": "Provo përsëri",
     "home": "Shko në faqen kryesore",
     "code": "Kodi i gabimit: {code}"
+  },
+  "invite": {
+    "label": "Ftesë nga {couple}",
+    "dear": "Të nderuar {name}",
+    "defaultHeadline": "Po martohemi",
+    "soundOn": "Ndiz zërin",
+    "soundOff": "Fik zërin",
+    "replay": "Shiko përsëri",
+    "play": "Luaj",
+    "respond": "Konfirmo"
   }
 }

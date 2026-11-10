@@ -786,7 +786,8 @@
       "settings": "Settings",
       "favourites": "Favourites",
       "inquiries": "Inquiries",
-      "unread": "unread"
+      "unread": "unread",
+      "invitation": "Invitation"
     },
     "header": {
       "daysLeft": "{count, plural, one {# day to go} other {# days to go}}",
@@ -881,7 +882,11 @@
       "pin": "Map pin",
       "pinHint": "Click the map to place the pin, drag it to move. Guests see it on their invitation link.",
       "pinClear": "Remove pin",
-      "pinSet": "Has a map pin"
+      "pinSet": "Has a map pin",
+      "orderHint": "Drag or use the arrows to set the order. The overview and the guests' invitation follow this order.",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "drag": "Drag to reorder"
     },
     "guests": {
       "title": "Guests",
@@ -990,7 +995,13 @@
         "answerHint": "Click to change the answer",
         "pickEvent": "Pick an event above to change answers",
         "child": "Child"
-      }
+      },
+      "personalLink": "Own link",
+      "personalLinkHint": "Invite this guest on their own: the link only answers for them.",
+      "copyLink": "Copy link",
+      "copied": "Copied",
+      "answeredSelf": "Answered on their own link {date}",
+      "shareTextPersonal": "Dear {name}, {couple} invite you to their wedding. Please let them know if you're coming: {url}"
     },
     "import": {
       "title": "Import guests",
@@ -1254,7 +1265,14 @@
         "dinner": "Dinner and music",
         "cake": "Cutting the cake",
         "party": "Party"
-      }
+      },
+      "mainHint": "Mark the main moments with the star. Once you do, the overview shows only those.",
+      "mainHintSome": "Only the starred moments are shown on the overview.",
+      "mainMark": "Main moment",
+      "markMain": "Show on the overview",
+      "unmarkMain": "Hide from the overview",
+      "isMain": "Main moment",
+      "isMainHint": "Shown on the overview. When a day has main moments, the other items are left out there."
     },
     "vendors": {
       "title": "Vendors",
@@ -1355,6 +1373,29 @@
       "save": "Save and continue",
       "saving": "Saving…",
       "skip": "Skip"
+    },
+    "invite": {
+      "title": "Video invitation",
+      "lead": "Guests open their link to a full-screen video with your names, the date and the places. When the video ends, the page slides on to the RSVP form.",
+      "enabled": "Show the video invitation to guests",
+      "enabledHint": "While this is off, guests see the usual RSVP page.",
+      "videoUrl": "Video link",
+      "videoUrlHint": "A direct link to an MP4 or WebM file that starts with https://. Leave empty to use the sample video.",
+      "useSample": "Use sample video",
+      "sampleNote": "Showing a sample video for now, from",
+      "headline": "Line above your names",
+      "headlineHint": "Leave empty for “We're getting married”.",
+      "headlinePlaceholder": "We're getting married",
+      "message": "Message",
+      "messageHint": "A few words for your guests, shown under the details.",
+      "messagePlaceholder": "We would love to celebrate this day with you.",
+      "overlay": "Darken the video: {value}%",
+      "overlayHint": "Darker makes the text easier to read over a bright video.",
+      "detailsNote": "Your names, the date and each event's time and place come from Settings. Every guest only sees the events they're invited to.",
+      "saved": "Saved.",
+      "openAsGuest": "Open as a guest sees it",
+      "openAsGuestOff": "Switch the video on and save to see it on the guest page.",
+      "preview": "Preview"
     }
   },
   "rsvp": {
@@ -1679,5 +1720,15 @@
     "retry": "Try again",
     "home": "Go to home page",
     "code": "Error code: {code}"
+  },
+  "invite": {
+    "label": "Invitation from {couple}",
+    "dear": "Dear {name}",
+    "defaultHeadline": "We're getting married",
+    "soundOn": "Turn sound on",
+    "soundOff": "Turn sound off",
+    "replay": "Watch again",
+    "play": "Play",
+    "respond": "Respond"
   }
 }
