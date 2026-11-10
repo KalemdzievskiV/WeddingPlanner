@@ -3,9 +3,11 @@
 import { prisma } from "@svadba/db";
 import {
   HEAD_TABLE_ROLES,
+  guestNameSchema,
   householdSchema,
   importSchema,
   planStartSchema,
+  quickGuestSchema,
   ROLE_SIDE,
   RSVP_VALUES,
   type GuestRole,
@@ -92,6 +94,62 @@ export async function saveHouseholdAction(id: string | null, input: unknown): Pr
     }
   });
   if (toHeadTable.length) await fillHeadTable(weddingId, { create: false, guestIds: toHeadTable });
+  refresh();
+  return { ok: true };
+}
+
+/** Renames one guest in place (decision 116). A one-person family named after the guest is renamed with them. */
+export async function renameGuestAction(guestId: string, input: unknown): Promise<FormState> {
+  const access = await editableWedding();
+  if (!access) return { formError: "forbidden" };
+  const parsed = guestNameSchema.safeParse(input);
+  if (!parsed.success) return { fieldErrors: { name: zodFieldErrors(parsed.error).form ?? "required" } };
+  const guest = await prisma.guest.findFirst({
+    where: { id: guestId, weddingId: access.wedding.id },
+    include: { household: { select: { name: true, _count: { select: { guests: true } } } } },
+  });
+  if (!guest) return { formError: "generic" };
+  const name = parsed.data;
+  const renameFamily = guest.household._count.guests === 1 && guest.household.name === guest.name;
+  await prisma.$transaction([
+    prisma.guest.update({ where: { id: guest.id }, data: { name } }),
+    ...(renameFamily ? [prisma.household.update({ where: { id: guest.householdId }, data: { name } })] : []),
+  ]);
+  refresh();
+  return { ok: true };
+}
+
+/**
+ * "+ Add guest" and empty role rows in the Two sides view (decision 116): a new family named after the guest,
+ * on the given side (or the role's side), invited to every event.
+ */
+export async function quickAddGuestAction(input: unknown): Promise<FormState> {
+  const access = await editableWedding();
+  if (!access) return { formError: "forbidden" };
+  const parsed = quickGuestSchema.safeParse(input);
+  if (!parsed.success) return { fieldErrors: zodFieldErrors(parsed.error) };
+  const { name, role } = parsed.data;
+  const side = role ? ROLE_SIDE[role] : parsed.data.side;
+  const weddingId = access.wedding.id;
+  if (role && (await prisma.guest.findFirst({ where: { weddingId, role }, select: { id: true } }))) {
+    return { fieldErrors: { name: "roleTaken" } };
+  }
+  const total = await prisma.guest.count({ where: { weddingId } });
+  if (guestLimitReached(access.wedding, total, 1)) return { formError: "guestLimit" };
+  const events = await prisma.weddingEvent.findMany({ where: { weddingId }, select: { id: true } });
+  const household = await prisma.household.create({
+    data: {
+      weddingId,
+      name,
+      side,
+      rsvpToken: newToken(),
+      guests: { create: { weddingId, name, role, invitations: { create: events.map((e) => ({ eventId: e.id })) } } },
+    },
+    include: { guests: { select: { id: true } } },
+  });
+  if (role && (HEAD_TABLE_ROLES as readonly GuestRole[]).includes(role)) {
+    await fillHeadTable(weddingId, { create: false, guestIds: household.guests.map((g) => g.id) });
+  }
   refresh();
   return { ok: true };
 }

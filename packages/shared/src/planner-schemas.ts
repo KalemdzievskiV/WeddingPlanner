@@ -3,6 +3,7 @@ import {
   AGE_GROUPS,
   COST_TYPES,
   EVENT_TYPES,
+  FLOOR_ITEM_KINDS,
   GUEST_ROLES,
   GUEST_SIDES,
   PAYERS,
@@ -78,6 +79,16 @@ export const householdSchema = z.object({
     .max(30),
 });
 export type HouseholdInput = z.infer<typeof householdSchema>;
+
+/** Two sides view (decision 116): rename one guest in place. */
+export const guestNameSchema = text(80);
+
+/** Two sides view (decision 116): one name becomes a new family on a side, optionally holding a wedding-party role. */
+export const quickGuestSchema = z.object({
+  name: text(80),
+  side: z.enum(GUEST_SIDES),
+  role: z.enum(GUEST_ROLES).nullable(),
+});
 
 /** Rows from paste / CSV import. */
 export const importSchema = z
@@ -180,3 +191,9 @@ export const typicalDaySchema = z.object({
   steps: z.array(typicalDayStepSchema).min(1, "required").max(50, "tooLong"),
 });
 export type TypicalDayStepInput = z.input<typeof typicalDayStepSchema>;
+
+/** A room element on the seating plan (decision 119). */
+export const floorItemSchema = z.object({
+  kind: z.enum(FLOOR_ITEM_KINDS),
+  name: text(40),
+});

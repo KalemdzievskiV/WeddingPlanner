@@ -54,7 +54,7 @@ export function MapView({
 
       const place = (p: Point) => {
         if (!marker.current) {
-          marker.current = new maplibre.Marker({ color: "#7a1f33", draggable: editable })
+          marker.current = new maplibre.Marker({ color: "#8a4f7d", draggable: editable })
             .setLngLat([p.lng, p.lat])
             .addTo(m);
           marker.current.on("dragend", () => {

@@ -12,6 +12,7 @@ import { Checkbox, Field, Input, inputClass, Select } from "@/components/ui/fiel
 import type { ErrorKey } from "@/lib/form";
 import { cn } from "@/lib/utils";
 import { GuestImport } from "./guest-import";
+import { GuestSides, GuestViewToggle, type GuestView, useGuestView } from "./guest-sides";
 import { EventSummary, GuestListActions, type GuestMatch, GuestPrintList } from "./guest-summary";
 import { InvitationCard } from "./invitation-card";
 
@@ -63,6 +64,11 @@ export function GuestManager({
   const [rsvp, setRsvp] = useState<"" | Rsvp>("");
   const [editing, setEditing] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
+  const [view, setView] = useGuestView();
+  function changeView(v: GuestView) {
+    setView(v);
+    if (v === "sides") setSide("");
+  }
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -96,6 +102,10 @@ export function GuestManager({
   /** Roles already held by guests of other families; each role belongs to one guest (decision 101). */
   const rolesOutside = (householdId: string | null) =>
     new Set(households.filter((h) => h.id !== householdId).flatMap((h) => h.guests.flatMap((g) => (g.role ? [g.role] : []))));
+
+  const filtering = !!(query.trim() || side || eventId || rsvp);
+  const visible = useMemo(() => (filtering ? new Set(matches.map((m) => m.guest.id)) : null), [filtering, matches]);
+  const sides = view === "sides";
 
   const guestCount = matches.length;
   const children = matches.filter((m) => m.guest.ageGroup === "CHILD").length;
@@ -138,8 +148,10 @@ export function GuestManager({
           <HouseholdEditor household={null} events={events} takenRoles={rolesOutside(null)} onDone={() => setEditing(null)} />
         )}
 
+        <GuestViewToggle view={view} onChange={changeView} />
+
         {households.length > 0 && (
-          <div className="grid gap-2 sm:grid-cols-[1fr_auto_auto_auto]">
+          <div className={cn("grid gap-2", sides ? "sm:grid-cols-[1fr_auto_auto]" : "sm:grid-cols-[1fr_auto_auto_auto]")}>
             <div className="relative">
               <Search aria-hidden className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-stone" />
               <input
@@ -151,14 +163,16 @@ export function GuestManager({
                 className={cn(inputClass, "pl-9")}
               />
             </div>
-            <Select aria-label={t("filterSide")} value={side} onChange={(e) => setSide(e.target.value as GuestSide | "")}>
-              <option value="">{t("filterSide")}: {t("all")}</option>
-              {GUEST_SIDES.map((s) => (
-                <option key={s} value={s}>
-                  {t(`sides.${s}`)}
-                </option>
-              ))}
-            </Select>
+            {!sides && (
+              <Select aria-label={t("filterSide")} value={side} onChange={(e) => setSide(e.target.value as GuestSide | "")}>
+                <option value="">{t("filterSide")}: {t("all")}</option>
+                {GUEST_SIDES.map((s) => (
+                  <option key={s} value={s}>
+                    {t(`sides.${s}`)}
+                  </option>
+                ))}
+              </Select>
+            )}
             {events.length > 1 && (
               <Select aria-label={t("filterEvent")} value={eventId} onChange={(e) => setEventId(e.target.value)}>
                 <option value="">{t("filterEvent")}: {t("all")}</option>
@@ -180,7 +194,35 @@ export function GuestManager({
           </div>
         )}
 
-        {households.length === 0 && editing !== "new" ? (
+        {sides ? (
+          <>
+            {editing && editing !== "new" && (
+              <HouseholdEditor
+                household={households.find((h) => h.id === editing) ?? null}
+                events={events}
+                takenRoles={rolesOutside(editing)}
+                onDone={() => setEditing(null)}
+              />
+            )}
+            {filtering && matches.length === 0 ? (
+              <p className="py-6 text-center text-stone">{t("noMatch")}</p>
+            ) : (
+              <Card className="px-3 py-6 sm:px-2 sm:py-8">
+                <GuestSides
+                  households={households}
+                  events={events}
+                  eventId={eventId}
+                  visible={visible}
+                  editable={editable}
+                  onEditFamily={(id) => {
+                    setEditing(id);
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                />
+              </Card>
+            )}
+          </>
+        ) : households.length === 0 && editing !== "new" ? (
           <Card className="p-10 text-center text-ink-soft">{t("empty")}</Card>
         ) : filtered.length === 0 ? (
           <p className="py-6 text-center text-stone">{t("noMatch")}</p>

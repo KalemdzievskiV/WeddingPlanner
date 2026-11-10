@@ -2,7 +2,7 @@ import "../globals.css";
 import type { Metadata } from "next";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { Onest, Prata } from "next/font/google";
+import { Onest } from "next/font/google";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { CookieNotice } from "@/components/cookie-notice";
@@ -10,7 +10,6 @@ import { routing } from "@/i18n/routing";
 import { env } from "@/lib/env";
 import { OG_LOCALE } from "@/lib/seo";
 
-const prata = Prata({ weight: "400", subsets: ["latin", "cyrillic"], variable: "--font-prata", display: "swap" });
 const onest = Onest({ subsets: ["latin", "latin-ext", "cyrillic"], variable: "--font-onest", display: "swap" });
 
 export function generateStaticParams() {
@@ -44,7 +43,7 @@ export default async function LocaleLayout({
   const t = await getTranslations({ locale, namespace: "common" });
 
   return (
-    <html lang={locale} className={`${prata.variable} ${onest.variable}`}>
+    <html lang={locale} className={onest.variable}>
       <body className="min-h-dvh">
         <a
           href="#main"

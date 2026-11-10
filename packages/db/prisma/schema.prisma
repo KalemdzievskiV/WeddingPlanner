@@ -576,6 +576,35 @@ enum TableShape {
   LONG
   ROUND
   HEAD
+  SQUARE
+  ELLIPSE
+  HALF_ROUND
+  ROW
+}
+
+/// Room elements on the seating plan (decision 119).
+enum FloorItemKind {
+  DANCE_FLOOR
+  BAND
+  LABEL
+  DANCE_FLOOR_ROUND
+  STAGE
+  TENT
+  BUFFET_LONG
+  BUFFET_ROUND
+  WALL
+  DOOR
+  PILLAR
+  ENTRANCE
+  WC
+  BAR
+  DJ
+  CAKE
+  GIFTS
+  SPEAKER
+  LIGHT
+  PHOTO
+  KIDS
 }
 
 enum Payer {
@@ -632,6 +661,7 @@ model Wedding {
   households       Household[]
   guests           Guest[]
   tables           SeatingTable[]
+  floorItems       FloorItem[]
   budgetCategories BudgetCategory[]
   expenses         Expense[]
   tasks            Task[]
@@ -691,6 +721,7 @@ model WeddingEvent {
   createdAt     DateTime          @default(now())
   invitations   GuestInvitation[]
   tables        SeatingTable[]
+  floorItems    FloorItem[]
   expenses      Expense[]
   scheduleItems ScheduleItem[]
   inquiries     Inquiry[]
@@ -771,6 +802,27 @@ model SeatingTable {
 
   @@index([eventId])
   @@map("seating_table")
+}
+
+/// A room element on an event's seating plan: dance floor, band or a labelled box (decision 119). Seats nobody.
+model FloorItem {
+  id        String        @id @default(cuid())
+  weddingId String
+  wedding   Wedding       @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  eventId   String
+  event     WeddingEvent  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  kind      FloorItemKind
+  name      String
+  /// Centre and size on the floor plan, in plan units (like tables).
+  x         Float
+  y         Float
+  width     Float
+  height    Float
+  rotation  Int           @default(0)
+  createdAt DateTime      @default(now())
+
+  @@index([eventId])
+  @@map("floor_item")
 }
 
 /// Which table a guest sits at for one event (per table, not per chair — decision 67).

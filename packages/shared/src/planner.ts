@@ -16,8 +16,8 @@ export const ROLE_SIDE: Record<GuestRole, "BRIDE" | "GROOM"> = {
   GROOM: "GROOM",
   KUM: "GROOM",
   KUMA: "GROOM",
-  STAR_SVAT: "GROOM",
-  STAROSVATICA: "GROOM",
+  STAR_SVAT: "BRIDE",
+  STAROSVATICA: "BRIDE",
   DEVER: "GROOM",
 };
 
@@ -27,8 +27,84 @@ export const HEAD_TABLE_ROLES = ["STAROSVATICA", "STAR_SVAT", "KUM", "GROOM", "B
 export const RSVP_VALUES = ["PENDING", "YES", "NO"] as const;
 export type Rsvp = (typeof RSVP_VALUES)[number];
 
-export const TABLE_SHAPES = ["LONG", "ROUND", "HEAD"] as const;
+export const TABLE_SHAPES = ["LONG", "ROUND", "HEAD", "SQUARE", "ELLIPSE", "HALF_ROUND", "ROW"] as const;
 export type TableShape = (typeof TABLE_SHAPES)[number];
+
+/** Room elements on the seating plan (decision 119), with their size when added, in plan units. */
+export const FLOOR_ITEM_KINDS = [
+  "DANCE_FLOOR",
+  "BAND",
+  "LABEL",
+  "DANCE_FLOOR_ROUND",
+  "STAGE",
+  "TENT",
+  "BUFFET_LONG",
+  "BUFFET_ROUND",
+  "WALL",
+  "DOOR",
+  "PILLAR",
+  "ENTRANCE",
+  "WC",
+  "BAR",
+  "DJ",
+  "CAKE",
+  "GIFTS",
+  "SPEAKER",
+  "LIGHT",
+  "PHOTO",
+  "KIDS",
+] as const;
+export type FloorItemKind = (typeof FLOOR_ITEM_KINDS)[number];
+/** How a room element is drawn (decision 129): a resizable area, a buffet table, room structure, or an icon. */
+export const FLOOR_ITEM_LOOK: Record<FloorItemKind, "area" | "round" | "half" | "buffet" | "buffetRound" | "wall" | "pillar" | "icon"> = {
+  DANCE_FLOOR: "area",
+  BAND: "area",
+  LABEL: "area",
+  DANCE_FLOOR_ROUND: "round",
+  STAGE: "half",
+  TENT: "area",
+  BUFFET_LONG: "buffet",
+  BUFFET_ROUND: "buffetRound",
+  WALL: "wall",
+  DOOR: "icon",
+  PILLAR: "pillar",
+  ENTRANCE: "icon",
+  WC: "icon",
+  BAR: "icon",
+  DJ: "icon",
+  CAKE: "icon",
+  GIFTS: "icon",
+  SPEAKER: "icon",
+  LIGHT: "icon",
+  PHOTO: "icon",
+  KIDS: "icon",
+};
+const ICON_SIZE = { width: 90, height: 90 };
+export const FLOOR_ITEM_SIZE: Record<FloorItemKind, { width: number; height: number }> = {
+  DANCE_FLOOR: { width: 380, height: 260 },
+  BAND: { width: 240, height: 110 },
+  LABEL: { width: 170, height: 80 },
+  DANCE_FLOOR_ROUND: { width: 320, height: 320 },
+  STAGE: { width: 320, height: 160 },
+  TENT: { width: 900, height: 600 },
+  BUFFET_LONG: { width: 260, height: 60 },
+  BUFFET_ROUND: { width: 110, height: 110 },
+  WALL: { width: 400, height: 12 },
+  DOOR: ICON_SIZE,
+  PILLAR: { width: 40, height: 40 },
+  ENTRANCE: ICON_SIZE,
+  WC: ICON_SIZE,
+  BAR: ICON_SIZE,
+  DJ: ICON_SIZE,
+  CAKE: ICON_SIZE,
+  GIFTS: ICON_SIZE,
+  SPEAKER: ICON_SIZE,
+  LIGHT: ICON_SIZE,
+  PHOTO: ICON_SIZE,
+  KIDS: ICON_SIZE,
+};
+/** Smallest size a room element can be resized to, in plan units. */
+export const FLOOR_ITEM_MIN = 10;
 
 export const PAYERS = ["COUPLE", "BRIDE_FAMILY", "GROOM_FAMILY", "KUM", "OTHER"] as const;
 export type Payer = (typeof PAYERS)[number];

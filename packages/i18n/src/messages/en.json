@@ -835,7 +835,26 @@
       "events": "Events",
       "vendors": "Vendors",
       "vendorsSummary": "{booked} booked · {considering} considering",
-      "viewAll": "View all"
+      "viewAll": "View all",
+      "journey": {
+        "lead": "Your wedding at a glance, from the date to the big day.",
+        "date": "Wedding date",
+        "daysLeft": "{count, plural, one {# day to go} other {# days to go}}",
+        "today": "Today is the day!",
+        "married": "You're married!",
+        "setDate": "Set the wedding date",
+        "sideStats": "{yes} coming · {waiting} waiting",
+        "guestsTotal": "{total} guests in all · {yes} coming · {waiting} waiting for an answer",
+        "checklist": "Checklist",
+        "tasksTotal": "{count} tasks",
+        "tasksDone": "{count} done",
+        "setBudget": "Set your budget",
+        "bigDay": "The big day",
+        "planDay": "Plan the day's timeline",
+        "after": "After the wedding",
+        "reviews": "Review your vendors",
+        "export": "Download all your data"
+      }
     },
     "events": {
       "types": {
@@ -946,7 +965,32 @@
       "statNo": "not coming",
       "download": "Download Excel",
       "print": "Print",
-      "printTitle": "Guest list"
+      "printTitle": "Guest list",
+      "views": {
+        "label": "View",
+        "sides": "Two sides",
+        "families": "Families"
+      },
+      "split": {
+        "BRIDE": "Bride's guests",
+        "GROOM": "Groom's guests",
+        "BOTH": "Both sides",
+        "tabs": {
+          "BRIDE": "Bride",
+          "GROOM": "Groom",
+          "BOTH": "Both"
+        },
+        "count": "{count, plural, one {# guest} other {# guests}}",
+        "addGuest": "Add guest",
+        "namePlaceholder": "Name…",
+        "newName": "Guest's name",
+        "rename": "Rename {name}",
+        "editFamily": "Edit family {name}",
+        "notInvited": "Not invited to this event",
+        "answerHint": "Click to change the answer",
+        "pickEvent": "Pick an event above to change answers",
+        "child": "Child"
+      }
     },
     "import": {
       "title": "Import guests",
@@ -979,7 +1023,11 @@
       "shapes": {
         "LONG": "Long table",
         "ROUND": "Round table",
-        "HEAD": "Couple's table"
+        "HEAD": "Couple's table",
+        "SQUARE": "Square table",
+        "ELLIPSE": "Oval table",
+        "HALF_ROUND": "Half-round table",
+        "ROW": "Row of chairs"
       },
       "seats": "Places",
       "occupancy": "{seated}/{seats}",
@@ -1013,7 +1061,53 @@
       "zoomOut": "Zoom out",
       "zoomReset": "Fit the whole plan",
       "fullscreen": "Full screen",
-      "exitFullscreen": "Exit full screen"
+      "exitFullscreen": "Exit full screen",
+      "addItem": "Add room element",
+      "items": {
+        "DANCE_FLOOR": "Dance floor",
+        "BAND": "Band",
+        "LABEL": "Label",
+        "DANCE_FLOOR_ROUND": "Round dance floor",
+        "STAGE": "Stage",
+        "TENT": "Tent",
+        "BUFFET_LONG": "Buffet table",
+        "BUFFET_ROUND": "Round buffet table",
+        "WALL": "Wall",
+        "DOOR": "Door",
+        "PILLAR": "Pillar",
+        "ENTRANCE": "Entrance",
+        "WC": "WC",
+        "BAR": "Bar",
+        "DJ": "DJ",
+        "CAKE": "Cake",
+        "GIFTS": "Gifts",
+        "SPEAKER": "Speaker",
+        "LIGHT": "Light",
+        "PHOTO": "Photo corner",
+        "KIDS": "Kids corner"
+      },
+      "itemKind": "Element",
+      "itemName": "Name",
+      "labelPlaceholder": "e.g. Bar, DJ, Photo corner",
+      "itemHint": "Drag to move, drag the corner to resize.",
+      "editItem": "Rename element",
+      "deleteItem": "Delete element",
+      "confirmDeleteItem": "Delete \"{name}\" from the plan?",
+      "resize": "Drag to resize",
+      "openEditor": "Open editor",
+      "closeEditor": "Close",
+      "editorHint": "Scroll to zoom · drag the floor to move around",
+      "addElement": "Add element",
+      "fitPlan": "Show the whole plan",
+      "pickTables": "Tables with seats",
+      "pickItems": "Room elements",
+      "closePicker": "Close",
+      "tableNumber": "Table {n}",
+      "rotateHandle": "Drag to turn (Shift: any angle)",
+      "pickBuffet": "Buffet tables (no seats)",
+      "pickAreas": "Areas",
+      "pickStructure": "Room",
+      "pickIcons": "Services and decor"
     },
     "budget": {
       "title": "Budget",

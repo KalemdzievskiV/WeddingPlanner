@@ -15,7 +15,7 @@ import { redirect } from "next/navigation";
 import { newToken } from "@/lib/business";
 import { zodFieldErrors, type FormState } from "@/lib/form";
 import { getCurrentUser } from "@/lib/session";
-import { fillHeadTable } from "@/lib/head-table";
+import { ensureCouple, ensureCoupleSeated, fillHeadTable } from "@/lib/head-table";
 import { deleteImage } from "@/lib/storage";
 import { canManage, editableWedding, getWeddingAccess } from "@/lib/wedding";
 
@@ -89,6 +89,7 @@ export async function createWeddingAction(_prev: FormState, fd: FormData): Promi
       },
     });
   }
+  await ensureCouple(wedding.id);
   await fillHeadTable(wedding.id, { create: true, locale });
   if (!user.roles.includes("COUPLE")) {
     await prisma.user.update({ where: { id: user.id }, data: { roles: { push: "COUPLE" } } });
@@ -150,6 +151,8 @@ export async function saveEventAction(id: string | null, _prev: FormState, fd: F
     const sortOrder = await prisma.weddingEvent.count({ where: { weddingId } });
     await prisma.weddingEvent.create({ data: { ...parsed.data, weddingId, sortOrder } });
   }
+  // The couple is invited to every event, and seated where a head table exists (decision 121).
+  await ensureCoupleSeated(weddingId);
   refresh();
   return { ok: true };
 }

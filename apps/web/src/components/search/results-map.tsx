@@ -54,7 +54,7 @@ export function ResultsMap({ points, label }: { points: MapPoint[]; label: strin
           card.appendChild(price);
         }
         const popup = new maplibre.Popup({ offset: 28, closeButton: false, maxWidth: "220px", focusAfterOpen: false }).setDOMContent(card);
-        new maplibre.Marker({ color: "#7a1f33" }).setLngLat([p.lng, p.lat]).setPopup(popup).addTo(m);
+        new maplibre.Marker({ color: "#8a4f7d" }).setLngLat([p.lng, p.lat]).setPopup(popup).addTo(m);
         bounds.extend([p.lng, p.lat]);
       }
       if (points.length === 1) m.jumpTo({ center: [points[0]!.lng, points[0]!.lat], zoom: 13 });

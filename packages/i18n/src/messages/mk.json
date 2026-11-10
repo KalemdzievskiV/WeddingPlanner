@@ -835,7 +835,26 @@
       "events": "Настани",
       "vendors": "Услуги",
       "vendorsSummary": "{booked} резервирани · {considering} во разгледување",
-      "viewAll": "Види сè"
+      "viewAll": "Види сè",
+      "journey": {
+        "lead": "Вашата свадба на еден поглед, од датумот до големиот ден.",
+        "date": "Датум на свадбата",
+        "daysLeft": "{count, plural, one {уште # ден} other {уште # дена}}",
+        "today": "Денес е денот!",
+        "married": "Венчани сте!",
+        "setDate": "Поставете го датумот",
+        "sideStats": "{yes} доаѓаат · {waiting} без одговор",
+        "guestsTotal": "Вкупно {total} гости · {yes} доаѓаат · {waiting} без одговор",
+        "checklist": "Обврски",
+        "tasksTotal": "{count} обврски",
+        "tasksDone": "{count} завршени",
+        "setBudget": "Поставете буџет",
+        "bigDay": "Големиот ден",
+        "planDay": "Направете распоред за денот",
+        "after": "По свадбата",
+        "reviews": "Оценете ги услугите",
+        "export": "Преземете ги сите ваши податоци"
+      }
     },
     "events": {
       "types": {
@@ -946,7 +965,32 @@
       "statNo": "не доаѓаат",
       "download": "Преземи Excel",
       "print": "Печати",
-      "printTitle": "Листа на гости"
+      "printTitle": "Листа на гости",
+      "views": {
+        "label": "Приказ",
+        "sides": "Две страни",
+        "families": "Семејства"
+      },
+      "split": {
+        "BRIDE": "Гости на невестата",
+        "GROOM": "Гости на младоженецот",
+        "BOTH": "Заеднички гости",
+        "tabs": {
+          "BRIDE": "Невеста",
+          "GROOM": "Младоженец",
+          "BOTH": "Заеднички"
+        },
+        "count": "{count, plural, one {# гостин} other {# гости}}",
+        "addGuest": "Додај гостин",
+        "namePlaceholder": "Име…",
+        "newName": "Име на гостинот",
+        "rename": "Преименувај {name}",
+        "editFamily": "Измени го семејството {name}",
+        "notInvited": "Не е поканет на овој настан",
+        "answerHint": "Кликнете за да го смените одговорот",
+        "pickEvent": "Изберете настан погоре за да ги менувате одговорите",
+        "child": "Дете"
+      }
     },
     "import": {
       "title": "Внеси гости",
@@ -979,7 +1023,11 @@
       "shapes": {
         "LONG": "Долга маса",
         "ROUND": "Тркалезна маса",
-        "HEAD": "Маса за младенците"
+        "HEAD": "Маса за младенците",
+        "SQUARE": "Квадратна маса",
+        "ELLIPSE": "Овална маса",
+        "HALF_ROUND": "Полукружна маса",
+        "ROW": "Ред столици"
       },
       "seats": "Места",
       "occupancy": "{seated}/{seats}",
@@ -1013,7 +1061,53 @@
       "zoomOut": "Одзумирај",
       "zoomReset": "Прикажи го целиот распоред",
       "fullscreen": "Цел екран",
-      "exitFullscreen": "Излези од цел екран"
+      "exitFullscreen": "Излези од цел екран",
+      "addItem": "Додај елемент",
+      "items": {
+        "DANCE_FLOOR": "Подиум за игра",
+        "BAND": "Бенд",
+        "LABEL": "Ознака",
+        "DANCE_FLOOR_ROUND": "Тркалезен подиум",
+        "STAGE": "Бина",
+        "TENT": "Шатор",
+        "BUFFET_LONG": "Шведска маса",
+        "BUFFET_ROUND": "Тркалезна шведска маса",
+        "WALL": "Ѕид",
+        "DOOR": "Врата",
+        "PILLAR": "Столб",
+        "ENTRANCE": "Влез",
+        "WC": "Тоалет",
+        "BAR": "Шанк",
+        "DJ": "DJ",
+        "CAKE": "Торта",
+        "GIFTS": "Подароци",
+        "SPEAKER": "Звучник",
+        "LIGHT": "Светло",
+        "PHOTO": "Фото-ќош",
+        "KIDS": "Детски агол"
+      },
+      "itemKind": "Елемент",
+      "itemName": "Име",
+      "labelPlaceholder": "на пр. Шанк, DJ, Фото-ќош",
+      "itemHint": "Повлечете за да го преместите, повлечете го аголот за големина.",
+      "editItem": "Преименувај елемент",
+      "deleteItem": "Избриши елемент",
+      "confirmDeleteItem": "Да се избрише „{name}“ од планот?",
+      "resize": "Повлечете за големина",
+      "openEditor": "Отвори уредувач",
+      "closeEditor": "Затвори",
+      "editorHint": "Тркалцето зумира · повлечете го подот за движење",
+      "addElement": "Додај елемент",
+      "fitPlan": "Прикажи го целиот план",
+      "pickTables": "Маси со седишта",
+      "pickItems": "Елементи во салата",
+      "closePicker": "Затвори",
+      "tableNumber": "Маса {n}",
+      "rotateHandle": "Повлечете за вртење (Shift: секој агол)",
+      "pickBuffet": "Шведски маси (без седишта)",
+      "pickAreas": "Простори",
+      "pickStructure": "Сала",
+      "pickIcons": "Услуги и декор"
     },
     "budget": {
       "title": "Буџет",
@@ -1367,7 +1461,7 @@
     "titleIn": "{what} во {city}",
     "tabs": {
       "VENUE": "Ресторани",
-      "BAND": "Музика",
+      "BAND": "Бенд",
       "PHOTO_VIDEO": "Фото и видео"
     },
     "categoriesLabel": "Вид на услуга",

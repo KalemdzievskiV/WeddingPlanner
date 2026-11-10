@@ -7,7 +7,7 @@
 - Translated DB columns use the `nameMk / nameSq / nameEn` pattern; read with `pickLocalized` from `@svadba/shared`.
 - App roles live on `user.roles` (COUPLE / VENDOR / ADMIN), not in Better Auth. Use `getCurrentUser`, `requireUser`, `requireAdmin` from `@/lib/session`. Server Actions must re-check the role themselves.
 - Images: always go through `saveImage` in `@/lib/storage` (validates, re-encodes to WebP).
-- Design tokens are in `apps/web/src/app/globals.css` (linen / ink / vranec). Headings use Prata, but its digit 1 looks like "l": show numbers and dates in the body font (Onest).
+- Design tokens are in `apps/web/src/app/globals.css` (soft lilac look, decision 113). Token names are historical: `linen` = lilac page tint, `vranec` = mauve accent, `rosehip` = its soft tint. Headings and body both use Onest.
 - Prisma 7: `migrate dev` does not regenerate the client; `pnpm db:migrate` runs generate too.
 - Forms: use `useFormAction` from `@/lib/use-form-action`, never `<form action>` with useActionState (React 19 clears all fields after every submit, even on validation errors).
 - Money and dates: use `formatMoney` / `formatDate` from `@/lib/format` (deterministic, no Intl) everywhere, so server and browser output match.

@@ -1,11 +1,12 @@
-import { prisma } from "@svadba/db";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { SeatingPlanner } from "@/components/plan/seating-planner";
 import { Card } from "@/components/ui/card";
 import { Link } from "@/i18n/navigation";
 import { localeFrom } from "@/lib/locale";
+import { ensureCoupleSeated } from "@/lib/head-table";
 import { eventName } from "@/lib/plan-helpers";
+import { loadSeating, seatingEvents } from "@/lib/seating";
 import { canEdit, premiumLocked, requireWedding } from "@/lib/wedding";
 import { cn } from "@/lib/utils";
 
@@ -26,10 +27,10 @@ export default async function SeatingPage({
   const te = await getTranslations("plan.events");
   if (premiumLocked(wedding)) return <Card className="p-10 text-center text-ink-soft">{t("locked")}</Card>;
 
-  const events = await prisma.weddingEvent.findMany({
-    where: { weddingId: wedding.id, hasSeating: true },
-    orderBy: { sortOrder: "asc" },
-  });
+  // Plans made before the couple were guests get them now (decision 121).
+  if (canEdit(role)) await ensureCoupleSeated(wedding.id);
+
+  const events = await seatingEvents(wedding.id);
   if (events.length === 0) {
     return (
       <Card className="p-10 text-center text-ink-soft">
@@ -43,18 +44,7 @@ export default async function SeatingPage({
   const requested = (await searchParams).event;
   const event = events.find((e) => e.id === requested) ?? events[0]!;
 
-  const [tables, invitations] = await Promise.all([
-    prisma.seatingTable.findMany({
-      where: { eventId: event.id },
-      orderBy: [{ sortOrder: "asc" }],
-      include: { guests: { select: { guestId: true } } },
-    }),
-    prisma.guestInvitation.findMany({
-      where: { eventId: event.id, rsvp: { not: "NO" } },
-      include: { guest: { include: { household: { select: { id: true, name: true } } } } },
-      orderBy: [{ guest: { household: { createdAt: "asc" } } }, { guest: { sortOrder: "asc" } }],
-    }),
-  ]);
+  const data = await loadSeating(event.id);
 
   return (
     <div className="space-y-5">
@@ -80,24 +70,7 @@ export default async function SeatingPage({
         eventId={event.id}
         locale={locale}
         editable={canEdit(role)}
-        tables={tables.map((tb) => ({
-          id: tb.id,
-          name: tb.name,
-          shape: tb.shape,
-          seats: tb.seats,
-          x: tb.x,
-          y: tb.y,
-          rotation: tb.rotation,
-          guestIds: tb.guests.map((g) => g.guestId),
-        }))}
-        guests={invitations.map((i) => ({
-          id: i.guest.id,
-          name: i.guest.name,
-          household: i.guest.household.name,
-          householdId: i.guest.household.id,
-          child: i.guest.ageGroup === "CHILD",
-          role: i.guest.role,
-        }))}
+        {...data}
       />
     </div>
   );

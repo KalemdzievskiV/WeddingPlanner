@@ -835,7 +835,26 @@
       "events": "Ngjarjet",
       "vendors": "Shërbimet",
       "vendorsSummary": "{booked} të rezervuara · {considering} në shqyrtim",
-      "viewAll": "Shiko të gjitha"
+      "viewAll": "Shiko të gjitha",
+      "journey": {
+        "lead": "Dasma juaj me një shikim, nga data deri te dita e madhe.",
+        "date": "Data e dasmës",
+        "daysLeft": "{count, plural, one {edhe # ditë} other {edhe # ditë}}",
+        "today": "Sot është dita!",
+        "married": "Jeni martuar!",
+        "setDate": "Caktoni datën e dasmës",
+        "sideStats": "{yes} vijnë · {waiting} pa përgjigje",
+        "guestsTotal": "Gjithsej {total} të ftuar · {yes} vijnë · {waiting} pa përgjigje",
+        "checklist": "Detyrat",
+        "tasksTotal": "{count} detyra",
+        "tasksDone": "{count} të kryera",
+        "setBudget": "Caktoni buxhetin",
+        "bigDay": "Dita e madhe",
+        "planDay": "Planifikoni orarin e ditës",
+        "after": "Pas dasmës",
+        "reviews": "Vlerësoni shërbimet",
+        "export": "Shkarkoni të gjitha të dhënat"
+      }
     },
     "events": {
       "types": {
@@ -946,7 +965,32 @@
       "statNo": "nuk vijnë",
       "download": "Shkarko Excel",
       "print": "Printo",
-      "printTitle": "Lista e të ftuarve"
+      "printTitle": "Lista e të ftuarve",
+      "views": {
+        "label": "Pamja",
+        "sides": "Dy palët",
+        "families": "Familjet"
+      },
+      "split": {
+        "BRIDE": "Të ftuarit e nuses",
+        "GROOM": "Të ftuarit e dhëndrit",
+        "BOTH": "Të përbashkët",
+        "tabs": {
+          "BRIDE": "Nusja",
+          "GROOM": "Dhëndri",
+          "BOTH": "Të dyja"
+        },
+        "count": "{count, plural, one {# i ftuar} other {# të ftuar}}",
+        "addGuest": "Shto të ftuar",
+        "namePlaceholder": "Emri…",
+        "newName": "Emri i të ftuarit",
+        "rename": "Riemërto {name}",
+        "editFamily": "Ndrysho familjen {name}",
+        "notInvited": "Nuk është ftuar në këtë ngjarje",
+        "answerHint": "Klikoni për të ndryshuar përgjigjen",
+        "pickEvent": "Zgjidhni një ngjarje më lart për të ndryshuar përgjigjet",
+        "child": "Fëmijë"
+      }
     },
     "import": {
       "title": "Fut të ftuar",
@@ -979,7 +1023,11 @@
       "shapes": {
         "LONG": "Tavolinë e gjatë",
         "ROUND": "Tavolinë e rrumbullakët",
-        "HEAD": "Tavolina e çiftit"
+        "HEAD": "Tavolina e çiftit",
+        "SQUARE": "Tavolinë katrore",
+        "ELLIPSE": "Tavolinë ovale",
+        "HALF_ROUND": "Tavolinë gjysmërrethore",
+        "ROW": "Rresht karrigesh"
       },
       "seats": "Vende",
       "occupancy": "{seated}/{seats}",
@@ -1013,7 +1061,53 @@
       "zoomOut": "Zvogëlo",
       "zoomReset": "Shfaq gjithë planin",
       "fullscreen": "Ekran i plotë",
-      "exitFullscreen": "Dil nga ekrani i plotë"
+      "exitFullscreen": "Dil nga ekrani i plotë",
+      "addItem": "Shto element",
+      "items": {
+        "DANCE_FLOOR": "Pista e vallëzimit",
+        "BAND": "Muzika",
+        "LABEL": "Etiketë",
+        "DANCE_FLOOR_ROUND": "Pistë e rrumbullakët",
+        "STAGE": "Skena",
+        "TENT": "Tenda",
+        "BUFFET_LONG": "Tavolinë bufeje",
+        "BUFFET_ROUND": "Bufe e rrumbullakët",
+        "WALL": "Mur",
+        "DOOR": "Dera",
+        "PILLAR": "Shtyllë",
+        "ENTRANCE": "Hyrja",
+        "WC": "Tualeti",
+        "BAR": "Bari",
+        "DJ": "DJ",
+        "CAKE": "Torta",
+        "GIFTS": "Dhuratat",
+        "SPEAKER": "Altoparlant",
+        "LIGHT": "Drita",
+        "PHOTO": "Këndi i fotove",
+        "KIDS": "Këndi i fëmijëve"
+      },
+      "itemKind": "Elementi",
+      "itemName": "Emri",
+      "labelPlaceholder": "p.sh. Bari, DJ, Këndi i fotove",
+      "itemHint": "Tërhiqni për ta lëvizur, tërhiqni këndin për madhësinë.",
+      "editItem": "Riemërto elementin",
+      "deleteItem": "Fshi elementin",
+      "confirmDeleteItem": "Të fshihet „{name}“ nga plani?",
+      "resize": "Tërhiqni për madhësinë",
+      "openEditor": "Hap redaktorin",
+      "closeEditor": "Mbyll",
+      "editorHint": "Rrota zmadhon · tërhiqni dyshemenë për të lëvizur",
+      "addElement": "Shto element",
+      "fitPlan": "Shfaq gjithë planin",
+      "pickTables": "Tavolina me ulëse",
+      "pickItems": "Elementet e sallës",
+      "closePicker": "Mbyll",
+      "tableNumber": "Tavolina {n}",
+      "rotateHandle": "Tërhiqni për ta rrotulluar (Shift: çdo kënd)",
+      "pickBuffet": "Tavolina bufeje (pa ulëse)",
+      "pickAreas": "Hapësirat",
+      "pickStructure": "Salla",
+      "pickIcons": "Shërbime dhe dekor"
     },
     "budget": {
       "title": "Buxheti",
