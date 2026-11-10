@@ -12,6 +12,7 @@ import { Checkbox, Field, Input, inputClass, Select } from "@/components/ui/fiel
 import type { ErrorKey } from "@/lib/form";
 import { cn } from "@/lib/utils";
 import { GuestImport } from "./guest-import";
+import { EventSummary, GuestListActions, type GuestMatch, GuestPrintList } from "./guest-summary";
 import { InvitationCard } from "./invitation-card";
 
 export type GuestRow = {
@@ -77,108 +78,135 @@ export function GuestManager({
     });
   }, [households, query, side, eventId, rsvp]);
 
+  /** With an event or answer filter, only the guests who match count, not whole households (decision 108). */
+  const matches = useMemo<GuestMatch[]>(
+    () =>
+      filtered.flatMap((h) =>
+        h.guests
+          .filter(
+            (g) =>
+              (!eventId && !rsvp) ||
+              g.invitations.some((i) => (!eventId || i.eventId === eventId) && (!rsvp || i.rsvp === rsvp)),
+          )
+          .map((guest) => ({ household: h, guest })),
+      ),
+    [filtered, eventId, rsvp],
+  );
+
   /** Roles already held by guests of other families; each role belongs to one guest (decision 101). */
   const rolesOutside = (householdId: string | null) =>
     new Set(households.filter((h) => h.id !== householdId).flatMap((h) => h.guests.flatMap((g) => (g.role ? [g.role] : []))));
 
-  const guestCount = filtered.reduce((n, h) => n + h.guests.length, 0);
-  const children = filtered.reduce((n, h) => n + h.guests.filter((g) => g.ageGroup === "CHILD").length, 0);
+  const guestCount = matches.length;
+  const children = matches.filter((m) => m.guest.ageGroup === "CHILD").length;
+  const countsText = t("counts", { households: filtered.length, guests: guestCount });
+  const agesText = t("ages", { adults: guestCount - children, children });
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="text-lg font-semibold tabular-nums">{t("counts", { households: filtered.length, guests: guestCount })}</p>
-          <p className="text-sm text-stone">{t("ages", { adults: guestCount - children, children })}</p>
-        </div>
-        {editable && (
+      <GuestPrintList matches={matches} events={events} eventId={eventId} couple={couple} totals={`${countsText} · ${agesText}`} />
+      <div className="space-y-5 print:hidden">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="text-lg font-semibold tabular-nums">{countsText}</p>
+            <p className="text-sm text-stone">{agesText}</p>
+          </div>
           <div className="flex flex-wrap gap-2">
-            {households.length > 0 && <DeleteAllButton households={households} />}
-            <Button variant="secondary" onClick={() => setImporting((v) => !v)}>
-              <Upload aria-hidden className="size-4" /> {t("import")}
-            </Button>
-            <Button onClick={() => setEditing("new")}>
-              <Plus aria-hidden className="size-4" /> {t("add")}
-            </Button>
+            {households.length > 0 && <GuestListActions matches={matches} events={events} eventId={eventId} />}
+            {editable && (
+              <div className="flex flex-wrap gap-2">
+                {households.length > 0 && <DeleteAllButton households={households} />}
+                <Button variant="secondary" onClick={() => setImporting((v) => !v)}>
+                  <Upload aria-hidden className="size-4" /> {t("import")}
+                </Button>
+                <Button onClick={() => setEditing("new")}>
+                  <Plus aria-hidden className="size-4" /> {t("add")}
+                </Button>
+              </div>
+            )}
           </div>
+        </div>
+
+        {events.length > 1 && households.length > 0 && (
+          <EventSummary households={households} events={events} active={eventId} onPick={setEventId} />
         )}
-      </div>
 
-      <InvitationCard url={invitationUrl} editable={editable} />
+        <InvitationCard url={invitationUrl} editable={editable} />
 
-      {importing && <GuestImport events={events} onClose={() => setImporting(false)} />}
-      {editing === "new" && (
-        <HouseholdEditor household={null} events={events} takenRoles={rolesOutside(null)} onDone={() => setEditing(null)} />
-      )}
+        {importing && <GuestImport events={events} onClose={() => setImporting(false)} />}
+        {editing === "new" && (
+          <HouseholdEditor household={null} events={events} takenRoles={rolesOutside(null)} onDone={() => setEditing(null)} />
+        )}
 
-      {households.length > 0 && (
-        <div className="grid gap-2 sm:grid-cols-[1fr_auto_auto_auto]">
-          <div className="relative">
-            <Search aria-hidden className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-stone" />
-            <input
-              type="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder={t("search")}
-              aria-label={t("search")}
-              className={cn(inputClass, "pl-9")}
-            />
-          </div>
-          <Select aria-label={t("filterSide")} value={side} onChange={(e) => setSide(e.target.value as GuestSide | "")}>
-            <option value="">{t("filterSide")}: {t("all")}</option>
-            {GUEST_SIDES.map((s) => (
-              <option key={s} value={s}>
-                {t(`sides.${s}`)}
-              </option>
-            ))}
-          </Select>
-          {events.length > 1 && (
-            <Select aria-label={t("filterEvent")} value={eventId} onChange={(e) => setEventId(e.target.value)}>
-              <option value="">{t("filterEvent")}: {t("all")}</option>
-              {events.map((e) => (
-                <option key={e.id} value={e.id}>
-                  {e.name}
+        {households.length > 0 && (
+          <div className="grid gap-2 sm:grid-cols-[1fr_auto_auto_auto]">
+            <div className="relative">
+              <Search aria-hidden className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-stone" />
+              <input
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={t("search")}
+                aria-label={t("search")}
+                className={cn(inputClass, "pl-9")}
+              />
+            </div>
+            <Select aria-label={t("filterSide")} value={side} onChange={(e) => setSide(e.target.value as GuestSide | "")}>
+              <option value="">{t("filterSide")}: {t("all")}</option>
+              {GUEST_SIDES.map((s) => (
+                <option key={s} value={s}>
+                  {t(`sides.${s}`)}
                 </option>
               ))}
             </Select>
-          )}
-          <Select aria-label={t("filterRsvp")} value={rsvp} onChange={(e) => setRsvp(e.target.value as Rsvp | "")}>
-            <option value="">{t("filterRsvp")}: {t("all")}</option>
-            {(["PENDING", "YES", "NO"] as const).map((r) => (
-              <option key={r} value={r}>
-                {t(`rsvp.${r}`)}
-              </option>
-            ))}
-          </Select>
-        </div>
-      )}
+            {events.length > 1 && (
+              <Select aria-label={t("filterEvent")} value={eventId} onChange={(e) => setEventId(e.target.value)}>
+                <option value="">{t("filterEvent")}: {t("all")}</option>
+                {events.map((e) => (
+                  <option key={e.id} value={e.id}>
+                    {e.name}
+                  </option>
+                ))}
+              </Select>
+            )}
+            <Select aria-label={t("filterRsvp")} value={rsvp} onChange={(e) => setRsvp(e.target.value as Rsvp | "")}>
+              <option value="">{t("filterRsvp")}: {t("all")}</option>
+              {(["PENDING", "YES", "NO"] as const).map((r) => (
+                <option key={r} value={r}>
+                  {t(`rsvp.${r}`)}
+                </option>
+              ))}
+            </Select>
+          </div>
+        )}
 
-      {households.length === 0 && editing !== "new" ? (
-        <Card className="p-10 text-center text-ink-soft">{t("empty")}</Card>
-      ) : filtered.length === 0 ? (
-        <p className="py-6 text-center text-stone">{t("noMatch")}</p>
-      ) : (
-        <ul className="space-y-3">
-          {filtered.map((h) =>
-            editing === h.id ? (
-              <li key={h.id}>
-                <HouseholdEditor household={h} events={events} takenRoles={rolesOutside(h.id)} onDone={() => setEditing(null)} />
-              </li>
-            ) : (
-              <li key={h.id}>
-                <HouseholdCard
-                  household={h}
-                  events={events}
-                  editable={editable}
-                  rsvpUrl={`${rsvpBase}/${h.rsvpToken}`}
-                  couple={couple}
-                  onEdit={() => setEditing(h.id)}
-                />
-              </li>
-            ),
-          )}
-        </ul>
-      )}
+        {households.length === 0 && editing !== "new" ? (
+          <Card className="p-10 text-center text-ink-soft">{t("empty")}</Card>
+        ) : filtered.length === 0 ? (
+          <p className="py-6 text-center text-stone">{t("noMatch")}</p>
+        ) : (
+          <ul className="space-y-3">
+            {filtered.map((h) =>
+              editing === h.id ? (
+                <li key={h.id}>
+                  <HouseholdEditor household={h} events={events} takenRoles={rolesOutside(h.id)} onDone={() => setEditing(null)} />
+                </li>
+              ) : (
+                <li key={h.id}>
+                  <HouseholdCard
+                    household={h}
+                    events={events}
+                    editable={editable}
+                    rsvpUrl={`${rsvpBase}/${h.rsvpToken}`}
+                    couple={couple}
+                    onEdit={() => setEditing(h.id)}
+                  />
+                </li>
+              ),
+            )}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }

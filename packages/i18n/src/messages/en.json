@@ -909,7 +909,15 @@
         "DEVERUSHA": "Bridesmaid"
       },
       "role": "Role",
-      "noRole": "No role"
+      "noRole": "No role",
+      "summary": "Guests by event",
+      "statInvited": "invited",
+      "statYes": "coming",
+      "statPending": "no answer",
+      "statNo": "not coming",
+      "download": "Download Excel",
+      "print": "Print",
+      "printTitle": "Guest list"
     },
     "import": {
       "title": "Import guests",

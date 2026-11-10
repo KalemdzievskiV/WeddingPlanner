@@ -909,7 +909,15 @@
         "DEVERUSHA": "Деверуша"
       },
       "role": "Улога",
-      "noRole": "Без улога"
+      "noRole": "Без улога",
+      "summary": "Гости по настан",
+      "statInvited": "поканети",
+      "statYes": "доаѓаат",
+      "statPending": "без одговор",
+      "statNo": "не доаѓаат",
+      "download": "Преземи Excel",
+      "print": "Печати",
+      "printTitle": "Листа на гости"
     },
     "import": {
       "title": "Внеси гости",

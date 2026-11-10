@@ -909,7 +909,15 @@
         "DEVERUSHA": "Shoqëruesja e nuses"
       },
       "role": "Roli",
-      "noRole": "Pa rol"
+      "noRole": "Pa rol",
+      "summary": "Të ftuarit sipas ngjarjes",
+      "statInvited": "të ftuar",
+      "statYes": "vijnë",
+      "statPending": "pa përgjigje",
+      "statNo": "nuk vijnë",
+      "download": "Shkarko Excel",
+      "print": "Printo",
+      "printTitle": "Lista e të ftuarve"
     },
     "import": {
       "title": "Fut të ftuar",
