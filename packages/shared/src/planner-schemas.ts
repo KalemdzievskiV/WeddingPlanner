@@ -210,10 +210,14 @@ export const INVITE_VIDEO_ACCEPT = "video/mp4,video/quicktime,video/webm,.mp4,.m
 export const INVITE_THEMES = ["LILAC", "IVORY", "SAGE"] as const;
 export type InviteThemeKey = (typeof INVITE_THEMES)[number];
 /**
- * Built-in royalty-free background tracks, served from `apps/web/public/music/<id>.mp3`.
- * Empty until the audio files are added; the editor hides the music choice while it is.
+ * Built-in background tracks, served from `apps/web/public/music/<id>.mp3`. All public domain or CC0
+ * (sources in `apps/web/public/music/CREDITS.md`). The editor hides the music choice when this is empty.
  */
-export const INVITE_TRACKS: readonly { id: string; title: string }[] = [];
+export const INVITE_TRACKS: readonly { id: string; title: string }[] = [
+  { id: "jesu", title: "Bach – Jesu, Joy of Man's Desiring" },
+  { id: "gymnopedie", title: "Satie – Gymnopédie No. 1" },
+  { id: "ave-maria", title: "Schubert – Ave Maria" },
+];
 
 /** Video invitation settings: full-screen video with the key details, then the RSVP form. */
 export const videoInviteSchema = z.object({
