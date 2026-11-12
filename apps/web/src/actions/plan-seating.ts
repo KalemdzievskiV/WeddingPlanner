@@ -19,6 +19,7 @@ import { revalidatePath } from "next/cache";
 import { zodFieldErrors, type FormState } from "@/lib/form";
 import { ensureCouple, fillHeadTable } from "@/lib/head-table";
 import { autoSeatPlan } from "@/lib/auto-seat";
+import { newToken } from "@/lib/business";
 import { freeSeats, takenSeats } from "@/lib/seating";
 import { editableWedding, premiumLocked } from "@/lib/wedding";
 
@@ -360,4 +361,72 @@ export async function addFloorItemAction(eventId: string, kind: FloorItemKind, x
   });
   refresh();
   return { ok: true, id: item.id };
+}
+
+// ─── Measure lines and room scale (decision 137) ───
+
+/** Room width limits in metres: the plan's scale. */
+const ROOM_MIN_M = 2;
+const ROOM_MAX_M = 500;
+const inPlan = (v: unknown, max: number) => typeof v === "number" && Number.isFinite(v) && v >= 0 && v <= max;
+type Line = { x1: number; y1: number; x2: number; y2: number };
+const validLine = (l: Line | null | undefined): l is Line =>
+  !!l && inPlan(l.x1, PLAN_WIDTH) && inPlan(l.x2, PLAN_WIDTH) && inPlan(l.y1, PLAN_HEIGHT) && inPlan(l.y2, PLAN_HEIGHT);
+
+export async function addMeasureLineAction(eventId: string, line: Line): Promise<FormState & { id?: string }> {
+  const access = await seatingAccess();
+  if (!access || !validLine(line)) return { formError: "forbidden" };
+  const event = await prisma.weddingEvent.findFirst({ where: { id: eventId, weddingId: access.wedding.id, hasSeating: true } });
+  if (!event) return { formError: "generic" };
+  const { x1, y1, x2, y2 } = line;
+  const row = await prisma.measureLine.create({ data: { weddingId: access.wedding.id, eventId, x1, y1, x2, y2 } });
+  refresh();
+  return { ok: true, id: row.id };
+}
+
+export async function moveMeasureLineAction(id: string, line: Line): Promise<FormState> {
+  const access = await seatingAccess();
+  if (!access || !validLine(line)) return { formError: "forbidden" };
+  const { x1, y1, x2, y2 } = line;
+  await prisma.measureLine.updateMany({ where: { id, weddingId: access.wedding.id }, data: { x1, y1, x2, y2 } });
+  return { ok: true };
+}
+
+export async function deleteMeasureLineAction(id: string): Promise<FormState> {
+  const access = await seatingAccess();
+  if (!access) return { formError: "forbidden" };
+  await prisma.measureLine.deleteMany({ where: { id, weddingId: access.wedding.id } });
+  refresh();
+  return { ok: true };
+}
+
+/** "The room is n metres wide": gives measure lines their real length. */
+export async function roomWidthAction(eventId: string, metres: number): Promise<FormState> {
+  const access = await seatingAccess();
+  if (!access || typeof metres !== "number" || !Number.isFinite(metres) || metres < ROOM_MIN_M || metres > ROOM_MAX_M) {
+    return { formError: "forbidden" };
+  }
+  const { count } = await prisma.weddingEvent.updateMany({
+    where: { id: eventId, weddingId: access.wedding.id },
+    data: { roomWidthM: Math.round(metres * 10) / 10 },
+  });
+  if (!count) return { formError: "generic" };
+  refresh();
+  return { ok: true };
+}
+
+// ─── Read-only chart link (decision 136) ───
+
+/** Switches the read-only seating chart link on (a new unguessable token) or off (the old link stops working). */
+export async function seatingShareAction(eventId: string, on: boolean): Promise<FormState & { token?: string | null }> {
+  const access = await seatingAccess();
+  if (!access || typeof on !== "boolean") return { formError: "forbidden" };
+  const token = on ? newToken() : null;
+  const { count } = await prisma.weddingEvent.updateMany({
+    where: { id: eventId, weddingId: access.wedding.id, hasSeating: true },
+    data: { seatingShareToken: token },
+  });
+  if (!count) return { formError: "generic" };
+  refresh();
+  return { ok: true, token };
 }

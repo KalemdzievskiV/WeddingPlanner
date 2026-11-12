@@ -705,6 +705,7 @@ model Wedding {
   guests           Guest[]
   tables           SeatingTable[]
   floorItems       FloorItem[]
+  measureLines     MeasureLine[]
   budgetCategories BudgetCategory[]
   expenses         Expense[]
   tasks            Task[]
@@ -745,29 +746,34 @@ model WeddingInvite {
 }
 
 model WeddingEvent {
-  id            String            @id @default(cuid())
-  weddingId     String
-  wedding       Wedding           @relation(fields: [weddingId], references: [id], onDelete: Cascade)
-  type          EventType
+  id                String            @id @default(cuid())
+  weddingId         String
+  wedding           Wedding           @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  type              EventType
   /// Custom name; empty means the translated name of `type`.
-  name          String?
-  date          DateTime?         @db.Date
+  name              String?
+  date              DateTime?         @db.Date
   /// "HH:MM"
-  time          String?
+  time              String?
   /// Address, free text.
-  place         String?
+  place             String?
   /// Optional map pin for the address (decision 103).
-  lat           Float?
-  lng           Float?
-  hasSeating    Boolean           @default(false)
-  sortOrder     Int               @default(0)
-  createdAt     DateTime          @default(now())
-  invitations   GuestInvitation[]
-  tables        SeatingTable[]
-  floorItems    FloorItem[]
-  expenses      Expense[]
-  scheduleItems ScheduleItem[]
-  inquiries     Inquiry[]
+  lat               Float?
+  lng               Float?
+  hasSeating        Boolean           @default(false)
+  /// Read-only seating chart link (decision 136); null while the couple has it switched off.
+  seatingShareToken String?           @unique
+  /// Real width of the room in metres: gives the seating plan its scale for measure lines (decision 137).
+  roomWidthM        Float             @default(30)
+  sortOrder         Int               @default(0)
+  createdAt         DateTime          @default(now())
+  invitations       GuestInvitation[]
+  tables            SeatingTable[]
+  floorItems        FloorItem[]
+  measureLines      MeasureLine[]
+  expenses          Expense[]
+  scheduleItems     ScheduleItem[]
+  inquiries         Inquiry[]
 
   @@index([weddingId])
   @@map("wedding_event")
@@ -873,6 +879,24 @@ model FloorItem {
 
   @@index([eventId])
   @@map("floor_item")
+}
+
+/// A measuring line on an event's seating plan, shown with its length in metres (decision 137).
+model MeasureLine {
+  id        String       @id @default(cuid())
+  weddingId String
+  wedding   Wedding      @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  eventId   String
+  event     WeddingEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  /// End points in plan units.
+  x1        Float
+  y1        Float
+  x2        Float
+  y2        Float
+  createdAt DateTime     @default(now())
+
+  @@index([eventId])
+  @@map("measure_line")
 }
 
 /// Which chair of which table a guest sits on for one event (decision 133; replaces per-table seating of decision 67).

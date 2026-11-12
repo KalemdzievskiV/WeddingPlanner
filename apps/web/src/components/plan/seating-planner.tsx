@@ -17,6 +17,10 @@ import {
   EyeOff,
   Eye,
   GripVertical,
+  Link2,
+  Presentation,
+  Printer,
+  Ruler,
   Undo2,
   Wand2,
   Locate,
@@ -36,17 +40,22 @@ import {
   ZoomOut,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useLayoutEffect, useOptimistic, useRef, useState, useTransition } from "react";
+import { useEffect, useLayoutEffect, useOptimistic, useRef, useState, useSyncExternalStore, useTransition } from "react";
 import {
   addFloorItemAction,
   addTableAction,
   deleteFloorItemAction,
   deleteTableAction,
+  addMeasureLineAction,
   autoSeatAction,
+  deleteMeasureLineAction,
   headTableAction,
   hideSeatAction,
   moveFloorItemAction,
+  moveMeasureLineAction,
   placeGuestAction,
+  roomWidthAction,
+  seatingShareAction,
   seatingDisplayAction,
   undoAutoSeatAction,
   moveTableAction,
@@ -91,6 +100,17 @@ export type TableRow = {
   /** Hidden chair numbers. */
   hidden: number[];
 };
+/** A measuring line on the plan, end points in plan units (decision 137). */
+export type MeasureLineRow = { id: string; x1: number; y1: number; x2: number; y2: number };
+type Line = Omit<MeasureLineRow, "id">;
+/** "4,2 m" (mk, sq) / "4.2 m" (en): deterministic, no Intl. */
+function metresText(units: number, roomWidthM: number, locale: string) {
+  const m = (units * roomWidthM) / PLAN_WIDTH;
+  const s = m < 10 ? m.toFixed(1) : String(Math.round(m));
+  return `${locale === "en" ? s : s.replace(".", ",")} m`;
+}
+const lineLength = (l: Line) => Math.hypot(l.x2 - l.x1, l.y2 - l.y1);
+
 /** Seating plan look (decision 132). */
 export type SeatDisplay = { plain: boolean; firstNames: boolean };
 type Seat = { tableId: string; seat: number };
@@ -259,7 +279,18 @@ export function SeatingPlanner({
   couple = "",
   eventName = "",
   display = { plain: false, firstNames: false },
+  lines = [],
+  roomWidthM = 30,
+  shareToken = null,
+  isPublic = false,
 }: {
+  /** Measure lines and the room's real width in metres (decision 137). */
+  lines?: MeasureLineRow[];
+  roomWidthM?: number;
+  /** Chart view (decision 136): the read-only link's token, null while it is off. */
+  shareToken?: string | null;
+  /** Chart view opened from the read-only link: no way back into the planner. */
+  isPublic?: boolean;
   /** Coloured or plain figures, full or first names (decision 132). */
   display?: SeatDisplay;
   /** For the printed and downloaded table list. */
@@ -271,8 +302,8 @@ export function SeatingPlanner({
   items: FloorItemRow[];
   guests: SeatGuest[];
   editable: boolean;
-  /** "editor": the full-screen editor (decision 126). */
-  mode?: "page" | "editor";
+  /** "editor": the full-screen editor (decision 126). "chart": the read-only seating chart (decision 136). */
+  mode?: "page" | "editor" | "chart";
   /** Seating events, for the editor's event switch. */
   events?: { id: string; name: string }[];
 }) {
@@ -299,11 +330,13 @@ export function SeatingPlanner({
     setSelectedIdRaw(id);
     setSelectedItemId(null);
     setSelectedSeat(null);
+    setSelectedLineId(null);
   };
   const selectItem = (id: string | null) => {
     setSelectedItemId(id);
     setSelectedIdRaw(null);
     setSelectedSeat(null);
+    setSelectedLineId(null);
   };
   const [adding, setAdding] = useState(false);
   const [editingItem, setEditingItem] = useState(false);
@@ -320,6 +353,43 @@ export function SeatingPlanner({
   /** Guest picked in the list: the next chair clicked gets them (touch and keyboard alternative to dragging). */
   const [armed, setArmed] = useState<string | null>(null);
   const [autoResult, setAutoResult] = useState<{ seated: string[]; left: number } | null>(null);
+  // Measure lines (decision 137): moves show at once, the server's answer replaces them.
+  const [lineMoves, setLineMoves] = useState<Record<string, Line>>({});
+  const [goneLines, setGoneLines] = useState<Set<string>>(new Set());
+  const shownLines = lines.filter((l) => !goneLines.has(l.id)).map((l) => ({ ...l, ...lineMoves[l.id] }));
+  const [measuring, setMeasuring] = useState(false);
+  const [selectedLineId, setSelectedLineId] = useState<string | null>(null);
+  const selectedLine = shownLines.find((l) => l.id === selectedLineId) ?? null;
+  const selectLine = (id: string | null) => {
+    setSelectedLineId(id);
+    if (id) {
+      setSelectedIdRaw(null);
+      setSelectedItemId(null);
+      setSelectedSeat(null);
+    }
+  };
+  const addLine = (line: Line) => {
+    setMeasuring(false);
+    start(async () => {
+      const res = await addMeasureLineAction(eventId, line);
+      if (res.ok && res.id) selectLine(res.id);
+    });
+  };
+  const moveLine = (id: string, line: Line) => {
+    setLineMoves((m) => ({ ...m, [id]: line }));
+    start(async () => void (await moveMeasureLineAction(id, line)));
+  };
+  const deleteLine = (id: string) => {
+    setGoneLines((g) => new Set(g).add(id));
+    setSelectedLineId(null);
+    start(async () => void (await deleteMeasureLineAction(id)));
+  };
+  const [roomWidth, setRoomWidth] = useOptimistic(roomWidthM);
+  const saveRoomWidth = (m: number) =>
+    start(async () => {
+      setRoomWidth(m);
+      await roomWidthAction(eventId, m);
+    });
   const place = (guestId: string, tableId: string, seat: number | null) => {
     setArmed(null);
     start(async () => {
@@ -339,6 +409,7 @@ export function SeatingPlanner({
     }
     setSelectedIdRaw(tableId);
     setSelectedItemId(null);
+    setSelectedLineId(null);
     setSelectedSeat({ tableId, seat });
   };
 
@@ -382,7 +453,11 @@ export function SeatingPlanner({
     window.addEventListener("pointercancel", cancel);
   };
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setArmed(null);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      setArmed(null);
+      setMeasuring(false);
+    };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
@@ -425,6 +500,9 @@ export function SeatingPlanner({
   const pos = (tb: TableRow) => moved[tb.id] ?? { x: tb.x, y: tb.y, rotation: tb.rotation };
   const seat = (ids: string[]) => selected && start(async () => void (await seatGuestsAction(selected.id, ids)));
 
+  // The chart view is a picture: nothing on it can be selected or changed.
+  const chartMode = mode === "chart";
+  const noop = () => {};
   const floorPlan = (
     <FloorPlan
               mode={mode}
@@ -435,12 +513,12 @@ export function SeatingPlanner({
               pos={pos}
               items={items}
               itemBox={itemBox}
-              selectedItemId={selectedItemId}
-              onSelectItem={selectItem}
+              selectedItemId={chartMode ? null : selectedItemId}
+              onSelectItem={chartMode ? noop : selectItem}
               onMoveItem={saveItemBox}
-              selectedId={selectedId}
-              editable={editable}
-              onSelect={setSelectedId}
+              selectedId={chartMode ? null : selectedId}
+              editable={editable && !chartMode}
+              onSelect={chartMode ? noop : setSelectedId}
               onMove={(id, p) => {
                 setMoved((m) => ({ ...m, [id]: p }));
                 start(async () => void (await moveTableAction(id, p.x, p.y, p.rotation)));
@@ -449,10 +527,18 @@ export function SeatingPlanner({
               guestOf={(id) => byId.get(id)}
               highlight={highlight}
               look={look}
-              selectedSeat={selectedSeat}
-              onSelectSeat={selectSeat}
+              selectedSeat={chartMode ? null : selectedSeat}
+              onSelectSeat={chartMode ? noop : selectSeat}
               onGuestPointerDown={(id, e, seat) => startGuestDrag(id, e, () => selectSeat(seat.tableId, seat.seat))}
               armed={armed !== null}
+              lines={shownLines}
+              measuring={measuring && editable}
+              onAddLine={addLine}
+              onMoveLine={moveLine}
+              selectedLineId={chartMode ? null : selectedLineId}
+              onSelectLine={chartMode ? noop : selectLine}
+              roomWidthM={roomWidth}
+              locale={locale}
             />
   );
   const seatTable = selectedSeat ? tables.find((tb) => tb.id === selectedSeat.tableId) : undefined;
@@ -494,6 +580,22 @@ export function SeatingPlanner({
   );
   const panel = (
           <div className="space-y-4">
+            {selectedLine && (
+              <Card className="p-4">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <h2 className="font-semibold">{t("measureLine")}</h2>
+                    <p className="text-sm tabular-nums text-stone">{metresText(lineLength(selectedLine), roomWidth, locale)}</p>
+                    {editable && <p className="mt-1 text-xs text-stone">{t("measureLineHint")}</p>}
+                  </div>
+                  {editable && (
+                    <Button variant="ghost" size="sm" aria-label={t("deleteLine")} onClick={() => deleteLine(selectedLine.id)}>
+                      <Trash2 aria-hidden className="size-4 text-danger" />
+                    </Button>
+                  )}
+                </div>
+              </Card>
+            )}
             {seatTable && selectedSeat && (
               <Card className="p-4">
                 <h2 className="font-semibold">
@@ -693,6 +795,7 @@ export function SeatingPlanner({
                     ]}
                     onChange={(v) => saveLook({ ...look, firstNames: v === "first" })}
                   />
+                  <RoomWidth key={roomWidth} value={roomWidth} onSave={saveRoomWidth} />
                 </div>
               </Card>
             )}
@@ -849,6 +952,58 @@ export function SeatingPlanner({
     </div>
   );
 
+  if (mode === "chart") {
+    return (
+      <div className="seating-chart fixed inset-0 z-40 overflow-auto bg-linen">
+        {/* Print only the chart, on a landscape page. */}
+        <style>{`@media print {
+  @page { size: landscape; margin: 10mm; }
+  body * { visibility: hidden; }
+  .seating-chart, .seating-chart * { visibility: visible; }
+  .seating-chart { position: absolute; inset: 0; overflow: visible; background: white; }
+}`}</style>
+        <div className="flex flex-wrap items-center gap-2 border-b border-line bg-surface/80 px-4 py-2 backdrop-blur print:hidden">
+          {!isPublic && (
+            <Link href={{ pathname: "/plan/seating/edit", query: { event: eventId } }} className={buttonClass("secondary", "sm")}>
+              <X aria-hidden className="size-4" /> {t("closeEditor")}
+            </Link>
+          )}
+          {!isPublic && events.length > 1 && (
+            <nav className="flex flex-wrap gap-1" aria-label={t("event")}>
+              {events.map((e) => (
+                <Link
+                  key={e.id}
+                  href={{ pathname: "/plan/seating/chart", query: { event: e.id } }}
+                  aria-current={e.id === eventId ? "page" : undefined}
+                  className={cn(
+                    "inline-flex h-8 items-center rounded-full border px-3 text-sm",
+                    e.id === eventId ? "border-ink bg-ink text-white" : "border-line-strong bg-surface text-ink-soft hover:text-ink",
+                  )}
+                >
+                  {e.name}
+                </Link>
+              ))}
+            </nav>
+          )}
+          <div className="ml-auto flex flex-wrap items-center gap-2">
+            {!isPublic && editable && <ShareLink eventId={eventId} locale={locale} token={shareToken} />}
+            <Button variant="secondary" size="sm" onClick={() => window.print()}>
+              <Printer aria-hidden className="size-4" /> {t("export.print")}
+            </Button>
+          </div>
+        </div>
+        <article className="mx-auto my-6 max-w-6xl rounded-[var(--radius-card)] bg-surface px-4 py-6 shadow-[var(--shadow-card)] sm:px-8 print:m-0 print:max-w-none print:p-0 print:shadow-none">
+          <header className="text-center">
+            <h1 className="font-display text-3xl sm:text-5xl">{t("chartTitle")}</h1>
+            <p className="mt-1 text-lg text-ink-soft sm:text-2xl">{t("chartLead")}</p>
+            {(couple || eventName) && <p className="mt-2 text-sm text-stone">{[couple, eventName].filter(Boolean).join(" · ")}</p>}
+          </header>
+          <div className="mt-4">{floorPlan}</div>
+        </article>
+      </div>
+    );
+  }
+
   if (mode === "editor") {
     return (
       <div className="fixed inset-0 z-40 flex flex-col bg-linen">
@@ -873,9 +1028,21 @@ export function SeatingPlanner({
               ))}
             </nav>
           )}
-          <p className="ml-auto hidden text-sm text-stone xl:block">{t("editorHint")}</p>
+          <p className="ml-auto hidden text-sm text-stone xl:block">{measuring ? t("measuringHint") : t("editorHint")}</p>
           {editable && (
             <div className="ml-auto flex gap-2 xl:ml-0">
+              <Button
+                variant={measuring ? "primary" : "secondary"}
+                size="sm"
+                aria-pressed={measuring}
+                title={t("measureHint")}
+                onClick={() => setMeasuring((m) => !m)}
+              >
+                <Ruler aria-hidden className="size-4" /> {t("measure")}
+              </Button>
+              <Link href={{ pathname: "/plan/seating/chart", query: { event: eventId } }} className={buttonClass("secondary", "sm")}>
+                <Presentation aria-hidden className="size-4" /> {t("chartView")}
+              </Link>
               <Button
                 variant="secondary"
                 size="sm"
@@ -980,6 +1147,87 @@ export function SeatingPlanner({
   );
 }
 
+/** "The room is n m wide" (decision 137): saved on blur or Enter. */
+function RoomWidth({ value, onSave }: { value: number; onSave: (m: number) => void }) {
+  const t = useTranslations("plan.seating");
+  const [text, setText] = useState(String(value));
+  const commit = () => {
+    const m = Number(text.replace(",", "."));
+    if (Number.isFinite(m) && m >= 2 && m <= 500 && m !== value) onSave(m);
+    else setText(String(value));
+  };
+  return (
+    <label className="flex items-center justify-between gap-2">
+      <span className="whitespace-nowrap text-stone" title={t("roomWidthHint")}>
+        {t("roomWidth")}
+      </span>
+      <span className="flex items-center gap-1">
+        <input
+          inputMode="decimal"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onBlur={commit}
+          onKeyDown={(e) => e.key === "Enter" && (e.currentTarget as HTMLInputElement).blur()}
+          aria-label={t("roomWidth")}
+          className="h-7 w-16 rounded-md border border-line-strong bg-surface px-2 text-right text-xs tabular-nums focus:border-vranec focus:outline-none focus:ring-2 focus:ring-vranec/15"
+        />
+        <span className="text-xs text-stone">m</span>
+      </span>
+    </label>
+  );
+}
+
+const noSubscribe = () => () => {};
+
+/** Read-only chart link (decision 136): switch it on to get a link, copy it, or switch it off. */
+function ShareLink({ eventId, locale, token }: { eventId: string; locale: string; token: string | null }) {
+  const t = useTranslations("plan.seating");
+  const [open, setOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [pending, start] = useTransition();
+  const origin = useSyncExternalStore(noSubscribe, () => window.location.origin, () => "");
+  const url = token ? `${origin}/${locale}/seating/${token}` : "";
+  const toggle = (on: boolean) => start(async () => void (await seatingShareAction(eventId, on)));
+  return (
+    <div className="relative">
+      <Button variant="secondary" size="sm" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+        <Link2 aria-hidden className="size-4" /> {t("shareLink")}
+      </Button>
+      {open && (
+        <div className="absolute right-0 top-full z-50 mt-2 w-80 rounded-xl border border-line bg-surface p-4 text-sm shadow-xl">
+          <p className="text-ink-soft">{t("shareHint")}</p>
+          {token ? (
+            <>
+              <div className="mt-3 flex gap-2">
+                <span className="min-w-0 flex-1">
+                  <input readOnly value={url} aria-label={t("shareLink")} onFocus={(e) => e.currentTarget.select()} className={cn(inputClass, "text-xs")} />
+                </span>
+                <Button
+                  size="sm"
+                  onClick={async () => {
+                    await navigator.clipboard.writeText(url);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  }}
+                >
+                  {copied ? t("copied") : t("copy")}
+                </Button>
+              </div>
+              <Button variant="ghost" size="sm" className="mt-2 text-danger" disabled={pending} onClick={() => toggle(false)}>
+                {t("shareOff")}
+              </Button>
+            </>
+          ) : (
+            <Button size="sm" className="mt-3" disabled={pending} onClick={() => toggle(true)}>
+              {t("shareOn")}
+            </Button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /** Two-choice switch, e.g. coloured / plain figures. */
 function Segmented({
   label,
@@ -1047,7 +1295,24 @@ function FloorPlan({
   onSelectSeat,
   onGuestPointerDown,
   armed,
+  lines,
+  measuring,
+  onAddLine,
+  onMoveLine,
+  selectedLineId,
+  onSelectLine,
+  roomWidthM,
+  locale,
 }: {
+  lines: MeasureLineRow[];
+  /** The Measure tool is on: dragging on the plan draws a line. */
+  measuring: boolean;
+  onAddLine: (line: Line) => void;
+  onMoveLine: (id: string, line: Line) => void;
+  selectedLineId: string | null;
+  onSelectLine: (id: string | null) => void;
+  roomWidthM: number;
+  locale: string;
   guestOf: (guestId: string) => SeatGuest | undefined;
   look: SeatDisplay;
   selectedSeat: Seat | null;
@@ -1068,13 +1333,14 @@ function FloorPlan({
   onMove: (id: string, p: { x: number; y: number; rotation: number }) => void;
   occupancy: (tb: TableRow) => number;
   highlight: Set<string>;
-  mode: "page" | "editor";
+  mode: "page" | "editor" | "chart";
   eventId: string;
   planRef: React.RefObject<HTMLDivElement | null>;
   viewportRef: React.RefObject<HTMLDivElement | null>;
 }) {
   const t = useTranslations("plan.seating");
   const editor = mode === "editor";
+  const chart = mode === "chart";
   const ref = planRef;
   const viewport = viewportRef;
   const [drag, setDrag] = useState<{ id: string; x: number; y: number; startX: number; startY: number; moved: boolean; seat: number | null } | null>(null);
@@ -1188,6 +1454,8 @@ function FloorPlan({
   const panHandlers = {
     onPointerDown: (e: React.PointerEvent) => {
       if (e.button !== 0 || (e.target !== ref.current && e.target !== viewport.current)) return;
+      onSelectLine(null);
+      if (chart) return;
       const v = viewport.current!;
       try {
         v.setPointerCapture(e.pointerId);
@@ -1203,9 +1471,119 @@ function FloorPlan({
     onPointerUp: () => setPan(null),
   };
 
+  // Measure lines (decision 137): drawing a new one, or moving one end / the whole line.
+  const [draft, setDraft] = useState<Line | null>(null);
+  const [lineDrag, setLineDrag] = useState<{ id: string; part: "a" | "b" | "line"; from: { x: number; y: number }; start: Line; line: Line } | null>(null);
+  /** Shift keeps a line level, upright or at 45°. */
+  const snap = (a: { x: number; y: number }, b: { x: number; y: number }, shift: boolean) => {
+    if (!shift) return b;
+    const ang = Math.round(Math.atan2(b.y - a.y, b.x - a.x) / (Math.PI / 4)) * (Math.PI / 4);
+    const len = Math.hypot(b.x - a.x, b.y - a.y);
+    return { x: a.x + len * Math.cos(ang), y: a.y + len * Math.sin(ang) };
+  };
+  const lineHandlers = {
+    onPointerMove: (e: React.PointerEvent) => {
+      if (!lineDrag) return;
+      const p = toPlan(e.clientX, e.clientY);
+      const s = lineDrag.start;
+      let line: Line;
+      if (lineDrag.part === "a") line = { ...s, ...rename(snap({ x: s.x2, y: s.y2 }, p, e.shiftKey), "1") };
+      else if (lineDrag.part === "b") line = { ...s, ...rename(snap({ x: s.x1, y: s.y1 }, p, e.shiftKey), "2") };
+      else {
+        const dx = Math.max(-Math.min(s.x1, s.x2), Math.min(PLAN_WIDTH - Math.max(s.x1, s.x2), p.x - lineDrag.from.x));
+        const dy = Math.max(-Math.min(s.y1, s.y2), Math.min(PLAN_HEIGHT - Math.max(s.y1, s.y2), p.y - lineDrag.from.y));
+        line = { x1: s.x1 + dx, y1: s.y1 + dy, x2: s.x2 + dx, y2: s.y2 + dy };
+      }
+      setLineDrag({ ...lineDrag, line });
+    },
+    onPointerUp: () => {
+      if (lineDrag && JSON.stringify(lineDrag.line) !== JSON.stringify(lineDrag.start)) onMoveLine(lineDrag.id, lineDrag.line);
+      setLineDrag(null);
+    },
+  };
+  const beginLine = (l: MeasureLineRow, part: "a" | "b" | "line") => (e: React.PointerEvent) => {
+    e.stopPropagation();
+    onSelectLine(l.id);
+    if (!editable || chart) return;
+    try {
+      (e.currentTarget as Element).setPointerCapture(e.pointerId);
+    } catch {
+      // Synthetic pointers can't be captured; dragging still works.
+    }
+    const start = { x1: l.x1, y1: l.y1, x2: l.x2, y2: l.y2 };
+    setLineDrag({ id: l.id, part, from: toPlan(e.clientX, e.clientY), start, line: start });
+  };
+  const k = PLAN_WIDTH / 1000; // plan units per "point" of line art
+  const lineArt = (l: Line, key: string, opts: { selected?: boolean; hit?: MeasureLineRow } = {}) => {
+    const len = lineLength(l);
+    let deg = (Math.atan2(l.y2 - l.y1, l.x2 - l.x1) * 180) / Math.PI;
+    if (deg > 90) deg -= 180;
+    if (deg < -90) deg += 180;
+    const mx = (l.x1 + l.x2) / 2;
+    const my = (l.y1 + l.y2) / 2;
+    const color = opts.selected ? "var(--color-vranec-deep)" : "var(--color-vranec)";
+    return (
+      <g key={key}>
+        <line x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} stroke={color} strokeWidth={1.6 * k} />
+        <circle cx={l.x1} cy={l.y1} r={3.5 * k} fill={color} />
+        <circle cx={l.x2} cy={l.y2} r={3.5 * k} fill={color} />
+        <text
+          x={mx}
+          y={my}
+          dy={-5 * k}
+          transform={`rotate(${deg.toFixed(1)} ${mx.toFixed(1)} ${my.toFixed(1)})`}
+          textAnchor="middle"
+          fontSize={9 * k}
+          fill={color}
+          stroke="var(--color-surface)"
+          strokeWidth={3 * k}
+          paintOrder="stroke"
+          className="tabular-nums"
+        >
+          {metresText(len, roomWidthM, locale)}
+        </text>
+        {opts.hit && (
+          <>
+            <line
+              x1={l.x1}
+              y1={l.y1}
+              x2={l.x2}
+              y2={l.y2}
+              stroke="transparent"
+              strokeWidth={12 * k}
+              pointerEvents="stroke"
+              className={cn(editable && !chart && "cursor-move")}
+              onPointerDown={beginLine(opts.hit, "line")}
+              {...lineHandlers}
+            />
+            {opts.selected && editable && !chart &&
+              (["a", "b"] as const).map((part) => (
+                <circle
+                  key={part}
+                  cx={part === "a" ? l.x1 : l.x2}
+                  cy={part === "a" ? l.y1 : l.y2}
+                  r={7 * k}
+                  fill="var(--color-surface)"
+                  stroke={color}
+                  strokeWidth={1.6 * k}
+                  pointerEvents="all"
+                  className="cursor-crosshair"
+                  onPointerDown={beginLine(opts.hit!, part)}
+                  {...lineHandlers}
+                />
+              ))}
+          </>
+        )}
+      </g>
+    );
+  };
+
+  // Chart view: crop to what is on the plan, so the print uses the whole page.
+  const crop = chart ? contentBox(tables, pos, items, itemBox, lines, chairCount) : null;
+
   return (
-    <div className={editor ? "absolute inset-0" : "hidden space-y-2 lg:block"}>
-      {!editor && (
+    <div className={editor ? "absolute inset-0" : chart ? "relative" : "hidden space-y-2 lg:block"}>
+      {!editor && !chart && (
         <div className="flex items-center justify-end gap-1">
           {zoomButtons}
           <Link href={{ pathname: "/plan/seating/edit", query: { event: eventId } }} className={buttonClass("secondary", "sm")}>
@@ -1231,22 +1609,32 @@ function FloorPlan({
         ref={viewport}
         {...panHandlers}
         className={cn(
-          "overflow-auto",
-          editor
+          chart ? "relative overflow-hidden" : "overflow-auto",
+          chart
+            ? ""
+            : editor
             ? "h-full w-full bg-[#fbfaf8] [background-image:linear-gradient(rgb(60_36_70/0.05)_1px,transparent_1px),linear-gradient(90deg,rgb(60_36_70/0.05)_1px,transparent_1px)] [background-size:24px_24px]"
             : "rounded-[var(--radius-card)] border border-line bg-surface",
           pan ? "cursor-grabbing" : editor && "cursor-grab",
         )}
-        style={editor ? undefined : { maxHeight: "75vh" }}
+        style={editor ? undefined : crop ? { aspectRatio: `${crop.w} / ${crop.h}` } : { maxHeight: "75vh" }}
       >
         <div
           ref={ref}
-          className={cn("@container relative select-none overflow-hidden", editor && "mx-auto my-4 bg-surface shadow-[var(--shadow-card)]")}
+          className={cn(
+            "@container relative select-none overflow-hidden",
+            editor && "mx-auto my-4 bg-surface shadow-[var(--shadow-card)]",
+            crop && "absolute",
+          )}
           style={{
-            width: `${zoom * 100}%`,
             aspectRatio: `${PLAN_WIDTH} / ${PLAN_HEIGHT}`,
-            backgroundImage: "radial-gradient(circle, rgb(35 26 29 / 0.09) 1px, transparent 1px)",
-            backgroundSize: "24px 24px",
+            ...(crop
+              ? { width: `${(PLAN_WIDTH / crop.w) * 100}%`, left: `${(-crop.x / crop.w) * 100}%`, top: `${(-crop.y / crop.h) * 100}%` }
+              : {
+                  width: `${zoom * 100}%`,
+                  backgroundImage: "radial-gradient(circle, rgb(35 26 29 / 0.09) 1px, transparent 1px)",
+                  backgroundSize: "24px 24px",
+                }),
           }}
         >
           {items.map((it) => (
@@ -1398,17 +1786,96 @@ function FloorPlan({
                   style={{ transform: `rotate(${-p.rotation}deg)`, fontSize: `${LABEL / (PLAN_WIDTH / 100)}cqw` }}
                 >
                   {tb.name}
-                  <span className={cn("block tabular-nums", over ? "text-danger" : "text-stone")}>
-                    {occupancy(tb)}/{tb.seats}
-                  </span>
+                  {!chart && (
+                    <span className={cn("block tabular-nums", over ? "text-danger" : "text-stone")}>
+                      {occupancy(tb)}/{tb.seats}
+                    </span>
+                  )}
                 </span>
               </button>
             );
           })}
+          <svg
+            viewBox={`0 0 ${PLAN_WIDTH} ${PLAN_HEIGHT}`}
+            className="pointer-events-none absolute inset-0 z-20 h-full w-full overflow-visible"
+            aria-hidden
+          >
+            {lines.map((l) =>
+              lineArt(lineDrag?.id === l.id ? lineDrag.line : l, l.id, { selected: selectedLineId === l.id, hit: l }),
+            )}
+            {draft && lineArt(draft, "draft")}
+          </svg>
+          {measuring && (
+            // Measure tool: drag anywhere on the plan to draw a line (Shift: level / upright / 45°).
+            <div
+              className="absolute inset-0 z-30 cursor-crosshair touch-none"
+              onPointerDown={(e) => {
+                if (e.button !== 0) return;
+                e.stopPropagation();
+                try {
+                  e.currentTarget.setPointerCapture(e.pointerId);
+                } catch {
+                  // Synthetic pointers can't be captured; drawing still works.
+                }
+                const p = toPlan(e.clientX, e.clientY);
+                setDraft({ x1: p.x, y1: p.y, x2: p.x, y2: p.y });
+              }}
+              onPointerMove={(e) => {
+                if (!draft) return;
+                const b = snap({ x: draft.x1, y: draft.y1 }, toPlan(e.clientX, e.clientY), e.shiftKey);
+                setDraft({ ...draft, x2: Math.min(PLAN_WIDTH, Math.max(0, b.x)), y2: Math.min(PLAN_HEIGHT, Math.max(0, b.y)) });
+              }}
+              onPointerUp={() => {
+                if (draft && lineLength(draft) > 15) onAddLine(draft);
+                setDraft(null);
+              }}
+            />
+          )}
         </div>
       </div>
     </div>
   );
+}
+
+/** { x, y } → { x1, y1 } or { x2, y2 }. */
+function rename(p: { x: number; y: number }, n: "1" | "2") {
+  return n === "1" ? { x1: p.x, y1: p.y } : { x2: p.x, y2: p.y };
+}
+
+/**
+ * The part of the plan that holds something (tables with their chairs and names, room elements, lines),
+ * with a margin, in plan units. The chart view shows only this. The whole plan when it is empty.
+ */
+function contentBox(
+  tables: TableRow[],
+  pos: (tb: TableRow) => { x: number; y: number; rotation: number },
+  items: FloorItemRow[],
+  itemBox: (it: FloorItemRow) => ItemBox,
+  lines: MeasureLineRow[],
+  chairs: (tb: TableRow) => number,
+) {
+  const pts: [number, number, number][] = [
+    ...tables.map((tb): [number, number, number] => {
+      const s = tableSize(tb.shape, chairs(tb));
+      const p = pos(tb);
+      return [p.x, p.y, Math.hypot(s.w, s.h) / 2 + CHAIR * 2.2];
+    }),
+    ...items.map((it): [number, number, number] => {
+      const b = itemBox(it);
+      return [b.x, b.y, Math.hypot(b.width, b.height) / 2];
+    }),
+    ...lines.flatMap((l): [number, number, number][] => [
+      [l.x1, l.y1, 20],
+      [l.x2, l.y2, 20],
+    ]),
+  ];
+  if (!pts.length) return { x: 0, y: 0, w: PLAN_WIDTH, h: PLAN_HEIGHT };
+  const pad = 30;
+  const x0 = Math.max(0, Math.min(...pts.map(([x, , r]) => x - r)) - pad);
+  const y0 = Math.max(0, Math.min(...pts.map(([, y, r]) => y - r)) - pad);
+  const x1 = Math.min(PLAN_WIDTH, Math.max(...pts.map(([x, , r]) => x + r)) + pad);
+  const y1 = Math.min(PLAN_HEIGHT, Math.max(...pts.map(([, y, r]) => y + r)) + pad);
+  return { x: x0, y: y0, w: Math.max(100, x1 - x0), h: Math.max(100, y1 - y0) };
 }
 
 /** Fill and outline per room element (decision 129). */

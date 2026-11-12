@@ -18,7 +18,7 @@
 - Maps: MapLibre worker is copied to `public/vendor/` by `scripts/copy-maplibre-worker.mjs` (runs in `dev`/`build`).
 - Notifications: call `notify(recipients, type, data, link)` from `@/lib/notify` (bell + email); recipients from `businessTeam` / `weddingTeam` / `admins`, always excluding the acting user. Text lives in `notifications.types`.
 - Marketplace: search logic is `lib/search.ts` (`dateFitFor` for availability); vendor budget lines go through `ensurePlannedVendor` / `createVendorExpense` in `@/lib/plan-vendors`; stats via `bumpStat` / `recordView` in `@/lib/stats`.
-- Seating: a guest sits on a chair (`TableSeat.seat`, 0-based, unique per table; `SeatingTable.hiddenSeats`). Place/swap with `placeGuestAction`, free chairs via `freeSeats` in `@/lib/seating`, auto seat logic in `@/lib/auto-seat`. Figures and curved names: `components/plan/seat-figure.tsx`.
+- Seating: a guest sits on a chair (`TableSeat.seat`, 0-based, unique per table; `SeatingTable.hiddenSeats`). Place/swap with `placeGuestAction`, free chairs via `freeSeats` in `@/lib/seating`, auto seat logic in `@/lib/auto-seat`. Figures and curved names: `components/plan/seat-figure.tsx`; room-element line art: `components/plan/floor-icons.tsx`. `SeatingPlanner` has three modes: page, editor, chart (read-only, also the public `/seating/[token]` link).
 - `cn` doesn't merge Tailwind classes: don't pass a conflicting `w-*` / `hidden` to components that set their own; wrap instead.
 - Checks before finishing: `pnpm typecheck`, `pnpm lint`, `pnpm build`.
 - Local DB: `pnpm db:up` (Docker, port 5434). Dev server: port 3100. Dev emails print to the server log.

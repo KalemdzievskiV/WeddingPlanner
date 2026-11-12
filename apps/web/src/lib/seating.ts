@@ -1,6 +1,6 @@
 import "server-only";
 import { prisma } from "@svadba/db";
-import type { FloorItemRow, SeatGuest, TableRow } from "@/components/plan/seating-planner";
+import type { FloorItemRow, MeasureLineRow, SeatGuest, TableRow } from "@/components/plan/seating-planner";
 
 /** Seating events of a plan, in order. */
 export function seatingEvents(weddingId: string) {
@@ -8,8 +8,10 @@ export function seatingEvents(weddingId: string) {
 }
 
 /** Tables, room elements and seatable guests of one event, shaped for the seating planner. */
-export async function loadSeating(eventId: string): Promise<{ tables: TableRow[]; items: FloorItemRow[]; guests: SeatGuest[] }> {
-  const [tables, items, invitations] = await Promise.all([
+export async function loadSeating(
+  eventId: string,
+): Promise<{ tables: TableRow[]; items: FloorItemRow[]; guests: SeatGuest[]; lines: MeasureLineRow[]; roomWidthM: number }> {
+  const [tables, items, invitations, lines, event] = await Promise.all([
     prisma.seatingTable.findMany({
       where: { eventId },
       orderBy: [{ sortOrder: "asc" }],
@@ -21,8 +23,12 @@ export async function loadSeating(eventId: string): Promise<{ tables: TableRow[]
       include: { guest: { include: { household: { select: { id: true, name: true, side: true } } } } },
       orderBy: [{ guest: { household: { createdAt: "asc" } } }, { guest: { sortOrder: "asc" } }],
     }),
+    prisma.measureLine.findMany({ where: { eventId }, orderBy: { createdAt: "asc" }, select: { id: true, x1: true, y1: true, x2: true, y2: true } }),
+    prisma.weddingEvent.findUnique({ where: { id: eventId }, select: { roomWidthM: true } }),
   ]);
   return {
+    lines,
+    roomWidthM: event?.roomWidthM ?? 30,
     tables: tables.map((tb) => ({
       id: tb.id,
       name: tb.name,
