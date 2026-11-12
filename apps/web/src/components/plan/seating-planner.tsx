@@ -13,38 +13,20 @@ import {
   type TableShape,
 } from "@svadba/shared";
 import {
-  ArrowUp,
-  Baby,
-  Cake,
-  Camera,
   Crown,
-  Disc3,
-  DoorOpen,
   EyeOff,
   Eye,
-  Gift,
   GripVertical,
   Undo2,
   Wand2,
-  Lightbulb,
-  Martini,
-  Mic,
-  Speaker,
-  Square,
-  Tent,
-  Toilet,
-  Utensils,
   Locate,
   Maximize2,
   Minus,
-  Music,
   Pencil,
   Plus,
   RotateCw,
   Search,
   Shapes,
-  Sparkles,
-  Tag,
   Trash2,
   UserMinus,
   UserPlus,
@@ -80,6 +62,7 @@ import { Link } from "@/i18n/navigation";
 import type { FormState } from "@/lib/form";
 import { useFormAction } from "@/lib/use-form-action";
 import { cn } from "@/lib/utils";
+import { FloorIcon, hasFloorIcon, QUIET_KINDS } from "./floor-icons";
 import { EmptyChair, FigureBadge, FigureShape, SeatName } from "./seat-figure";
 import { SeatingListActions, SeatingPrintList } from "./seating-export";
 
@@ -1428,29 +1411,6 @@ function FloorPlan({
   );
 }
 
-const itemIcon: Record<FloorItemKind, typeof Music> = {
-  DANCE_FLOOR: Sparkles,
-  BAND: Music,
-  LABEL: Tag,
-  DANCE_FLOOR_ROUND: Sparkles,
-  STAGE: Mic,
-  TENT: Tent,
-  BUFFET_LONG: Utensils,
-  BUFFET_ROUND: Utensils,
-  WALL: Minus,
-  DOOR: DoorOpen,
-  PILLAR: Square,
-  ENTRANCE: ArrowUp,
-  WC: Toilet,
-  BAR: Martini,
-  DJ: Disc3,
-  CAKE: Cake,
-  GIFTS: Gift,
-  SPEAKER: Speaker,
-  LIGHT: Lightbulb,
-  PHOTO: Camera,
-  KIDS: Baby,
-};
 /** Fill and outline per room element (decision 129). */
 const itemStyle: Partial<Record<FloorItemKind, string>> = {
   DANCE_FLOOR: "border-vranec/40 bg-rosehip/70",
@@ -1573,8 +1533,9 @@ function FloorItemBox({
   type Gesture = { mode: "move" | "resize" | "turn"; startX: number; startY: number; start: ItemBox; box: ItemBox; moved: boolean };
   const [gesture, setGesture] = useState<Gesture | null>(null);
   const b = gesture?.box ?? box;
-  const Icon = itemIcon[item.kind];
   const look = FLOOR_ITEM_LOOK[item.kind];
+  // Trees, hedges and the like show no name unless the couple gave them one.
+  const showName = !QUIET_KINDS.has(item.kind) || item.name !== t(`items.${item.kind}`);
 
   const begin = (mode: Gesture["mode"]) => (e: React.PointerEvent) => {
     e.stopPropagation();
@@ -1654,13 +1615,15 @@ function FloorItemBox({
     >
       {look === "icon" ? (
         <span className="flex h-full w-full flex-col items-center justify-center" style={{ transform: `rotate(${-b.rotation}deg)` }}>
-          <Icon aria-hidden strokeWidth={1.4} className="h-3/5 w-3/5 text-ink-soft" />
-          <span
-            className="max-w-[160%] truncate font-medium leading-tight text-ink-soft"
-            style={{ fontSize: `${LABEL / (PLAN_WIDTH / 100)}cqw` }}
-          >
-            {item.name}
-          </span>
+          <FloorIcon kind={item.kind} strokeWidth={1.3} className={cn("min-h-0 w-full flex-1 text-ink-soft", showName && "max-h-[78%]")} />
+          {showName && (
+            <span
+              className="max-w-[160%] truncate font-medium leading-tight text-ink-soft"
+              style={{ fontSize: `${LABEL / (PLAN_WIDTH / 100)}cqw` }}
+            >
+              {item.name}
+            </span>
+          )}
         </span>
       ) : look === "wall" || look === "pillar" ? (
         <span className="sr-only">{item.name}</span>
@@ -1669,7 +1632,7 @@ function FloorItemBox({
           className="flex max-w-full items-center gap-1 truncate px-1 font-medium text-ink-soft"
           style={{ transform: `rotate(${-b.rotation}deg)`, fontSize: `${ITEM_LABEL / (PLAN_WIDTH / 100)}cqw` }}
         >
-          <Icon aria-hidden style={{ width: "1.1em", height: "1.1em" }} className="shrink-0 text-vranec" />
+          {hasFloorIcon(item.kind) && <FloorIcon kind={item.kind} strokeWidth={2.2} className="size-[1.3em] shrink-0 text-vranec" />}
           <span className="truncate">{item.name}</span>
         </span>
       )}
@@ -1797,10 +1760,7 @@ function PickerArt({ choice }: { choice: PickChoice }) {
     }
   }
   const look = FLOOR_ITEM_LOOK[choice.kind];
-  if (look === "icon") {
-    const Icon = itemIcon[choice.kind];
-    return <Icon aria-hidden className="size-9" strokeWidth={1.4} />;
-  }
+  if (look === "icon") return <FloorIcon kind={choice.kind} className="h-11 w-14" />;
   const dashed = { strokeDasharray: "3 3" };
   switch (look) {
     case "round":
@@ -1834,7 +1794,10 @@ function AddPicker({ onPick, onClose }: { onPick: (c: PickChoice) => void; onClo
     { title: t("pickBuffet"), choices: items(["BUFFET_LONG", "BUFFET_ROUND"]) },
     { title: t("pickAreas"), choices: items(["DANCE_FLOOR", "DANCE_FLOOR_ROUND", "STAGE", "BAND", "TENT", "LABEL"]) },
     { title: t("pickStructure"), choices: items(["WALL", "DOOR", "PILLAR", "ENTRANCE"]) },
-    { title: t("pickIcons"), choices: items(["WC", "BAR", "DJ", "CAKE", "GIFTS", "SPEAKER", "LIGHT", "PHOTO", "KIDS"]) },
+    { title: t("pickServices"), choices: items(["WC", "BAR", "CAKE", "GIFTS", "PHOTO", "KIDS", "HIGH_CHAIR"]) },
+    { title: t("pickMusic"), choices: items(["DJ", "SPEAKER", "MIC", "LIGHT", "LASER", "FIREWORK", "SMOKE", "PIANO", "GRAND_PIANO"]) },
+    { title: t("pickNature"), choices: items(["TREE_ROUND", "TREE_CLOUD", "TREE_TALL", "TREE_PINE", "TREE_LEAF", "HEDGE", "HEDGE_ROW", "ARCH", "WATER"]) },
+    { title: t("pickSigns"), choices: items(["FAN", "AIR_CON", "HEATER", "ACCESSIBLE", "CAUTION", "COMPASS", "TARGET"]) },
   ];
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-ink/30 p-4 backdrop-blur-sm" onClick={onClose}>

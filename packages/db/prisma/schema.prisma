@@ -582,7 +582,7 @@ enum TableShape {
   ROW
 }
 
-/// Room elements on the seating plan (decision 119).
+/// Room elements on the seating plan (decisions 119, 129, 135).
 enum FloorItemKind {
   DANCE_FLOOR
   BAND
@@ -605,6 +605,29 @@ enum FloorItemKind {
   LIGHT
   PHOTO
   KIDS
+  TREE_ROUND
+  TREE_CLOUD
+  TREE_TALL
+  TREE_PINE
+  TREE_LEAF
+  HEDGE
+  HEDGE_ROW
+  ARCH
+  PIANO
+  GRAND_PIANO
+  MIC
+  LASER
+  FIREWORK
+  SMOKE
+  WATER
+  FAN
+  AIR_CON
+  HEATER
+  HIGH_CHAIR
+  ACCESSIBLE
+  CAUTION
+  COMPASS
+  TARGET
 }
 
 enum Payer {
