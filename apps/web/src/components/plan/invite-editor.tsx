@@ -1,7 +1,7 @@
 "use client";
 
-import { INVITE_OVERLAY_MAX, SAMPLE_INVITE_VIDEO } from "@svadba/shared";
-import { ExternalLink } from "lucide-react";
+import { INVITE_OVERLAY_MAX, INVITE_THEMES, INVITE_TRACKS, type InviteThemeKey, SAMPLE_INVITE_VIDEO } from "@svadba/shared";
+import { Check, ExternalLink } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { saveVideoInviteAction } from "@/actions/plan-invitation";
@@ -12,14 +12,33 @@ import { Checkbox, Field, Input } from "@/components/ui/field";
 import { Link } from "@/i18n/navigation";
 import type { FormState } from "@/lib/form";
 import { useFormAction } from "@/lib/use-form-action";
-import { type InviteEvent, VideoInvite } from "./video-invite";
+import { DesignedInvite } from "@/components/invite/designed-invite";
+import { cn } from "@/lib/utils";
 
-type Draft = { enabled: boolean; videoUrl: string; headline: string; message: string; overlay: number; eventIds: string[] };
+export type InviteEvent = { id: string; name: string; when: string; place: string | null };
+
+/** Swatch colours for the theme picker: page, paper, accent (match `.inv[data-theme]` in globals.css). */
+const SWATCH: Record<InviteThemeKey, [string, string, string]> = {
+  LILAC: ["#ede4ef", "#faf6fa", "#8a5f86"],
+  IVORY: ["#f3ede2", "#fcfaf5", "#9c7a3a"],
+  SAGE: ["#e7ece3", "#f7f9f4", "#5b7660"],
+};
+
+type Draft = {
+  enabled: boolean;
+  videoUrl: string;
+  headline: string;
+  message: string;
+  overlay: number;
+  eventIds: string[];
+  theme: InviteThemeKey;
+  music: string;
+};
 
 const textareaClass =
   "block w-full rounded-lg border border-line-strong bg-surface px-3 py-2 text-[15px] focus:border-vranec focus:outline-none focus:ring-2 focus:ring-vranec/15";
 
-/** Edits the video invitation, with a live preview next to the form. */
+/** Edits the designed invitation (decision 130), with a live preview next to the form. */
 export function InviteEditor({
   initial,
   editable,
@@ -28,6 +47,8 @@ export function InviteEditor({
   dateLabel,
   events,
   previewHref,
+  photoUrl,
+  countdownTo,
 }: {
   initial: Draft;
   editable: boolean;
@@ -36,6 +57,8 @@ export function InviteEditor({
   dateLabel: string;
   events: InviteEvent[];
   previewHref: string | null;
+  photoUrl: string | null;
+  countdownTo: string | null;
 }) {
   const t = useTranslations("plan.invite");
   const tc = useTranslations("common");
@@ -61,6 +84,58 @@ export function InviteEditor({
                 <span className="block text-stone">{t("enabledHint")}</span>
               </span>
             </label>
+
+            <fieldset>
+              <legend className="text-sm font-medium">{t("theme")}</legend>
+              <input type="hidden" name="theme" value={draft.theme} />
+              <div className="mt-2 grid grid-cols-3 gap-2 sm:gap-3">
+                {INVITE_THEMES.map((key) => {
+                  const [bg, paper, accent] = SWATCH[key];
+                  const on = draft.theme === key;
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      aria-pressed={on}
+                      onClick={() => set("theme", key)}
+                      className={cn(
+                        "relative rounded-xl border p-2 text-left transition",
+                        on ? "border-vranec ring-2 ring-vranec/20" : "border-line hover:border-line-strong",
+                      )}
+                    >
+                      <span aria-hidden className="flex h-14 items-center justify-center rounded-lg" style={{ background: bg }}>
+                        <span className="grid h-10 w-8 place-items-center rounded-t-full border" style={{ background: paper, borderColor: accent }}>
+                          <span className="size-3 rounded-full" style={{ background: accent }} />
+                        </span>
+                      </span>
+                      <span className="mt-1.5 block text-sm font-medium">{t(`themes.${key}`)}</span>
+                      {on && <Check aria-hidden className="absolute right-2 top-2 size-4 text-vranec" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </fieldset>
+
+            {INVITE_TRACKS.length > 0 ? (
+              <Field id="invite-music" label={t("music")} hint={t("musicHint")} error={fe.music && te(fe.music)}>
+                <select
+                  id="invite-music"
+                  name="music"
+                  value={draft.music}
+                  onChange={(e) => set("music", e.target.value)}
+                  className="block h-10 w-full rounded-lg border border-line-strong bg-surface px-3 text-[15px] focus:border-vranec focus:outline-none focus:ring-2 focus:ring-vranec/15"
+                >
+                  <option value="">{t("noMusic")}</option>
+                  {INVITE_TRACKS.map((tr) => (
+                    <option key={tr.id} value={tr.id}>
+                      {tr.title}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            ) : (
+              <input type="hidden" name="music" value="" />
+            )}
 
             <Field id="invite-video" label={t("videoUrl")} hint={t("videoUrlHint")} error={fe.videoUrl && te(fe.videoUrl)}>
               <div className="flex flex-wrap gap-2">
@@ -173,9 +248,10 @@ export function InviteEditor({
 
       <div className="space-y-2 lg:sticky lg:top-4">
         <p className="text-sm font-medium text-ink-soft">{t("preview")}</p>
-        <VideoInvite
+        <DesignedInvite
           key={previewUrl ?? "sample"}
           preview
+          theme={draft.theme}
           videoUrl={previewUrl}
           overlay={draft.overlay}
           headline={draft.headline.trim() || null}
@@ -183,8 +259,13 @@ export function InviteEditor({
           partner1={partner1}
           partner2={partner2}
           dateLabel={dateLabel}
-          events={events.filter((e) => draft.eventIds.includes(e.id))}
-        />
+          venue={(events.filter((e) => draft.eventIds.includes(e.id)).find((e) => e.place) ?? events.find((e) => e.place))?.place ?? null}
+          photoUrl={photoUrl}
+          countdownTo={countdownTo}
+          musicSrc={draft.music ? `/music/${draft.music}.mp3` : null}
+        >
+          <p className="px-6 pb-10 text-center text-sm italic text-[var(--inv-soft)]">{t("previewMore")}</p>
+        </DesignedInvite>
       </div>
     </div>
   );

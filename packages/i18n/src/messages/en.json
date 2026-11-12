@@ -1391,10 +1391,10 @@
       "skip": "Skip"
     },
     "invite": {
-      "title": "Video invitation",
-      "lead": "Guests open their link to a full-screen video with your names, the date and the places. When the video ends, the page slides on to the RSVP form.",
-      "enabled": "Show the video invitation to guests",
-      "enabledHint": "While this is off, guests see the usual RSVP page.",
+      "title": "Invitation",
+      "lead": "Guests open their link to an envelope with a wax seal. One tap opens it onto your names over your video, a countdown, their part of the day, the places and the RSVP form.",
+      "enabled": "Show the invitation to guests",
+      "enabledHint": "While this is off, guests see the plain RSVP page.",
       "videoUrl": "Video link",
       "videoUrlHint": "A direct link to an MP4 or WebM file that starts with https://. Leave empty to use the sample video.",
       "useSample": "Use sample video",
@@ -1403,17 +1403,27 @@
       "headlineHint": "Leave empty for “We're getting married”.",
       "headlinePlaceholder": "We're getting married",
       "message": "Message",
-      "messageHint": "A few words for your guests, shown under the details.",
+      "messageHint": "A few words for your guests, shown by the countdown.",
       "messagePlaceholder": "We would love to celebrate this day with you.",
-      "overlay": "Darken the video: {value}%",
-      "overlayHint": "Darker makes the text easier to read over a bright video.",
+      "overlay": "Soften the video: {value}%",
+      "overlayHint": "Higher washes the video out more, so the frame and text stand out.",
       "detailsNote": "Your names and the date come from Settings, and so do each event's time and place.",
       "saved": "Saved.",
       "openAsGuest": "Open as a guest sees it",
-      "openAsGuestOff": "Switch the video on and save to see it on the guest page.",
+      "openAsGuestOff": "Switch the invitation on and save to see it on the guest page.",
       "preview": "Preview",
       "events": "Events on the invitation",
-      "eventsHint": "None are shown unless you tick them. Each guest only sees the ticked events they're invited to."
+      "eventsHint": "None are shown unless you tick them. Each guest only sees the ticked events they're invited to.",
+      "theme": "Theme",
+      "themes": {
+        "LILAC": "Lilac & pearl",
+        "IVORY": "Ivory & gold",
+        "SAGE": "Sage"
+      },
+      "music": "Music",
+      "musicHint": "Starts when the guest taps the seal. They can mute it at any time.",
+      "noMusic": "No music",
+      "previewMore": "Guests then see their part of the day, the places with maps and the RSVP form."
     }
   },
   "rsvp": {
@@ -1740,13 +1750,25 @@
     "code": "Error code: {code}"
   },
   "invite": {
-    "label": "Invitation from {couple}",
     "dear": "Dear {name}",
     "defaultHeadline": "We're getting married",
     "soundOn": "Turn sound on",
     "soundOff": "Turn sound off",
-    "replay": "Watch again",
-    "play": "Play",
-    "respond": "Respond"
+    "for": "For",
+    "tapToOpen": "Tap the seal to open",
+    "scroll": "Scroll",
+    "musicOn": "Play music",
+    "replayEnvelope": "Replay",
+    "countdown": "Countdown",
+    "days": "Days",
+    "hours": "Hours",
+    "minutes": "Minutes",
+    "seconds": "Seconds",
+    "countdownDone": "Today is the day!",
+    "photoAlt": "{couple}",
+    "theDay": "The Day",
+    "location": "Location",
+    "rsvpTitle": "Will you join us?",
+    "directions": "Get directions"
   }
 }

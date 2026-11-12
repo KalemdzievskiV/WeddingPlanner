@@ -202,6 +202,14 @@ export const floorItemSchema = z.object({
 /** Placeholder video for the video invitation until the couple picks their own (Mixkit Stock Video Free License). */
 export const SAMPLE_INVITE_VIDEO = "https://assets.mixkit.co/videos/18204/18204-720.mp4";
 export const INVITE_OVERLAY_MAX = 80;
+/** Colour themes of the designed invitation (decision 130). */
+export const INVITE_THEMES = ["LILAC", "IVORY", "SAGE"] as const;
+export type InviteThemeKey = (typeof INVITE_THEMES)[number];
+/**
+ * Built-in royalty-free background tracks, served from `apps/web/public/music/<id>.mp3`.
+ * Empty until the audio files are added; the editor hides the music choice while it is.
+ */
+export const INVITE_TRACKS: readonly { id: string; title: string }[] = [];
 
 /** Video invitation settings: full-screen video with the key details, then the RSVP form. */
 export const videoInviteSchema = z.object({
@@ -217,4 +225,10 @@ export const videoInviteSchema = z.object({
   overlay: z.coerce.number("number").int("wholeNumber").min(0, "positive").max(INVITE_OVERLAY_MAX, "tooLarge"),
   /** Events to show on the invitation; empty shows none. */
   eventIds: z.array(z.string()).max(50),
+  theme: z.enum(INVITE_THEMES, "required"),
+  /** A track id from INVITE_TRACKS, or empty for no music. */
+  music: z
+    .string()
+    .refine((v) => v === "" || INVITE_TRACKS.some((tr) => tr.id === v), "required")
+    .transform((v) => (v === "" ? null : v)),
 });

@@ -1391,10 +1391,10 @@
       "skip": "Kapërce"
     },
     "invite": {
-      "title": "Ftesë me video",
-      "lead": "Të ftuarit hapin lidhjen e tyre dhe shohin një video në ekran të plotë me emrat tuaj, datën dhe vendet. Kur video mbaron, faqja kalon te formulari i konfirmimit.",
-      "enabled": "Shfaqua të ftuarve ftesën me video",
-      "enabledHint": "Kur është e fikur, të ftuarit shohin faqen e zakonshme të konfirmimit.",
+      "title": "Ftesa",
+      "lead": "Të ftuarit hapin lidhjen e tyre dhe shohin një zarf me vulë dylli. Me një prekje hapet te emrat tuaj mbi videon tuaj, numërimi mbrapsht, pjesa e tyre e ditës, vendet dhe formulari i konfirmimit.",
+      "enabled": "Shfaqua të ftuarve ftesën",
+      "enabledHint": "Kur është e fikur, të ftuarit shohin faqen e thjeshtë të konfirmimit.",
       "videoUrl": "Lidhja e videos",
       "videoUrlHint": "Lidhje e drejtpërdrejtë te një skedar MP4 ose WebM që fillon me https://. Lëreni bosh për videon shembull.",
       "useSample": "Përdor videon shembull",
@@ -1403,17 +1403,27 @@
       "headlineHint": "Lëreni bosh për “Po martohemi”.",
       "headlinePlaceholder": "Po martohemi",
       "message": "Mesazhi",
-      "messageHint": "Disa fjalë për të ftuarit, nën detajet.",
+      "messageHint": "Disa fjalë për të ftuarit, pranë numërimit mbrapsht.",
       "messagePlaceholder": "Do të na gëzonte ta festonim këtë ditë me ju.",
-      "overlay": "Errëso videon: {value}%",
-      "overlayHint": "Më e errët e bën tekstin më të lexueshëm mbi një video të ndritshme.",
+      "overlay": "Zbut videon: {value}%",
+      "overlayHint": "Më e lartë e zbeh më shumë videon, që korniza dhe teksti të dallohen.",
       "detailsNote": "Emrat dhe data vijnë nga Cilësimet, po ashtu ora dhe vendi i çdo ngjarjeje.",
       "saved": "U ruajt.",
       "openAsGuest": "Hape si e sheh i ftuari",
-      "openAsGuestOff": "Ndizeni videon dhe ruajeni për ta parë në faqen e të ftuarve.",
+      "openAsGuestOff": "Ndizeni ftesën dhe ruajeni për ta parë në faqen e të ftuarve.",
       "preview": "Parapamje",
       "events": "Ngjarjet në ftesë",
-      "eventsHint": "Asnjë nuk shfaqet nëse nuk e shënoni. Çdo i ftuar sheh vetëm ngjarjet e shënuara ku është i ftuar."
+      "eventsHint": "Asnjë nuk shfaqet nëse nuk e shënoni. Çdo i ftuar sheh vetëm ngjarjet e shënuara ku është i ftuar.",
+      "theme": "Tema",
+      "themes": {
+        "LILAC": "Lejla dhe perla",
+        "IVORY": "Fildish dhe ar",
+        "SAGE": "Sherebelë"
+      },
+      "music": "Muzika",
+      "musicHint": "Fillon kur i ftuari prek vulën. Mund ta heshtë në çdo kohë.",
+      "noMusic": "Pa muzikë",
+      "previewMore": "Pastaj të ftuarit shohin pjesën e tyre të ditës, vendet me harta dhe formularin e konfirmimit."
     }
   },
   "rsvp": {
@@ -1740,13 +1750,25 @@
     "code": "Kodi i gabimit: {code}"
   },
   "invite": {
-    "label": "Ftesë nga {couple}",
     "dear": "Të nderuar {name}",
     "defaultHeadline": "Po martohemi",
     "soundOn": "Ndiz zërin",
     "soundOff": "Fik zërin",
-    "replay": "Shiko përsëri",
-    "play": "Luaj",
-    "respond": "Konfirmo"
+    "for": "Për",
+    "tapToOpen": "Prekni vulën për ta hapur",
+    "scroll": "Lëviz",
+    "musicOn": "Luaj muzikën",
+    "replayEnvelope": "Përsëri",
+    "countdown": "Numërimi mbrapsht",
+    "days": "Ditë",
+    "hours": "Orë",
+    "minutes": "Minuta",
+    "seconds": "Sekonda",
+    "countdownDone": "Sot është dita!",
+    "photoAlt": "{couple}",
+    "theDay": "Dita",
+    "location": "Vendndodhja",
+    "rsvpTitle": "Do të na bashkoheni?",
+    "directions": "Udhëzime"
   }
 }

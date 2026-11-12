@@ -41,7 +41,7 @@ export async function removeInvitationAction(): Promise<FormState> {
   return { ok: true };
 }
 
-/** Saves the video invitation (new "Invitation" tab). */
+/** Saves the invitation settings (the "Invitation" tab). */
 export async function saveVideoInviteAction(_prev: FormState, fd: FormData): Promise<FormState> {
   const access = await editableWedding();
   if (!access) return { formError: "forbidden" };
@@ -52,9 +52,11 @@ export async function saveVideoInviteAction(_prev: FormState, fd: FormData): Pro
     message: fd.get("message") ?? "",
     overlay: fd.get("overlay") ?? "",
     eventIds: fd.getAll("eventIds"),
+    theme: fd.get("theme") ?? "",
+    music: fd.get("music") ?? "",
   });
   if (!parsed.success) return { fieldErrors: zodFieldErrors(parsed.error) };
-  const { enabled, videoUrl, headline, message, overlay } = parsed.data;
+  const { enabled, videoUrl, headline, message, overlay, theme, music } = parsed.data;
   // Only this wedding's events.
   const events = await prisma.weddingEvent.findMany({
     where: { weddingId: access.wedding.id, id: { in: parsed.data.eventIds } },
@@ -69,6 +71,8 @@ export async function saveVideoInviteAction(_prev: FormState, fd: FormData): Pro
       inviteMessage: message,
       inviteOverlay: overlay,
       inviteEventIds: events.map((e) => e.id),
+      inviteTheme: theme,
+      inviteMusic: music,
     },
   });
   revalidatePath("/", "layout");

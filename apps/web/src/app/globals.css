@@ -159,6 +159,131 @@
 .invite-line {
   animation: invite-line 1.2s cubic-bezier(0.6, 0, 0.2, 1) both;
 }
+/*
+ * Designed invitation (decision 130). A theme sets the palette for everything inside `.inv`,
+ * and also re-points the app's accent tokens, so the RSVP form inside picks up the theme colours.
+ */
+.inv {
+  --inv-bg: #ede4ef;
+  --inv-paper: #faf6fa;
+  --inv-ink: #4a3a52;
+  --inv-soft: #7a6880;
+  --inv-accent: #8a5f86;
+  --inv-line: #bfa5c0;
+  --inv-seal-1: #c4a0bf;
+  --inv-seal-2: #7b5277;
+  --inv-satin-1: #f3e9f3;
+  --inv-satin-2: #d6c0d7;
+  --inv-satin-3: #b89bb9;
+  --color-vranec: var(--inv-accent);
+  --color-vranec-deep: var(--inv-seal-2);
+  --color-rosehip: var(--inv-satin-1);
+  --color-line: color-mix(in srgb, var(--inv-line) 45%, white);
+  --color-line-strong: var(--inv-line);
+  --color-ink: var(--inv-ink);
+  --color-ink-soft: var(--inv-ink);
+  --color-stone: var(--inv-soft);
+  --color-linen: var(--inv-bg);
+  color: var(--inv-ink);
+  background-color: var(--inv-bg);
+  background-image:
+    radial-gradient(120% 60% at 0% 0%, rgb(255 255 255 / 0.65), transparent 60%),
+    radial-gradient(90% 50% at 100% 40%, rgb(255 255 255 / 0.4), transparent 60%),
+    radial-gradient(100% 60% at 20% 100%, color-mix(in srgb, var(--inv-satin-2) 50%, transparent), transparent 70%);
+}
+.inv[data-theme="IVORY"] {
+  --inv-bg: #f3ede2;
+  --inv-paper: #fcfaf5;
+  --inv-ink: #4b3f2c;
+  --inv-soft: #85765c;
+  --inv-accent: #9c7a3a;
+  --inv-line: #d2bd8f;
+  --inv-seal-1: #d9b871;
+  --inv-seal-2: #8e6a29;
+  --inv-satin-1: #f8f1e2;
+  --inv-satin-2: #e5d5b2;
+  --inv-satin-3: #c9b07c;
+}
+.inv[data-theme="SAGE"] {
+  --inv-bg: #e7ece3;
+  --inv-paper: #f7f9f4;
+  --inv-ink: #34423a;
+  --inv-soft: #6c7c70;
+  --inv-accent: #5b7660;
+  --inv-line: #a9baa5;
+  --inv-seal-1: #9db59c;
+  --inv-seal-2: #4f6a54;
+  --inv-satin-1: #eef3ea;
+  --inv-satin-2: #d0dccb;
+  --inv-satin-3: #a8bba4;
+}
+.inv-script {
+  font-family: var(--font-inv-script), cursive;
+  font-weight: 400;
+}
+.inv-serif {
+  font-family: var(--font-inv-serif), Georgia, serif;
+}
+/* Forms inside the invitation keep the app font, which reads better at small sizes. */
+.inv-sans {
+  font-family: var(--font-sans);
+}
+/* Fine paper grain over the pearl wash. */
+.inv-grain {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.3 0 0 0 0 0.25 0 0 0 0 0.3 0 0 0 0.07 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.inv-paper {
+  background-color: var(--inv-paper);
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.9) inset,
+    0 2px 4px rgb(60 40 60 / 0.06),
+    0 24px 50px -24px rgb(60 40 60 / 0.35);
+}
+/* Satin: soft highlights running across a fabric-like surface. */
+.inv-satin {
+  background:
+    linear-gradient(115deg, transparent 20%, rgb(255 255 255 / 0.55) 32%, transparent 44%),
+    linear-gradient(115deg, transparent 52%, rgb(255 255 255 / 0.35) 62%, transparent 72%),
+    linear-gradient(160deg, var(--inv-satin-1), var(--inv-satin-2) 55%, var(--inv-satin-3));
+}
+/* Envelope flaps: each casts a soft shadow on the one below, like embossed paper. */
+.inv-flap {
+  position: absolute;
+  inset: 0;
+  filter: drop-shadow(0 3px 6px rgb(50 30 50 / 0.22)) drop-shadow(0 1px 1px rgb(50 30 50 / 0.18));
+  transition: transform 1.3s cubic-bezier(0.65, 0, 0.25, 1), opacity 1.3s ease;
+}
+.inv-face {
+  position: absolute;
+  inset: 0;
+}
+.inv-seal {
+  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--inv-seal-1) 60%, white), var(--inv-seal-1) 35%, var(--inv-seal-2) 100%);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--inv-seal-2) 55%, transparent),
+    0 6px 16px rgb(40 20 40 / 0.35),
+    inset 0 -4px 8px rgb(0 0 0 / 0.18),
+    inset 0 3px 6px rgb(255 255 255 / 0.35);
+  border-radius: 46% 54% 50% 50% / 52% 48% 54% 46%;
+}
+@keyframes inv-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+.inv-pulse {
+  animation: inv-pulse 2.4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .inv-pulse {
+    animation: none !important;
+  }
+}
+
 /* The global reduced-motion rule keeps animation delays, which would leave the text hidden: show it at once. */
 @media (prefers-reduced-motion: reduce) {
   .invite-rise,

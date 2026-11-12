@@ -657,6 +657,10 @@ model Wedding {
   inviteOverlay   Int       @default(45)
   /// Events shown on the video invitation (none by default). Each guest still only sees the ones they're invited to.
   inviteEventIds  String[]  @default([])
+  /// Look of the designed invitation (decision 130).
+  inviteTheme     InviteTheme @default(LILAC)
+  /// Built-in background track id (INVITE_TRACKS); empty means no music.
+  inviteMusic     String?
   /// Read-only from 6 months after the date (decision 90).
   archivedAt        DateTime?
   /// Owners were emailed that guest data will be erased soon (decision 92).
@@ -1201,4 +1205,11 @@ model BusinessView {
 
   @@id([businessId, date, visitor])
   @@map("business_view")
+}
+
+/// Colour themes of the designed invitation (decision 130).
+enum InviteTheme {
+  LILAC
+  IVORY
+  SAGE
 }

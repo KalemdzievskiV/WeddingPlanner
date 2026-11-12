@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { InvitationCard } from "@/components/plan/invitation-card";
 import { InviteEditor } from "@/components/plan/invite-editor";
 import { formatDate } from "@/lib/format";
+import { inviteCountdownTo } from "@/lib/invite";
 import { localeFrom } from "@/lib/locale";
 import { eventName } from "@/lib/plan-helpers";
 import { canEdit, requireWedding } from "@/lib/wedding";
@@ -12,7 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("plan.invite"))("title") };
 }
 
-/** Video invitation editor: the video, the words in front of it and a live preview. */
+/** Invitation editor: theme, video, words and music, with a live preview (decision 130). */
 export default async function InvitationPage({ params }: { params: Promise<{ locale: string }> }) {
   const locale = await localeFrom(params);
   const { wedding, role } = await requireWedding(locale);
@@ -31,7 +32,9 @@ export default async function InvitationPage({ params }: { params: Promise<{ loc
         partner2={wedding.partner2}
         dateLabel={wedding.date ? formatDate(wedding.date) : ""}
         previewHref={household ? `/rsvp/${household.rsvpToken}` : null}
-        events={events.map((e) => ({ id: e.id, name: eventName(e, te), when: [e.time ?? "", e.place ?? ""].filter(Boolean).join(" · ") }))}
+        events={events.map((e) => ({ id: e.id, name: eventName(e, te), when: [e.time ?? "", e.place ?? ""].filter(Boolean).join(" · "), place: e.place }))}
+        photoUrl={wedding.invitationUrl}
+        countdownTo={inviteCountdownTo(wedding.date, events)}
         initial={{
           enabled: wedding.inviteEnabled,
           videoUrl: wedding.inviteVideoUrl ?? "",
@@ -39,6 +42,8 @@ export default async function InvitationPage({ params }: { params: Promise<{ loc
           message: wedding.inviteMessage ?? "",
           overlay: wedding.inviteOverlay,
           eventIds: wedding.inviteEventIds,
+          theme: wedding.inviteTheme,
+          music: wedding.inviteMusic ?? "",
         }}
       />
       <InvitationCard url={wedding.invitationUrl} editable={canEdit(role)} />
