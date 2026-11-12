@@ -16,27 +16,27 @@ enum Role {
 }
 
 model User {
-  id            String    @id
-  name          String
-  email         String    @unique
-  emailVerified Boolean   @default(false)
-  image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id                  String           @id
+  name                String
+  email               String           @unique
+  emailVerified       Boolean          @default(false)
+  image               String?
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
   /// Empty until the person picks "planning a wedding" or "I'm a vendor".
-  roles         Role[]    @default([])
+  roles               Role[]           @default([])
   /// Preferred language: mk | sq | en
-  locale        String    @default("mk")
-  sessions      Session[]
-  accounts      Account[]
-  memberships   BusinessMember[]
+  locale              String           @default("mk")
+  sessions            Session[]
+  accounts            Account[]
+  memberships         BusinessMember[]
   /// One wedding per account (decision 59).
-  weddingMember WeddingMember?
+  weddingMember       WeddingMember?
   /// Email alerts for inquiries, offers and reviews (bell notifications always on).
-  emailNotifications Boolean @default(true)
-  notifications Notification[]
-  inquiryMessages InquiryMessage[]
-  reviews       Review[]
+  emailNotifications  Boolean          @default(true)
+  notifications       Notification[]
+  inquiryMessages     InquiryMessage[]
+  reviews             Review[]
   /// Set when the user asks to delete the account (decision 89). Signing in within 30 days clears it; after that the nightly job erases the account.
   deletionRequestedAt DateTime?
 
@@ -93,16 +93,16 @@ model Verification {
 // ─── Reference data (managed in the admin panel) ───
 
 model City {
-  id        String   @id @default(cuid())
-  slug      String   @unique
-  nameMk    String
-  nameSq    String
-  nameEn    String
-  region    String?
-  active    Boolean  @default(true)
-  sortOrder Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String      @id @default(cuid())
+  slug       String      @unique
+  nameMk     String
+  nameSq     String
+  nameEn     String
+  region     String?
+  active     Boolean     @default(true)
+  sortOrder  Int         @default(0)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
   businesses Business[]
   travelFees TravelFee[]
   weddings   Wedding[]
@@ -130,15 +130,15 @@ model VendorCategory {
 }
 
 model VenueFeature {
-  id        String   @id @default(cuid())
-  slug      String   @unique
-  nameMk    String
-  nameSq    String
-  nameEn    String
-  active    Boolean  @default(true)
-  sortOrder Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String            @id @default(cuid())
+  slug       String            @unique
+  nameMk     String
+  nameSq     String
+  nameEn     String
+  active     Boolean           @default(true)
+  sortOrder  Int               @default(0)
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
   businesses BusinessFeature[]
 
   @@map("venue_feature")
@@ -319,7 +319,7 @@ model Business {
   views           BusinessView[]
   /// Kept in sync with visible reviews, for sorting search results.
   ratingAvg       Float?
-  ratingCount     Int               @default(0)
+  ratingCount     Int                @default(0)
 
   @@index([category, status])
   @@index([cityId])
@@ -632,45 +632,48 @@ enum PlannedVendorStatus {
 }
 
 model Wedding {
-  id              String    @id @default(cuid())
-  partner1        String
-  partner2        String
-  date            DateTime? @db.Date
-  cityId          String?
-  city            City?     @relation(fields: [cityId], references: [id], onDelete: SetNull)
-  estimatedGuests Int?
+  id                String      @id @default(cuid())
+  partner1          String
+  partner2          String
+  date              DateTime?   @db.Date
+  cityId            String?
+  city              City?       @relation(fields: [cityId], references: [id], onDelete: SetNull)
+  estimatedGuests   Int?
   /// Total budget the couple plans to spend, in `currency`.
-  budgetTotal     Int?
-  currency        Currency  @default(EUR)
+  budgetTotal       Int?
+  currency          Currency    @default(EUR)
   /// Paid plan. Limits only apply when the paywall is switched on (decision 22a).
-  premium         Boolean   @default(false)
+  premium           Boolean     @default(false)
   /// Invitation picture: shown on RSVP pages and as their link preview.
-  invitationUrl   String?
+  invitationUrl     String?
   /// Video invitation (full-screen video with the key details, then the RSVP form). Off until switched on.
-  inviteEnabled   Boolean   @default(false)
+  inviteEnabled     Boolean     @default(false)
   /// https link to an MP4/WebM; empty means the sample video.
-  inviteVideoUrl  String?
+  inviteVideoUrl    String?
   /// Video the couple uploaded (one per wedding; a new upload deletes the old file). Wins over `inviteVideoUrl`.
-  inviteVideoFile String?
+  inviteVideoFile   String?
   /// Small line above the names, e.g. "We're getting married".
-  inviteHeadline  String?
-  inviteMessage   String?
+  inviteHeadline    String?
+  inviteMessage     String?
   /// How dark the layer over the video is, 0–80 (%), so the text stays readable.
-  inviteOverlay   Int       @default(45)
+  inviteOverlay     Int         @default(45)
   /// Events shown on the video invitation (none by default). Each guest still only sees the ones they're invited to.
-  inviteEventIds  String[]  @default([])
+  inviteEventIds    String[]    @default([])
   /// Look of the designed invitation (decision 130).
-  inviteTheme     InviteTheme @default(LILAC)
+  inviteTheme       InviteTheme @default(LILAC)
   /// Built-in background track id (INVITE_TRACKS); empty means no music.
-  inviteMusic     String?
+  inviteMusic       String?
+  /// Seating plan look (decision 132): plain grey figures instead of coloured ones; first names only.
+  seatPlainFigures  Boolean     @default(false)
+  seatFirstNames    Boolean     @default(false)
   /// Read-only from 6 months after the date (decision 90).
   archivedAt        DateTime?
   /// Owners were emailed that guest data will be erased soon (decision 92).
   erasureWarnedAt   DateTime?
   /// Guest list and seating erased 2 years after the date (decision 92).
   guestDataErasedAt DateTime?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
 
   members          WeddingMember[]
   invites          WeddingInvite[]
@@ -768,22 +771,22 @@ model Household {
 }
 
 model Guest {
-  id          String            @id @default(cuid())
+  id          String              @id @default(cuid())
   weddingId   String
-  wedding     Wedding           @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  wedding     Wedding             @relation(fields: [weddingId], references: [id], onDelete: Cascade)
   householdId String
-  household   Household         @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  household   Household           @relation(fields: [householdId], references: [id], onDelete: Cascade)
   name        String
-  ageGroup    AgeGroup          @default(ADULT)
+  ageGroup    AgeGroup            @default(ADULT)
   /// Wedding-party role (decision 100); most guests have none.
   role        GuestRole?
-  sortOrder   Int               @default(0)
+  sortOrder   Int                 @default(0)
   /// Personal RSVP link for this guest only (the household link covers the whole family). Made on first use.
-  rsvpToken   String?           @unique
+  rsvpToken   String?             @unique
   /// Note and answer time from the guest's personal link.
   guestNote   String?
   respondedAt DateTime?
-  createdAt   DateTime          @default(now())
+  createdAt   DateTime            @default(now())
   invitations GuestInvitation[]
   seats       TableSeat[]
   scheduleFor ScheduleItemGuest[]
@@ -807,20 +810,22 @@ model GuestInvitation {
 }
 
 model SeatingTable {
-  id        String       @id @default(cuid())
-  weddingId String
-  wedding   Wedding      @relation(fields: [weddingId], references: [id], onDelete: Cascade)
-  eventId   String
-  event     WeddingEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  name      String
-  shape     TableShape
-  seats     Int
+  id          String       @id @default(cuid())
+  weddingId   String
+  wedding     Wedding      @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  eventId     String
+  event       WeddingEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  name        String
+  shape       TableShape
+  seats       Int
   /// Position on the floor plan, in plan units (0–1000 × 0–700).
-  x         Float        @default(0)
-  y         Float        @default(0)
-  rotation  Int          @default(0)
-  sortOrder Int          @default(0)
-  guests    TableSeat[]
+  x           Float        @default(0)
+  y           Float        @default(0)
+  rotation    Int          @default(0)
+  sortOrder   Int          @default(0)
+  /// Chair numbers (0-based) hidden from the plan: not drawn, not free, skipped by auto seat (decision 133).
+  hiddenSeats Int[]        @default([])
+  guests      TableSeat[]
 
   @@index([eventId])
   @@map("seating_table")
@@ -847,7 +852,7 @@ model FloorItem {
   @@map("floor_item")
 }
 
-/// Which table a guest sits at for one event (per table, not per chair — decision 67).
+/// Which chair of which table a guest sits on for one event (decision 133; replaces per-table seating of decision 67).
 model TableSeat {
   guestId String
   guest   Guest        @relation(fields: [guestId], references: [id], onDelete: Cascade)
@@ -855,9 +860,11 @@ model TableSeat {
   table   SeatingTable @relation(fields: [tableId], references: [id], onDelete: Cascade)
   /// Same as the table's event; part of the key so a guest has one table per event.
   eventId String
+  /// Chair number at the table, 0-based (shown as seat n+1). Can be ≥ the table's seats when it is over capacity.
+  seat    Int
 
   @@id([guestId, eventId])
-  @@index([tableId])
+  @@unique([tableId, seat])
   @@map("table_seat")
 }
 
@@ -1044,30 +1051,30 @@ enum InquiryStatus {
 
 /// A couple's request to a vendor (decision 78). Open = NEW / REPLIED / OFFER_SENT.
 model Inquiry {
-  id             String        @id @default(cuid())
-  weddingId      String
-  wedding        Wedding       @relation(fields: [weddingId], references: [id], onDelete: Cascade)
-  businessId     String
-  business       Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  eventId        String?
-  event          WeddingEvent? @relation(fields: [eventId], references: [id], onDelete: SetNull)
-  hallId         String?
-  hall           Hall?         @relation(fields: [hallId], references: [id], onDelete: SetNull)
+  id            String           @id @default(cuid())
+  weddingId     String
+  wedding       Wedding          @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  businessId    String
+  business      Business         @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  eventId       String?
+  event         WeddingEvent?    @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  hallId        String?
+  hall          Hall?            @relation(fields: [hallId], references: [id], onDelete: SetNull)
   /// Optional menu or package the couple is interested in: "menu:<id>" / "package:<id>" with its name copied.
-  packageRef     String?
-  packageName    String?
-  date           DateTime?     @db.Date
-  guestCount     Int?
-  status         InquiryStatus @default(NEW)
-  createdById    String?
-  lastMessageAt  DateTime      @default(now())
+  packageRef    String?
+  packageName   String?
+  date          DateTime?        @db.Date
+  guestCount    Int?
+  status        InquiryStatus    @default(NEW)
+  createdById   String?
+  lastMessageAt DateTime         @default(now())
   /// When each side last opened the thread (for unread dots).
-  coupleSeenAt   DateTime?
-  vendorSeenAt   DateTime?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-  messages       InquiryMessage[]
-  offers         Offer[]
+  coupleSeenAt  DateTime?
+  vendorSeenAt  DateTime?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  messages      InquiryMessage[]
+  offers        Offer[]
 
   @@index([weddingId])
   @@index([businessId, status])
@@ -1104,19 +1111,19 @@ enum OfferStatus {
 
 /// Vendor's priced offer in an inquiry (decision 79).
 model Offer {
-  id         String      @id @default(cuid())
-  inquiryId  String
-  inquiry    Inquiry     @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
-  price      Int
-  unit       OfferUnit
-  currency   Currency
-  validUntil DateTime?   @db.Date
-  note       String?
-  status     OfferStatus @default(OPEN)
-  authorId   String?
-  createdAt  DateTime    @default(now())
+  id          String      @id @default(cuid())
+  inquiryId   String
+  inquiry     Inquiry     @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+  price       Int
+  unit        OfferUnit
+  currency    Currency
+  validUntil  DateTime?   @db.Date
+  note        String?
+  status      OfferStatus @default(OPEN)
+  authorId    String?
+  createdAt   DateTime    @default(now())
   respondedAt DateTime?
-  expense    Expense?
+  expense     Expense?
 
   @@index([inquiryId])
   @@map("offer")

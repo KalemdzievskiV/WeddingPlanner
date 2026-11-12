@@ -4,12 +4,12 @@ import {
   FLOOR_ITEM_KINDS,
   FLOOR_ITEM_LOOK,
   FLOOR_ITEM_MIN,
-  HEAD_TABLE_ROLES,
   PLAN_HEIGHT,
   PLAN_WIDTH,
   TABLE_SHAPES,
   type FloorItemKind,
   type GuestRole,
+  type Rsvp,
   type TableShape,
 } from "@svadba/shared";
 import {
@@ -20,7 +20,12 @@ import {
   Crown,
   Disc3,
   DoorOpen,
+  EyeOff,
+  Eye,
   Gift,
+  GripVertical,
+  Undo2,
+  Wand2,
   Lightbulb,
   Martini,
   Mic,
@@ -49,14 +54,19 @@ import {
   ZoomOut,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useLayoutEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useLayoutEffect, useOptimistic, useRef, useState, useTransition } from "react";
 import {
   addFloorItemAction,
   addTableAction,
   deleteFloorItemAction,
   deleteTableAction,
+  autoSeatAction,
   headTableAction,
+  hideSeatAction,
   moveFloorItemAction,
+  placeGuestAction,
+  seatingDisplayAction,
+  undoAutoSeatAction,
   moveTableAction,
   saveFloorItemAction,
   saveTableAction,
@@ -70,6 +80,7 @@ import { Link } from "@/i18n/navigation";
 import type { FormState } from "@/lib/form";
 import { useFormAction } from "@/lib/use-form-action";
 import { cn } from "@/lib/utils";
+import { EmptyChair, FigureBadge, FigureShape, SeatName } from "./seat-figure";
 import { SeatingListActions, SeatingPrintList } from "./seating-export";
 
 export type SeatGuest = {
@@ -79,6 +90,8 @@ export type SeatGuest = {
   householdId: string;
   child: boolean;
   role: GuestRole | null;
+  side: "BRIDE" | "GROOM" | "BOTH";
+  rsvp: Rsvp;
 };
 export type TableRow = {
   id: string;
@@ -88,8 +101,51 @@ export type TableRow = {
   x: number;
   y: number;
   rotation: number;
+  /** Seated guests in chair order (for lists and exports). */
   guestIds: string[];
+  /** Who sits on which chair (0-based, decision 133). */
+  chairs: { guestId: string; seat: number }[];
+  /** Hidden chair numbers. */
+  hidden: number[];
 };
+/** Seating plan look (decision 132). */
+export type SeatDisplay = { plain: boolean; firstNames: boolean };
+type Seat = { tableId: string; seat: number };
+type SeatChange = { type: "place"; guestId: string; tableId: string; seat: number | null } | { type: "unseat"; guestId: string };
+
+/** Chairs a table draws: its seats, or more when guests sit past them (over capacity). */
+const chairCount = (tb: TableRow) => Math.max(tb.seats, ...tb.chairs.map((c) => c.seat + 1));
+/** Seats that can take a guest (hidden chairs don't count). */
+const openSeats = (tb: TableRow) => tb.seats - tb.hidden.filter((h) => h < tb.seats).length;
+
+/** First free chair of a table, like the server's `freeSeats`. */
+function firstFree(tb: TableRow, except?: string) {
+  const taken = new Set(tb.chairs.filter((c) => c.guestId !== except).map((c) => c.seat));
+  for (let i = 0; ; i++) if (!taken.has(i) && !(i < tb.seats && tb.hidden.includes(i))) return i;
+}
+
+/** The same move as `placeGuestAction` / `unseatGuestAction`, applied to the tables shown until the server answers. */
+function applySeatChange(tables: TableRow[], change: SeatChange): TableRow[] {
+  const from = tables.flatMap((tb) => tb.chairs.filter((c) => c.guestId === change.guestId).map((c) => ({ tableId: tb.id, seat: c.seat })))[0];
+  let next = tables.map((tb) => ({ ...tb, chairs: tb.chairs.filter((c) => c.guestId !== change.guestId) }));
+  if (change.type === "place") {
+    const target = next.find((tb) => tb.id === change.tableId);
+    if (!target) return tables;
+    const seat = change.seat ?? firstFree(target);
+    const other = target.chairs.find((c) => c.seat === seat);
+    next = next.map((tb) => {
+      let chairs = tb.chairs;
+      if (other) chairs = chairs.filter((c) => c.guestId !== other.guestId);
+      if (other && from && tb.id === from.tableId) chairs = [...chairs, { guestId: other.guestId, seat: from.seat }];
+      if (tb.id === change.tableId) chairs = [...chairs, { guestId: change.guestId, seat }];
+      return { ...tb, chairs };
+    });
+  }
+  return next.map((tb) => {
+    const chairs = [...tb.chairs].sort((a, b) => a.seat - b.seat);
+    return { ...tb, chairs, guestIds: chairs.map((c) => c.guestId) };
+  });
+}
 
 export type FloorItemRow = {
   id: string;
@@ -182,6 +238,21 @@ function chairSpots(shape: TableShape, chairs: number, w: number, h: number) {
   return [...row(top, -out), ...row(chairs - top, h + out)];
 }
 
+/**
+ * Which way a guest on a chair faces (towards the table), as the figure's turn in degrees, and the opposite
+ * direction (`out`, radians, table coordinates) where their name goes. A row of chairs faces up.
+ */
+function facing(shape: TableShape, c: { x: number; y: number }, w: number, h: number) {
+  let dx: number;
+  let dy: number;
+  if (shape === "ROW") [dx, dy] = [0, -1];
+  else if (shape === "ROUND" || shape === "ELLIPSE") [dx, dy] = [w / 2 - c.x, h / 2 - c.y];
+  else if (shape === "HALF_ROUND") [dx, dy] = [w / 2 - c.x, 0 - c.y];
+  else [dx, dy] = [Math.min(w, Math.max(0, c.x)) - c.x, Math.min(h, Math.max(0, c.y)) - c.y];
+  const a = Math.atan2(dy, dx);
+  return { deg: (a * 180) / Math.PI + 90, out: a + Math.PI };
+}
+
 /** Table outline per shape (the half-round's flat side is at the top). */
 const tableShapeClass: Record<TableShape, string> = {
   LONG: "rounded-lg",
@@ -192,27 +263,6 @@ const tableShapeClass: Record<TableShape, string> = {
   HALF_ROUND: "rounded-b-full",
   ROW: "rounded-full border-transparent! bg-transparent! shadow-none!",
 };
-
-/** Table fill meter: green when empty, orange half full, red when full. */
-const FILL_STOPS = [
-  [91, 122, 63], // green
-  [197, 138, 43], // orange
-  [161, 42, 42], // red (danger)
-] as const;
-function fillColor(seated: number, seats: number) {
-  const t = Math.min(1, seats > 0 ? seated / seats : 1) * (FILL_STOPS.length - 1);
-  const i = Math.min(FILL_STOPS.length - 2, Math.floor(t));
-  const f = t - i;
-  const [a, b] = [FILL_STOPS[i]!, FILL_STOPS[i + 1]!];
-  return `rgb(${a.map((v, k) => Math.round(v + (b[k]! - v) * f)).join(" ")})`;
-}
-
-/** "Денка Марковска" → "ДМ", "Конте" → "К". */
-function initials(name: string) {
-  const words = name.split(/\s+/).filter(Boolean);
-  const letters = words.length > 1 ? [words[0]!, words.at(-1)!] : words;
-  return letters.map((w) => w[0]!.toUpperCase()).join("");
-}
 
 export function SeatingPlanner({
   eventId,
@@ -225,7 +275,10 @@ export function SeatingPlanner({
   events = [],
   couple = "",
   eventName = "",
+  display = { plain: false, firstNames: false },
 }: {
+  /** Coloured or plain figures, full or first names (decision 132). */
+  display?: SeatDisplay;
   /** For the printed and downloaded table list. */
   couple?: string;
   eventName?: string;
@@ -262,10 +315,12 @@ export function SeatingPlanner({
   const setSelectedId = (id: string | null) => {
     setSelectedIdRaw(id);
     setSelectedItemId(null);
+    setSelectedSeat(null);
   };
   const selectItem = (id: string | null) => {
     setSelectedItemId(id);
     setSelectedIdRaw(null);
+    setSelectedSeat(null);
   };
   const [adding, setAdding] = useState(false);
   const [editingItem, setEditingItem] = useState(false);
@@ -275,14 +330,90 @@ export function SeatingPlanner({
   const [pending, start] = useTransition();
   const [query, setQuery] = useState("");
   const byId = new Map(guests.map((g) => [g.id, g]));
-  // Head tables list the wedding party in its fixed order, couple in the middle (decision 102).
-  const headIndex = (id: string) => {
-    const i = (HEAD_TABLE_ROLES as readonly (GuestRole | null)[]).indexOf(byId.get(id)?.role ?? null);
-    return i === -1 ? HEAD_TABLE_ROLES.length : i;
+  // Moves show at once; the server's answer replaces them (decision 133).
+  const [tables, changeSeats] = useOptimistic(rawTables, applySeatChange);
+  const [look, setLook] = useOptimistic(display);
+  const [selectedSeat, setSelectedSeat] = useState<Seat | null>(null);
+  /** Guest picked in the list: the next chair clicked gets them (touch and keyboard alternative to dragging). */
+  const [armed, setArmed] = useState<string | null>(null);
+  const [autoResult, setAutoResult] = useState<{ seated: string[]; left: number } | null>(null);
+  const place = (guestId: string, tableId: string, seat: number | null) => {
+    setArmed(null);
+    start(async () => {
+      changeSeats({ type: "place", guestId, tableId, seat });
+      await placeGuestAction(guestId, tableId, seat);
+    });
   };
-  const tables = rawTables.map((tb) =>
-    tb.shape === "HEAD" ? { ...tb, guestIds: [...tb.guestIds].sort((a, b) => headIndex(a) - headIndex(b)) } : tb,
-  );
+  const unseat = (guestId: string) =>
+    start(async () => {
+      changeSeats({ type: "unseat", guestId });
+      await unseatGuestAction(guestId, eventId);
+    });
+  const selectSeat = (tableId: string, seat: number) => {
+    if (armed && editable) {
+      const tb = tables.find((x) => x.id === tableId);
+      if (tb && !(seat < tb.seats && tb.hidden.includes(seat))) return place(armed, tableId, seat);
+    }
+    setSelectedIdRaw(tableId);
+    setSelectedItemId(null);
+    setSelectedSeat({ tableId, seat });
+  };
+
+  // Dragging a guest (from the list or a chair) onto a chair, a table, or back to the list.
+  const [dragGuest, setDragGuest] = useState<{ id: string; x: number; y: number } | null>(null);
+  const dropRef = useRef<(id: string, x: number, y: number) => void>(() => {});
+  useEffect(() => {
+    dropRef.current = (id, x, y) => {
+      const el = document.elementFromPoint(x, y);
+      const chair = el?.closest<HTMLElement | SVGElement>("[data-seat]");
+      if (chair) return place(id, chair.dataset.table!, Number(chair.dataset.seat));
+      const table = el?.closest<HTMLElement>("[data-table-id]");
+      if (table) return place(id, table.dataset.tableId!, null);
+      if (el?.closest("[data-unseat-drop]") && tables.some((tb) => tb.guestIds.includes(id))) unseat(id);
+    };
+  });
+  // Listeners go on at pointer-down (not in an effect), so even a very quick click is seen.
+  const startGuestDrag = (id: string, e: React.PointerEvent, onClick?: () => void) => {
+    if (!editable || e.button !== 0) return;
+    e.preventDefault();
+    const sx = e.clientX;
+    const sy = e.clientY;
+    let active = false;
+    const move = (ev: PointerEvent) => {
+      active ||= Math.abs(ev.clientX - sx) + Math.abs(ev.clientY - sy) > 5;
+      if (active) setDragGuest({ id, x: ev.clientX, y: ev.clientY });
+    };
+    const done = (ev: PointerEvent, cancelled: boolean) => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+      window.removeEventListener("pointercancel", cancel);
+      setDragGuest(null);
+      if (cancelled) return;
+      if (active) dropRef.current(id, ev.clientX, ev.clientY);
+      else onClick?.();
+    };
+    const up = (ev: PointerEvent) => done(ev, false);
+    const cancel = (ev: PointerEvent) => done(ev, true);
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+    window.addEventListener("pointercancel", cancel);
+  };
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setArmed(null);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+  const saveLook = (next: SeatDisplay) =>
+    start(async () => {
+      setLook(next);
+      await seatingDisplayAction(next);
+    });
+  const autoSeat = () =>
+    start(async () => {
+      const res = await autoSeatAction(eventId);
+      if (res.ok) setAutoResult({ seated: res.seated ?? [], left: res.left ?? 0 });
+    });
+
   const selected = tables.find((tb) => tb.id === selectedId) ?? null;
   const selectedItem = items.find((it) => it.id === selectedItemId) ?? null;
   const itemBox = (it: FloorItemRow): ItemBox => movedItems[it.id] ?? it;
@@ -332,12 +463,95 @@ export function SeatingPlanner({
                 start(async () => void (await moveTableAction(id, p.x, p.y, p.rotation)));
               }}
               occupancy={(tb) => tb.guestIds.length}
-              nameOf={(id) => byId.get(id)?.name}
+              guestOf={(id) => byId.get(id)}
               highlight={highlight}
+              look={look}
+              selectedSeat={selectedSeat}
+              onSelectSeat={selectSeat}
+              onGuestPointerDown={(id, e, seat) => startGuestDrag(id, e, () => selectSeat(seat.tableId, seat.seat))}
+              armed={armed !== null}
             />
+  );
+  const seatTable = selectedSeat ? tables.find((tb) => tb.id === selectedSeat.tableId) : undefined;
+  const seatGuest = seatTable && selectedSeat ? byId.get(seatTable.chairs.find((c) => c.seat === selectedSeat.seat)?.guestId ?? "") : undefined;
+  const seatHidden = !!seatTable && !!selectedSeat && selectedSeat.seat < seatTable.seats && seatTable.hidden.includes(selectedSeat.seat);
+  const guestRow = (g: SeatGuest, extra?: React.ReactNode) => (
+    <li
+      key={g.id}
+      className={cn(
+        "flex items-center gap-1.5 rounded-md py-0.5 pr-1 text-sm",
+        armed === g.id && "bg-rosehip ring-1 ring-vranec/40",
+      )}
+    >
+      {editable && (
+        <span
+          onPointerDown={(e) => startGuestDrag(g.id, e)}
+          title={t("dragGuest")}
+          className="grid size-7 shrink-0 cursor-grab touch-none place-items-center rounded text-stone hover:bg-linen active:cursor-grabbing"
+        >
+          <GripVertical aria-hidden className="size-4" />
+        </span>
+      )}
+      <FigureBadge look={g} plain={look.plain} size={22} className="shrink-0" />
+      {editable ? (
+        <button
+          type="button"
+          aria-pressed={armed === g.id}
+          onClick={() => setArmed((a) => (a === g.id ? null : g.id))}
+          className="min-w-0 flex-1 truncate text-left text-ink-soft hover:text-ink"
+        >
+          {g.name}
+          {g.rsvp === "PENDING" && <span className="ml-1 text-xs text-stone">· {t("waiting")}</span>}
+        </button>
+      ) : (
+        <span className="min-w-0 flex-1 truncate text-ink-soft">{g.name}</span>
+      )}
+      {extra}
+    </li>
   );
   const panel = (
           <div className="space-y-4">
+            {seatTable && selectedSeat && (
+              <Card className="p-4">
+                <h2 className="font-semibold">
+                  {t("seatTitle", { table: seatTable.name, n: selectedSeat.seat + 1 })}
+                </h2>
+                {seatGuest ? (
+                  <div className="mt-3 flex items-center gap-3">
+                    <FigureBadge look={seatGuest} plain={look.plain} size={52} className="shrink-0" />
+                    <div className="min-w-0">
+                      <p className="font-medium">{seatGuest.name}</p>
+                      <p className="text-sm text-stone">{seatGuest.role ? tg(`roles.${seatGuest.role}`) : seatGuest.household}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="mt-1 text-sm text-stone">
+                    {seatHidden ? t("seatHidden") : editable ? t("seatFreeHint") : t("seatFree")}
+                  </p>
+                )}
+                {editable && (
+                  <div className="mt-3 grid gap-2">
+                    {seatGuest && (
+                      <Button variant="secondary" size="sm" onClick={() => unseat(seatGuest.id)}>
+                        <X aria-hidden className="size-4" /> {t("releaseSeat")}
+                      </Button>
+                    )}
+                    {selectedSeat.seat < seatTable.seats && (
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        disabled={!!seatGuest || pending}
+                        title={seatGuest ? t("hideSeatTaken") : undefined}
+                        onClick={() => start(async () => void (await hideSeatAction(seatTable.id, selectedSeat.seat, !seatHidden)))}
+                      >
+                        {seatHidden ? <Eye aria-hidden className="size-4" /> : <EyeOff aria-hidden className="size-4" />}
+                        {seatHidden ? t("showSeat") : t("hideSeat")}
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </Card>
+            )}
             {selectedItem && (
               <Card className="p-4">
                 {editingItem ? (
@@ -394,7 +608,7 @@ export function SeatingPlanner({
                       <div>
                         <h2 className="text-lg font-semibold">{selected.name}</h2>
                         <p className="text-sm text-stone">
-                          {t(`shapes.${selected.shape}`)} · <Occupancy seated={selected.guestIds.length} seats={selected.seats} />
+                          {t(`shapes.${selected.shape}`)} · <Occupancy seated={selected.guestIds.length} seats={openSeats(selected)} />
                         </p>
                       </div>
                       {editable && (
@@ -438,21 +652,28 @@ export function SeatingPlanner({
                       <p className="mt-1 text-sm text-stone">{t("emptyTable")}</p>
                     ) : (
                       <ul className="mt-2 divide-y divide-line">
-                        {selected.guestIds.map((id) => {
+                        {selected.chairs.map(({ guestId: id, seat: n }) => {
                           const g = byId.get(id);
                           if (!g) return null;
                           return (
                             <li key={id} className="flex items-center justify-between gap-2 py-1.5 text-sm">
-                              <span>
+                              <button
+                                type="button"
+                                onClick={() => selectSeat(selected.id, n)}
+                                className="min-w-0 text-left hover:text-vranec"
+                              >
+                                <span className={cn("mr-1.5 inline-block w-5 text-right tabular-nums", n >= selected.seats ? "text-danger" : "text-stone")}>
+                                  {n + 1}
+                                </span>
                                 {g.name} <span className="text-stone">· {g.role ? tg(`roles.${g.role}`) : g.household}</span>
-                              </span>
+                              </button>
                               {editable && (
                                 <Button
                                   variant="ghost"
                                   size="sm"
                                   aria-label={`${t("unseat")}: ${g.name}`}
                                   disabled={pending}
-                                  onClick={() => start(async () => void (await unseatGuestAction(id, eventId)))}
+                                  onClick={() => unseat(id)}
                                 >
                                   <UserMinus aria-hidden className="size-4" />
                                 </Button>
@@ -467,11 +688,67 @@ export function SeatingPlanner({
               </Card>
             )}
 
-            <Card className="p-4">
+            {editable && (
+              <Card className="p-4">
+                <h2 className="text-sm font-medium">{t("display")}</h2>
+                <div className="mt-2 grid gap-2 text-sm">
+                  <Segmented
+                    label={t("figures")}
+                    value={look.plain ? "plain" : "colour"}
+                    options={[
+                      ["colour", t("figuresColour")],
+                      ["plain", t("figuresPlain")],
+                    ]}
+                    onChange={(v) => saveLook({ ...look, plain: v === "plain" })}
+                  />
+                  <Segmented
+                    label={t("names")}
+                    value={look.firstNames ? "first" : "full"}
+                    options={[
+                      ["full", t("namesFull")],
+                      ["first", t("namesFirst")],
+                    ]}
+                    onChange={(v) => saveLook({ ...look, firstNames: v === "first" })}
+                  />
+                </div>
+              </Card>
+            )}
+
+            <Card className="p-4" data-unseat-drop>
               <h2 className="font-medium">{t("unseated", { count: unseated.length })}</h2>
               <p className="mt-1 text-sm text-stone">
-                {unseated.length === 0 ? t("unseatedEmpty") : selected ? t("selected", { name: selected.name }) : t("selectTable")}
+                {unseated.length === 0
+                  ? t("unseatedEmpty")
+                  : !editable
+                    ? null
+                    : armed
+                      ? t("armedHint", { name: byId.get(armed)?.name ?? "" })
+                      : t("guestPanelHint")}
               </p>
+              {editable && unseated.length > 0 && (
+                <Button variant="secondary" className="mt-3 w-full" disabled={pending} onClick={autoSeat}>
+                  <Wand2 aria-hidden className="size-4" /> {t("autoSeat")}
+                </Button>
+              )}
+              {autoResult && (
+                <div className="mt-3 flex items-center justify-between gap-2 rounded-lg bg-rosehip px-3 py-2 text-sm" role="status">
+                  <span>{t("autoSeatDone", { seated: autoResult.seated.length, left: autoResult.left })}</span>
+                  {autoResult.seated.length > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      disabled={pending}
+                      onClick={() => {
+                        const ids = autoResult.seated;
+                        setAutoResult(null);
+                        start(async () => void (await undoAutoSeatAction(eventId, ids)));
+                      }}
+                    >
+                      <Undo2 aria-hidden className="size-4" /> {t("undo")}
+                    </Button>
+                  )}
+                </div>
+              )}
               {guests.length > 0 && (
                 <div className="relative mt-3">
                   <Search aria-hidden className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-stone" />
@@ -493,11 +770,16 @@ export function SeatingPlanner({
                       <li key={guest.id}>
                         <button
                           type="button"
-                          onClick={() => setSelectedId(table.id)}
+                          onClick={() => {
+                            const c = table.chairs.find((x) => x.guestId === guest.id);
+                            if (c) selectSeat(table.id, c.seat);
+                          }}
                           className="flex w-full items-center justify-between gap-2 rounded py-1.5 text-left text-sm hover:text-vranec"
                         >
                           <span>{guest.name}</span>
-                          <span className="shrink-0 text-stone">{table.name}</span>
+                          <span className="shrink-0 text-stone">
+                            {table.name} · {t("seatNumber", { n: (table.chairs.find((x) => x.guestId === guest.id)?.seat ?? 0) + 1 })}
+                          </span>
                         </button>
                       </li>
                     ))}
@@ -508,16 +790,17 @@ export function SeatingPlanner({
                 <p className="mt-3 text-sm text-stone">{t("searchEmpty")}</p>
               )}
               {shownHouseholds.length > 0 && (
-                <ul className="mt-3 max-h-[28rem] space-y-3 overflow-y-auto pr-1">
+                <ul className={cn("mt-3 space-y-3 overflow-y-auto pr-1", mode === "editor" ? "max-h-[50vh]" : "max-h-[28rem]")}>
                   {shownHouseholds.map(([hid, members]) => (
-                    <li key={hid} className="rounded-lg border border-line p-2.5">
-                      <div className="flex items-center justify-between gap-2">
+                    <li key={hid} className="rounded-lg border border-line p-2">
+                      <div className="flex items-center justify-between gap-2 pl-1">
                         <span className="text-sm font-medium">{members[0]!.household}</span>
                         {editable && households.get(hid)!.length > 1 && (
                           <Button
                             variant="ghost"
                             size="sm"
                             disabled={!selected || pending}
+                            title={selected ? t("selected", { name: selected.name }) : t("selectTable")}
                             onClick={() => seat(households.get(hid)!.map((m) => m.id))}
                           >
                             <Users aria-hidden className="size-4" /> {t("seatFamily")}
@@ -525,22 +808,26 @@ export function SeatingPlanner({
                         )}
                       </div>
                       <ul className="mt-1">
-                        {members.map((g) => (
-                          <li key={g.id} className="flex items-center justify-between gap-2 text-sm">
-                            <span className="text-ink-soft">{g.name}</span>
-                            {editable && (
+                        {members.map((g) =>
+                          guestRow(
+                            g,
+                            editable && (
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 disabled={!selected || pending}
+                                title={selected ? t("selected", { name: selected.name }) : t("selectTable")}
                                 aria-label={`${t("seat")}: ${g.name}`}
-                                onClick={() => seat([g.id])}
+                                onClick={() =>
+                                  selected &&
+                                  place(g.id, selected.id, selectedSeat && selectedSeat.tableId === selected.id && !seatGuest && !seatHidden ? selectedSeat.seat : null)
+                                }
                               >
                                 <UserPlus aria-hidden className="size-4" />
                               </Button>
-                            )}
-                          </li>
-                        ))}
+                            ),
+                          ),
+                        )}
                       </ul>
                     </li>
                   ))}
@@ -569,6 +856,14 @@ export function SeatingPlanner({
         });
       }}
     />
+  );
+
+  const ghostGuest = dragGuest ? byId.get(dragGuest.id) : undefined;
+  const ghost = ghostGuest && dragGuest && (
+    <div className="pointer-events-none fixed z-[60] -translate-x-1/2 -translate-y-1/2" style={{ left: dragGuest.x, top: dragGuest.y }}>
+      <FigureBadge look={ghostGuest} plain={look.plain} size={44} className="drop-shadow" />
+      <span className="mt-0.5 block whitespace-nowrap rounded bg-surface/90 px-1.5 text-center text-xs shadow-sm">{ghostGuest.name}</span>
+    </div>
   );
 
   if (mode === "editor") {
@@ -618,6 +913,7 @@ export function SeatingPlanner({
           <div className="min-h-0 overflow-y-auto border-l border-line bg-linen p-4">{panel}</div>
         </div>
         {picker}
+        {ghost}
       </div>
     );
   }
@@ -628,6 +924,7 @@ export function SeatingPlanner({
     <SeatingPrintList tables={tables} byId={byId} couple={couple} eventName={eventName} />
     <div className="space-y-5 print:hidden">
       {picker}
+      {ghost}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="hidden text-sm text-stone lg:block">{editable && t("dragHint")}</p>
         <div className="flex flex-wrap gap-2">
@@ -681,9 +978,11 @@ export function SeatingPlanner({
                   >
                     <span className="flex items-center justify-between gap-2">
                       <span className="font-medium">{tb.name}</span>
-                      <Occupancy seated={tb.guestIds.length} seats={tb.seats} />
+                      <Occupancy seated={tb.guestIds.length} seats={openSeats(tb)} />
                     </span>
-                    <span className="mt-1 block text-sm text-stone">{tb.guestIds.map((id) => byId.get(id)?.name).filter(Boolean).join(", ")}</span>
+                    <span className="mt-1 block text-sm text-stone">
+                      {tb.chairs.flatMap((c) => (byId.has(c.guestId) ? [`${c.seat + 1}. ${byId.get(c.guestId)!.name}`] : [])).join(", ")}
+                    </span>
                   </button>
                 </li>
               ))}
@@ -695,6 +994,39 @@ export function SeatingPlanner({
       )}
     </div>
     </>
+  );
+}
+
+/** Two-choice switch, e.g. coloured / plain figures. */
+function Segmented({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: [string, string][];
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <span className="text-stone">{label}</span>
+      <div role="radiogroup" aria-label={label} className="inline-flex rounded-full border border-line-strong bg-surface p-0.5">
+        {options.map(([v, text]) => (
+          <button
+            key={v}
+            type="button"
+            role="radio"
+            aria-checked={value === v}
+            onClick={() => value !== v && onChange(v)}
+            className={cn("rounded-full px-2.5 py-0.5 text-xs", value === v ? "bg-ink text-white" : "text-ink-soft hover:text-ink")}
+          >
+            {text}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -725,9 +1057,21 @@ function FloorPlan({
   onSelect,
   onMove,
   occupancy,
-  nameOf,
+  guestOf,
   highlight,
+  look,
+  selectedSeat,
+  onSelectSeat,
+  onGuestPointerDown,
+  armed,
 }: {
+  guestOf: (guestId: string) => SeatGuest | undefined;
+  look: SeatDisplay;
+  selectedSeat: Seat | null;
+  onSelectSeat: (tableId: string, seat: number) => void;
+  onGuestPointerDown: (guestId: string, e: React.PointerEvent, seat: Seat) => void;
+  /** A guest is picked in the list: chairs invite a click. */
+  armed: boolean;
   tables: TableRow[];
   pos: (tb: TableRow) => { x: number; y: number; rotation: number };
   items: FloorItemRow[];
@@ -740,7 +1084,6 @@ function FloorPlan({
   onSelect: (id: string) => void;
   onMove: (id: string, p: { x: number; y: number; rotation: number }) => void;
   occupancy: (tb: TableRow) => number;
-  nameOf: (guestId: string) => string | undefined;
   highlight: Set<string>;
   mode: "page" | "editor";
   eventId: string;
@@ -751,7 +1094,7 @@ function FloorPlan({
   const editor = mode === "editor";
   const ref = planRef;
   const viewport = viewportRef;
-  const [drag, setDrag] = useState<{ id: string; x: number; y: number; startX: number; startY: number; moved: boolean } | null>(null);
+  const [drag, setDrag] = useState<{ id: string; x: number; y: number; startX: number; startY: number; moved: boolean; seat: number | null } | null>(null);
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState<{ x: number; y: number; left: number; top: number } | null>(null);
   const [turning, setTurning] = useState<{ id: string; deg: number } | null>(null);
@@ -940,23 +1283,33 @@ function FloorPlan({
             const base = drag?.id === tb.id ? { ...pos(tb), x: drag.x, y: drag.y } : pos(tb);
             const p = turning?.id === tb.id ? { ...base, rotation: turning.deg } : base;
             const seated = occupancy(tb);
-            const chairs = Math.max(tb.seats, seated);
+            const chairs = chairCount(tb);
             const size = tableSize(tb.shape, chairs);
-            const over = seated > tb.seats;
-            const color = fillColor(seated, tb.seats);
+            const over = seated > openSeats(tb) || chairs > tb.seats;
+            const at = new Map(tb.chairs.map((c) => [c.seat, c.guestId]));
             return (
               <button
                 key={tb.id}
                 type="button"
+                data-table-id={tb.id}
                 onPointerDown={(e) => {
-                  onSelect(tb.id);
-                  if (!editable) return;
+                  if (e.button !== 0) return;
+                  const chairEl = (e.target as Element).closest<SVGElement>("[data-seat], [data-hidden-seat]");
+                  const seatNo = chairEl ? Number(chairEl.dataset.seat ?? chairEl.dataset.hiddenSeat) : null;
+                  // A seated guest: drag them to another chair, or click to open the chair (decision 133).
+                  const guestId = chairEl?.dataset.guest;
+                  if (guestId && editable && seatNo !== null) return onGuestPointerDown(guestId, e, { tableId: tb.id, seat: seatNo });
+                  if (seatNo === null) onSelect(tb.id);
+                  if (!editable) {
+                    if (seatNo !== null) onSelectSeat(tb.id, seatNo);
+                    return;
+                  }
                   try {
                     e.currentTarget.setPointerCapture(e.pointerId);
                   } catch {
                     // Synthetic or already-released pointers can't be captured; dragging still works without it.
                   }
-                  setDrag({ id: tb.id, x: p.x, y: p.y, startX: e.clientX, startY: e.clientY, moved: false });
+                  setDrag({ id: tb.id, x: p.x, y: p.y, startX: e.clientX, startY: e.clientY, moved: false, seat: seatNo });
                 }}
                 onPointerMove={(e) => {
                   if (!drag || drag.id !== tb.id) return;
@@ -965,6 +1318,7 @@ function FloorPlan({
                 }}
                 onPointerUp={() => {
                   if (drag?.id === tb.id && drag.moved) onMove(tb.id, { x: drag.x, y: drag.y, rotation: p.rotation });
+                  else if (drag?.id === tb.id && drag.seat !== null) onSelectSeat(tb.id, drag.seat);
                   setDrag(null);
                 }}
                 onKeyDown={(e) => {
@@ -1003,30 +1357,53 @@ function FloorPlan({
                   />
                 )}
                 {chairSpots(tb.shape, chairs, size.w, size.h).map((c, i) => {
-                  const guestId = tb.guestIds[i];
-                  const name = guestId ? nameOf(guestId) : undefined;
+                  const guestId = at.get(i);
+                  const guest = guestId ? guestOf(guestId) : undefined;
+                  const hidden = !guest && i < tb.seats && tb.hidden.includes(i);
+                  // Hidden chairs only show (faintly) while their table is selected, so they can be shown again.
+                  if (hidden && !(editable && selectedId === tb.id)) return null;
+                  const face = facing(tb.shape, c, size.w, size.h);
+                  const isSelected = selectedSeat?.tableId === tb.id && selectedSeat.seat === i;
+                  const ring = isSelected
+                    ? "var(--color-vranec)"
+                    : guestId && highlight.has(guestId)
+                      ? "var(--color-ink)"
+                      : i >= tb.seats
+                        ? "var(--color-danger)"
+                        : null;
+                  const box = CHAIR * 3;
                   return (
-                    <span
+                    <svg
                       key={i}
-                      aria-hidden
-                      title={name}
-                      className={cn(
-                        "absolute grid place-items-center rounded-full border-[1.5px] font-semibold leading-none text-white",
-                        i >= tb.seats && "ring-2 ring-danger ring-offset-1",
-                        guestId && highlight.has(guestId) && "z-10 scale-125 ring-2 ring-ink ring-offset-1",
-                      )}
+                      viewBox={`${-box / 2} ${-box / 2} ${box} ${box}`}
+                      overflow="visible"
+                      className="pointer-events-none absolute"
                       style={{
-                        left: `${((c.x - CHAIR / 2) / size.w) * 100}%`,
-                        top: `${((c.y - CHAIR / 2) / size.h) * 100}%`,
-                        width: `${(CHAIR / size.w) * 100}%`,
-                        height: `${(CHAIR / size.h) * 100}%`,
-                        borderColor: color,
-                        backgroundColor: guestId ? color : "var(--color-surface)",
-                        fontSize: `${(CHAIR * 0.48) / (PLAN_WIDTH / 100)}cqw`,
+                        left: `${((c.x - box / 2) / size.w) * 100}%`,
+                        top: `${((c.y - box / 2) / size.h) * 100}%`,
+                        width: `${(box / size.w) * 100}%`,
+                        height: `${(box / size.h) * 100}%`,
+                        zIndex: isSelected || (guestId && highlight.has(guestId)) ? 10 : undefined,
                       }}
                     >
-                      {name && <span style={{ transform: `rotate(${-p.rotation}deg)` }}>{initials(name)}</span>}
-                    </span>
+                      {ring && <circle r={14.5} fill="none" stroke={ring} strokeWidth={2} />}
+                      <g transform={`rotate(${face.deg.toFixed(1)})`}>
+                        {guest ? <FigureShape look={guest} plain={look.plain} /> : <EmptyChair number={i + 1} hidden={hidden} />}
+                      </g>
+                      {guest && (
+                        <SeatName name={guest.name} firstOnly={look.firstNames} angle={face.out + (p.rotation * Math.PI) / 180} />
+                      )}
+                      <circle
+                        r={13}
+                        fill="transparent"
+                        pointerEvents="all"
+                        className={cn(editable && (guest ? "cursor-grab" : armed ? "cursor-copy" : "cursor-pointer"))}
+                        {...(hidden ? { "data-hidden-seat": i } : { "data-seat": i, "data-table": tb.id })}
+                        {...(guestId ? { "data-guest": guestId } : {})}
+                      >
+                        <title>{guest ? `${guest.name} · ${t("seatNumber", { n: i + 1 })}` : t("seatNumber", { n: i + 1 })}</title>
+                      </circle>
+                    </svg>
                   );
                 })}
                 <span

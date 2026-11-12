@@ -18,6 +18,8 @@ import { getTranslations } from "next-intl/server";
 import { revalidatePath } from "next/cache";
 import { zodFieldErrors, type FormState } from "@/lib/form";
 import { ensureCouple, fillHeadTable } from "@/lib/head-table";
+import { autoSeatPlan } from "@/lib/auto-seat";
+import { freeSeats, takenSeats } from "@/lib/seating";
 import { editableWedding, premiumLocked } from "@/lib/wedding";
 
 const refresh = () => revalidatePath("/", "layout");
@@ -110,7 +112,7 @@ export async function moveTableAction(id: string, x: number, y: number, rotation
   return { ok: true };
 }
 
-/** Seats guests at a table (moving them from any other table for the same event). */
+/** Seats guests at a table on its first free chairs, in the given order (moving them from any other table). */
 export async function seatGuestsAction(tableId: string, guestIds: string[]): Promise<FormState> {
   const access = await seatingAccess();
   if (!access || !Array.isArray(guestIds) || guestIds.length > 60) return { formError: "forbidden" };
@@ -122,15 +124,127 @@ export async function seatGuestsAction(tableId: string, guestIds: string[]): Pro
     where: { eventId: table.eventId, guestId: { in: guestIds }, rsvp: { not: "NO" }, guest: { weddingId } },
     select: { guestId: true },
   });
+  const allowed = new Set(invited.map((i) => i.guestId));
+  // Guests already at this table keep their chairs.
+  const here = await prisma.tableSeat.findMany({ where: { tableId, guestId: { in: [...allowed] } }, select: { guestId: true } });
+  const ids = guestIds.filter((id, i) => allowed.has(id) && guestIds.indexOf(id) === i && !here.some((h) => h.guestId === id));
+  const free = freeSeats(table.seats, table.hiddenSeats, await takenSeats(tableId), ids.length);
   await prisma.$transaction(
-    invited.map(({ guestId }) =>
+    ids.map((guestId, i) =>
       prisma.tableSeat.upsert({
         where: { guestId_eventId: { guestId, eventId: table.eventId } },
-        update: { tableId },
-        create: { guestId, tableId, eventId: table.eventId },
+        update: { tableId, seat: free[i]! },
+        create: { guestId, tableId, eventId: table.eventId, seat: free[i]! },
       }),
     ),
   );
+  refresh();
+  return { ok: true };
+}
+
+/**
+ * Puts a guest on a chair (decision 133). `seat` null: the table's first free chair. A taken chair swaps:
+ * its guest moves to the chair this guest came from, or becomes unseated if this guest had none.
+ */
+export async function placeGuestAction(guestId: string, tableId: string, seat: number | null): Promise<FormState> {
+  const access = await seatingAccess();
+  if (!access || typeof guestId !== "string" || (seat !== null && (!Number.isInteger(seat) || seat < 0 || seat > 500))) {
+    return { formError: "forbidden" };
+  }
+  const weddingId = access.wedding.id;
+  const table = await prisma.seatingTable.findFirst({ where: { id: tableId, weddingId } });
+  if (!table) return { formError: "generic" };
+  const eventId = table.eventId;
+  const invited = await prisma.guestInvitation.findFirst({ where: { guestId, eventId, rsvp: { not: "NO" }, guest: { weddingId } } });
+  if (!invited) return { formError: "generic" };
+  if (seat !== null && table.hiddenSeats.includes(seat)) return { formError: "generic" };
+  const target = seat ?? freeSeats(table.seats, table.hiddenSeats, await takenSeats(tableId, [guestId]), 1)[0]!;
+  await prisma.$transaction(async (tx) => {
+    const mine = await tx.tableSeat.findUnique({ where: { guestId_eventId: { guestId, eventId } } });
+    if (mine && mine.tableId === tableId && mine.seat === target) return;
+    const other = await tx.tableSeat.findUnique({ where: { tableId_seat: { tableId, seat: target } } });
+    if (mine) await tx.tableSeat.delete({ where: { guestId_eventId: { guestId, eventId } } });
+    if (other) {
+      await (mine
+        ? tx.tableSeat.update({ where: { guestId_eventId: { guestId: other.guestId, eventId } }, data: { tableId: mine.tableId, seat: mine.seat } })
+        : tx.tableSeat.delete({ where: { guestId_eventId: { guestId: other.guestId, eventId } } }));
+    }
+    await tx.tableSeat.create({ data: { guestId, tableId, eventId, seat: target } });
+  });
+  refresh();
+  return { ok: true };
+}
+
+/** Hides an empty chair from the plan, or shows it again (decision 133). */
+export async function hideSeatAction(tableId: string, seat: number, hidden: boolean): Promise<FormState> {
+  const access = await seatingAccess();
+  if (!access || !Number.isInteger(seat) || seat < 0) return { formError: "forbidden" };
+  const table = await prisma.seatingTable.findFirst({ where: { id: tableId, weddingId: access.wedding.id } });
+  if (!table || seat >= table.seats) return { formError: "generic" };
+  if (hidden && (await prisma.tableSeat.count({ where: { tableId, seat } }))) return { formError: "generic" };
+  const rest = table.hiddenSeats.filter((s) => s !== seat && s < table.seats);
+  await prisma.seatingTable.update({ where: { id: tableId }, data: { hiddenSeats: hidden ? [...rest, seat].sort((a, b) => a - b) : rest } });
+  refresh();
+  return { ok: true };
+}
+
+/**
+ * "Seat guests automatically" (decision 134): unseated guests who are coming (Yes first, then waiting) go on free
+ * chairs. A family stays at one table when one has room; bride's and groom's sides aren't mixed where possible.
+ * Head tables are left alone and nobody already seated moves. Returns who was seated, for Undo.
+ */
+export async function autoSeatAction(eventId: string): Promise<FormState & { seated?: string[]; left?: number }> {
+  const access = await seatingAccess();
+  if (!access) return { formError: "forbidden" };
+  const weddingId = access.wedding.id;
+  const event = await prisma.weddingEvent.findFirst({ where: { id: eventId, weddingId, hasSeating: true } });
+  if (!event) return { formError: "generic" };
+  const [tables, invitations] = await Promise.all([
+    prisma.seatingTable.findMany({
+      where: { eventId, shape: { not: "HEAD" } },
+      orderBy: { sortOrder: "asc" },
+      include: { guests: { select: { seat: true, guest: { select: { household: { select: { side: true } } } } } } },
+    }),
+    prisma.guestInvitation.findMany({
+      where: { eventId, rsvp: { not: "NO" }, guest: { weddingId, seats: { none: { eventId } } } },
+      select: { rsvp: true, guest: { select: { id: true, householdId: true, household: { select: { side: true } } } } },
+      orderBy: [{ guest: { household: { createdAt: "asc" } } }, { guest: { sortOrder: "asc" } }],
+    }),
+  ]);
+  const plan = autoSeatPlan(
+    tables.map((tb) => ({
+      id: tb.id,
+      seats: tb.seats,
+      hidden: tb.hiddenSeats,
+      taken: tb.guests.map((g) => g.seat),
+      sides: tb.guests.map((g) => g.guest.household.side),
+    })),
+    invitations.map((i) => ({ id: i.guest.id, family: i.guest.householdId, side: i.guest.household.side, yes: i.rsvp === "YES" })),
+  );
+  await prisma.$transaction(
+    plan.map((p) => prisma.tableSeat.create({ data: { guestId: p.guestId, tableId: p.tableId, eventId, seat: p.seat } })),
+  );
+  refresh();
+  return { ok: true, seated: plan.map((p) => p.guestId), left: invitations.length - plan.length };
+}
+
+/** Undo for "Seat guests automatically": unseats exactly the guests it seated. */
+export async function undoAutoSeatAction(eventId: string, guestIds: string[]): Promise<FormState> {
+  const access = await seatingAccess();
+  if (!access || !Array.isArray(guestIds) || guestIds.length > 2000) return { formError: "forbidden" };
+  await prisma.tableSeat.deleteMany({ where: { eventId, guestId: { in: guestIds }, guest: { weddingId: access.wedding.id } } });
+  refresh();
+  return { ok: true };
+}
+
+/** Seating plan look (decision 132): coloured or plain figures, full or first names. */
+export async function seatingDisplayAction(display: { plain: boolean; firstNames: boolean }): Promise<FormState> {
+  const access = await editableWedding();
+  if (!access || typeof display?.plain !== "boolean" || typeof display.firstNames !== "boolean") return { formError: "forbidden" };
+  await prisma.wedding.update({
+    where: { id: access.wedding.id },
+    data: { seatPlainFigures: display.plain, seatFirstNames: display.firstNames },
+  });
   refresh();
   return { ok: true };
 }

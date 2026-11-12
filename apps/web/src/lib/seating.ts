@@ -13,12 +13,12 @@ export async function loadSeating(eventId: string): Promise<{ tables: TableRow[]
     prisma.seatingTable.findMany({
       where: { eventId },
       orderBy: [{ sortOrder: "asc" }],
-      include: { guests: { select: { guestId: true } } },
+      include: { guests: { select: { guestId: true, seat: true }, orderBy: { seat: "asc" } } },
     }),
     prisma.floorItem.findMany({ where: { eventId }, orderBy: { createdAt: "asc" } }),
     prisma.guestInvitation.findMany({
       where: { eventId, rsvp: { not: "NO" } },
-      include: { guest: { include: { household: { select: { id: true, name: true } } } } },
+      include: { guest: { include: { household: { select: { id: true, name: true, side: true } } } } },
       orderBy: [{ guest: { household: { createdAt: "asc" } } }, { guest: { sortOrder: "asc" } }],
     }),
   ]);
@@ -32,6 +32,8 @@ export async function loadSeating(eventId: string): Promise<{ tables: TableRow[]
       y: tb.y,
       rotation: tb.rotation,
       guestIds: tb.guests.map((g) => g.guestId),
+      chairs: tb.guests.map((g) => ({ guestId: g.guestId, seat: g.seat })),
+      hidden: tb.hiddenSeats,
     })),
     items: items.map((it) => ({
       id: it.id,
@@ -50,6 +52,26 @@ export async function loadSeating(eventId: string): Promise<{ tables: TableRow[]
       householdId: i.guest.household.id,
       child: i.guest.ageGroup === "CHILD",
       role: i.guest.role,
+      side: i.guest.household.side,
+      rsvp: i.rsvp,
     })),
   };
+}
+
+/**
+ * The first `count` free chair numbers of a table, lowest first (decision 133). Hidden chairs are skipped;
+ * when the table is full the numbers continue past its seats (shown as over capacity).
+ */
+export function freeSeats(seats: number, hidden: readonly number[], taken: ReadonlySet<number>, count: number): number[] {
+  const out: number[] = [];
+  const skip = new Set(hidden);
+  for (let i = 0; out.length < count && i < seats; i++) if (!taken.has(i) && !skip.has(i)) out.push(i);
+  for (let i = seats; out.length < count; i++) if (!taken.has(i)) out.push(i);
+  return out;
+}
+
+/** Chair numbers already used at a table. */
+export async function takenSeats(tableId: string, except: readonly string[] = []) {
+  const rows = await prisma.tableSeat.findMany({ where: { tableId, guestId: { notIn: [...except] } }, select: { seat: true } });
+  return new Set(rows.map((r) => r.seat));
 }

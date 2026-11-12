@@ -25,13 +25,16 @@ function naturalCompare(a: string, b: string) {
 
 type Seated = { table: TableRow; guests: SeatGuest[] };
 
-/** Tables that have guests, head table first, then by name; guests in their seat order. */
+/** Tables that have guests, head table first, then by name; guests in seat order, numbered by seat. */
 function seatedTables(tables: TableRow[], byId: Map<string, SeatGuest>): Seated[] {
   return tables
     .map((table) => ({ table, guests: table.guestIds.flatMap((id) => (byId.has(id) ? [byId.get(id)!] : [])) }))
     .filter((s) => s.guests.length > 0)
     .sort((a, b) => Number(b.table.shape === "HEAD") - Number(a.table.shape === "HEAD") || naturalCompare(a.table.name, b.table.name));
 }
+
+/** The guest's seat number as shown on the plan (decision 133). */
+const seatNo = (table: TableRow, guestId: string) => (table.chairs.find((c) => c.guestId === guestId)?.seat ?? 0) + 1;
 
 const fileSafe = (s: string) => s.replace(/[\\/:*?"<>|]+/g, "").trim();
 
@@ -59,7 +62,7 @@ export function SeatingListActions({
       const rows = [
         [t("table"), t("number"), t("guest"), t("family"), t("note")].map(bold),
         ...list.flatMap(({ table, guests }) =>
-          guests.map((g, i) => [{ value: table.name }, { value: i + 1, type: Number }, { value: g.name }, { value: g.household }, { value: note(g) }]),
+          guests.map((g) => [{ value: table.name }, { value: seatNo(table, g.id), type: Number }, { value: g.name }, { value: g.household }, { value: note(g) }]),
         ),
       ];
       await writeXlsxFile(rows, {
@@ -116,9 +119,9 @@ export function SeatingPrintList({
               <span className="text-xs font-normal tabular-nums">{t("count", { count: guests.length })}</span>
             </h2>
             <ol className="mt-1.5 space-y-0.5">
-              {guests.map((g, i) => (
+              {guests.map((g) => (
                 <li key={g.id} className="flex gap-2">
-                  <span className="w-5 shrink-0 text-right tabular-nums text-stone">{i + 1}.</span>
+                  <span className="w-5 shrink-0 text-right tabular-nums text-stone">{seatNo(table, g.id)}.</span>
                   <span>
                     {g.name}
                     {(g.role || g.child) && (

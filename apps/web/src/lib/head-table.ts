@@ -3,6 +3,7 @@ import { prisma } from "@svadba/db";
 import { FLOOR_ITEM_SIZE, HEAD_TABLE_ROLES, PLAN_WIDTH, type FloorItemKind, type Locale } from "@svadba/shared";
 import { getTranslations } from "next-intl/server";
 import { newToken } from "@/lib/business";
+import { freeSeats } from "@/lib/seating";
 
 /**
  * Seats the wedding party (Старосватица, Старосват, Кум, Младоженец, Невеста, Кума) at the head table
@@ -10,7 +11,7 @@ import { newToken } from "@/lib/business";
  * - `create`: add a "Главна маса" where an event has none (new plans and the Seating button).
  * - `guestIds`: only seat these guests (a role was just given); otherwise everyone with a head-table role.
  * - `eventId`: only this event.
- * Seating moves a guest from any other table; the table grows if the party doesn't fit.
+ * Seating moves a guest from any other table onto their role's chair; the table grows if the party doesn't fit.
  * With `create`, Reception plans also get a dance floor and a band area if they have none (decision 120).
  */
 export async function fillHeadTable(
@@ -31,7 +32,7 @@ export async function fillHeadTable(
         rsvp: { not: "NO" },
         guest: { weddingId, role: { in: [...HEAD_TABLE_ROLES] }, ...(guestIds ? { id: { in: guestIds } } : {}) },
       },
-      select: { guestId: true },
+      select: { guestId: true, guest: { select: { role: true } } },
     });
     let table = await prisma.seatingTable.findFirst({
       where: { eventId: event.id, shape: "HEAD" },
@@ -66,18 +67,36 @@ export async function fillHeadTable(
     }
     if (!table || party.length === 0) continue;
     const tableId = table.id;
-    const seated = await prisma.tableSeat.count({ where: { tableId, guestId: { notIn: party.map((p) => p.guestId) } } });
+    // Each role has its own chair at the head table, left to right (decision 102); taken ones fall back to a free chair.
+    const roleIndex = new Map(party.map((p) => [p.guestId, (HEAD_TABLE_ROLES as readonly (string | null)[]).indexOf(p.guest.role)]));
+    const ids = party.map((p) => p.guestId);
+    const current = await prisma.tableSeat.findMany({ where: { tableId }, select: { guestId: true, seat: true } });
+    const already = new Set(current.filter((c) => ids.includes(c.guestId)).map((c) => c.guestId));
+    const taken = new Set(current.map((c) => c.seat));
+    const toSeat = ids
+      .filter((id) => !already.has(id))
+      .sort((a, b) => roleIndex.get(a)! - roleIndex.get(b)!);
+    const seatFor = new Map<string, number>();
+    for (const id of toSeat) {
+      const want = roleIndex.get(id)!;
+      const seat =
+        want >= 0 && want < table.seats && !taken.has(want) && !table.hiddenSeats.includes(want)
+          ? want
+          : freeSeats(table.seats, table.hiddenSeats, taken, 1)[0]!;
+      taken.add(seat);
+      seatFor.set(id, seat);
+    }
+    const top = taken.size ? Math.max(...taken) + 1 : 0;
     await prisma.$transaction([
-      ...party.map(({ guestId }) =>
+      ...toSeat.map((guestId) =>
         prisma.tableSeat.upsert({
           where: { guestId_eventId: { guestId, eventId: event.id } },
-          update: { tableId },
-          create: { guestId, tableId, eventId: event.id },
+          update: { tableId, seat: seatFor.get(guestId)! },
+          create: { guestId, tableId, eventId: event.id, seat: seatFor.get(guestId)! },
         }),
       ),
-      ...(seated + party.length > table.seats
-        ? [prisma.seatingTable.update({ where: { id: tableId }, data: { seats: seated + party.length } })]
-        : []),
+      // The table grows if the party doesn't fit.
+      ...(top > table.seats ? [prisma.seatingTable.update({ where: { id: tableId }, data: { seats: top } })] : []),
     ]);
   }
 }

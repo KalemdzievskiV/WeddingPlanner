@@ -36,6 +36,7 @@ export default async function SeatingEditorPage({
       locale={locale}
       editable={canEdit(role)}
       events={events.map((e) => ({ id: e.id, name: eventName(e, te) }))}
+      display={{ plain: wedding.seatPlainFigures, firstNames: wedding.seatFirstNames }}
       {...data}
     />
   );

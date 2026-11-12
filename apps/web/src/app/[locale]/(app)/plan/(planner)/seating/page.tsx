@@ -72,7 +72,8 @@ export default async function SeatingPage({
         editable={canEdit(role)}
         couple={coupleNames(wedding)}
         eventName={eventName(event, te)}
-        {...data}
+        display={{ plain: wedding.seatPlainFigures, firstNames: wedding.seatFirstNames }}
+      {...data}
       />
     </div>
   );
