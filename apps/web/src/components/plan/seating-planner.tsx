@@ -171,7 +171,7 @@ const LABEL = 13;
 const ITEM_LABEL = 20;
 /** Floor plan zoom (decision 104): 100% fits the whole plan in the width. */
 const MAX_ZOOM = 4;
-const ZOOM_STEP = 1.25;
+const ZOOM_STEP = 1.5;
 
 /** Table footprint on the floor plan, in plan units. Grows so `chairs` chairs fit around it. */
 function tableSize(shape: TableShape, chairs: number) {
@@ -1424,8 +1424,10 @@ function FloorPlan({
       if (!editor && !pinch) return;
       if (editor && !pinch && Math.abs(e.deltaX) > Math.abs(e.deltaY)) return; // sideways swipe: let it pan
       e.preventDefault();
-      const step = e.deltaMode === 1 ? e.deltaY * 33 : e.deltaY;
-      zoomToRef.current(zoomRef.current * Math.exp(-step * (pinch ? 0.01 : 0.0015)), { x: e.clientX, y: e.clientY });
+      // One wheel notch (about 100) zooms ~40%; a fast spin is capped so the view doesn't leap.
+      const raw = e.deltaMode === 1 ? e.deltaY * 33 : e.deltaY;
+      const step = Math.max(-150, Math.min(150, raw));
+      zoomToRef.current(zoomRef.current * Math.exp(-step * (pinch ? 0.012 : 0.0035)), { x: e.clientX, y: e.clientY });
     };
     v.addEventListener("wheel", onWheel, { passive: false });
     return () => v.removeEventListener("wheel", onWheel);
