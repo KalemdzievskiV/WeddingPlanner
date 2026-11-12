@@ -650,6 +650,8 @@ model Wedding {
   inviteEnabled   Boolean   @default(false)
   /// https link to an MP4/WebM; empty means the sample video.
   inviteVideoUrl  String?
+  /// Video the couple uploaded (one per wedding; a new upload deletes the old file). Wins over `inviteVideoUrl`.
+  inviteVideoFile String?
   /// Small line above the names, e.g. "We're getting married".
   inviteHeadline  String?
   inviteMessage   String?

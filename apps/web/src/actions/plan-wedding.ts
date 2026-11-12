@@ -122,6 +122,7 @@ export async function deleteWeddingAction(locale: string): Promise<FormState> {
   if (!access || access.role !== "OWNER" || !isLocale(locale)) return { formError: "forbidden" };
   await prisma.wedding.delete({ where: { id: access.wedding.id } });
   if (access.wedding.invitationUrl) await deleteImage(access.wedding.invitationUrl);
+  if (access.wedding.inviteVideoFile) await deleteImage(access.wedding.inviteVideoFile);
   refresh();
   redirect(`/${locale}/app`);
 }

@@ -202,6 +202,10 @@ export const floorItemSchema = z.object({
 /** Placeholder video for the video invitation until the couple picks their own (Mixkit Stock Video Free License). */
 export const SAMPLE_INVITE_VIDEO = "https://assets.mixkit.co/videos/18204/18204-720.mp4";
 export const INVITE_OVERLAY_MAX = 80;
+/** Largest video a couple can upload for the invitation (decision 131). */
+export const INVITE_VIDEO_MAX_BYTES = 50 * 1024 * 1024;
+/** File types offered in the picker; the server checks the file's real format, not just this. */
+export const INVITE_VIDEO_ACCEPT = "video/mp4,video/quicktime,video/webm,.mp4,.mov,.webm";
 /** Colour themes of the designed invitation (decision 130). */
 export const INVITE_THEMES = ["LILAC", "IVORY", "SAGE"] as const;
 export type InviteThemeKey = (typeof INVITE_THEMES)[number];

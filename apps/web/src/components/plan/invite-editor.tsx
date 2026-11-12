@@ -13,6 +13,7 @@ import { Link } from "@/i18n/navigation";
 import type { FormState } from "@/lib/form";
 import { useFormAction } from "@/lib/use-form-action";
 import { DesignedInvite } from "@/components/invite/designed-invite";
+import { InviteVideoUpload } from "./invite-video-upload";
 import { cn } from "@/lib/utils";
 
 export type InviteEvent = { id: string; name: string; when: string; place: string | null };
@@ -49,6 +50,7 @@ export function InviteEditor({
   previewHref,
   photoUrl,
   countdownTo,
+  videoFile: initialFile,
 }: {
   initial: Draft;
   editable: boolean;
@@ -59,6 +61,8 @@ export function InviteEditor({
   previewHref: string | null;
   photoUrl: string | null;
   countdownTo: string | null;
+  /** The uploaded video, which wins over the link. */
+  videoFile: string | null;
 }) {
   const t = useTranslations("plan.invite");
   const tc = useTranslations("common");
@@ -68,7 +72,9 @@ export function InviteEditor({
   const fe = state.fieldErrors ?? {};
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setDraft((d) => ({ ...d, [k]: v }));
   // Only an https link plays; anything else previews the sample until it's fixed.
-  const previewUrl = /^https:\/\//i.test(draft.videoUrl.trim()) ? draft.videoUrl.trim() : null;
+  const [videoFile, setVideoFile] = useState(initialFile);
+  const link = /^https:\/\//i.test(draft.videoUrl.trim()) ? draft.videoUrl.trim() : null;
+  const previewUrl = videoFile ?? link;
 
   return (
     <div className="grid items-start gap-6 lg:grid-cols-[1fr_minmax(0,22rem)]">
@@ -137,6 +143,8 @@ export function InviteEditor({
               <input type="hidden" name="music" value="" />
             )}
 
+            <InviteVideoUpload file={videoFile} editable={editable} onChange={setVideoFile} />
+
             <Field id="invite-video" label={t("videoUrl")} hint={t("videoUrlHint")} error={fe.videoUrl && te(fe.videoUrl)}>
               <div className="flex flex-wrap gap-2">
                 <Input
@@ -156,7 +164,8 @@ export function InviteEditor({
                 )}
               </div>
             </Field>
-            {!draft.videoUrl && (
+            {videoFile && draft.videoUrl && <p className="-mt-3 text-sm text-stone">{t("videoLinkIgnored")}</p>}
+            {!draft.videoUrl && !videoFile && (
               <p className="-mt-3 text-sm text-stone">
                 {t("sampleNote")}{" "}
                 <a href={SAMPLE_INVITE_VIDEO} target="_blank" rel="noreferrer" className="text-vranec hover:underline">

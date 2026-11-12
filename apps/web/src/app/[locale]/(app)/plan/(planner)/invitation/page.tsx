@@ -34,6 +34,7 @@ export default async function InvitationPage({ params }: { params: Promise<{ loc
         previewHref={household ? `/rsvp/${household.rsvpToken}` : null}
         events={events.map((e) => ({ id: e.id, name: eventName(e, te), when: [e.time ?? "", e.place ?? ""].filter(Boolean).join(" · "), place: e.place }))}
         photoUrl={wedding.invitationUrl}
+        videoFile={wedding.inviteVideoFile}
         countdownTo={inviteCountdownTo(wedding.date, events)}
         initial={{
           enabled: wedding.inviteEnabled,

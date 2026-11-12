@@ -92,7 +92,7 @@ export default async function RsvpPage({ params }: { params: Promise<{ token: st
       <main id="main">
         <DesignedInvite
           theme={designed.inviteTheme}
-          videoUrl={designed.inviteVideoUrl}
+          videoUrl={designed.inviteVideoFile ?? designed.inviteVideoUrl}
           overlay={designed.inviteOverlay}
           headline={designed.inviteHeadline}
           message={designed.inviteMessage}

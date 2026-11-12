@@ -443,7 +443,9 @@
     "reviewNotAllowed": "You can review a vendor after your wedding, if they were booked in your plan.",
     "rsvpClosed": "This wedding is over, so answers are closed.",
     "confirmEmail": "Type your email exactly as shown.",
-    "roleTaken": "Another guest already has this role."
+    "roleTaken": "Another guest already has this role.",
+    "videoSize": "The video is too big. The limit is 50 MB.",
+    "videoType": "This file isn't a video we can play. Use MP4, MOV or WebM."
   },
   "email": {
     "greeting": "Hi {name},",
@@ -1395,8 +1397,8 @@
       "lead": "Guests open their link to an envelope with a wax seal. One tap opens it onto your names over your video, a countdown, their part of the day, the places and the RSVP form.",
       "enabled": "Show the invitation to guests",
       "enabledHint": "While this is off, guests see the plain RSVP page.",
-      "videoUrl": "Video link",
-      "videoUrlHint": "A direct link to an MP4 or WebM file that starts with https://. Leave empty to use the sample video.",
+      "videoUrl": "Or a video link",
+      "videoUrlHint": "A direct link to an MP4 or WebM file that starts with https://. With no upload and no link, the sample video plays.",
       "useSample": "Use sample video",
       "sampleNote": "Showing a sample video for now, from",
       "headline": "Line above your names",
@@ -1423,7 +1425,15 @@
       "music": "Music",
       "musicHint": "Starts when the guest taps the seal. They can mute it at any time.",
       "noMusic": "No music",
-      "previewMore": "Guests then see their part of the day, the places with maps and the RSVP form."
+      "previewMore": "Guests then see their part of the day, the places with maps and the RSVP form.",
+      "videoFile": "Your video",
+      "videoFileHint": "Upload a clip from your computer or phone: MP4, MOV or WebM, up to {mb} MB. A new upload replaces the old one.",
+      "videoFileSet": "Video uploaded",
+      "videoFileRemove": "Delete the video",
+      "videoFileReplace": "Upload a different video",
+      "videoFileUpload": "Upload video",
+      "videoFileUploading": "Uploading…",
+      "videoLinkIgnored": "Your uploaded video is used instead of this link."
     }
   },
   "rsvp": {
@@ -1769,6 +1779,8 @@
     "theDay": "The Day",
     "location": "Location",
     "rsvpTitle": "Will you join us?",
-    "directions": "Get directions"
+    "directions": "Get directions",
+    "swipeToReveal": "Swipe to reveal",
+    "showPhoto": "Show the photo"
   }
 }

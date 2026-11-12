@@ -443,7 +443,9 @@
     "reviewNotAllowed": "Mund ta vlerësoni një shërbim pas dasmës, nëse ishte i rezervuar në planin tuaj.",
     "rsvpClosed": "Dasma ka kaluar, prandaj përgjigjet janë mbyllur.",
     "confirmEmail": "Shkruani email-in saktësisht siç shfaqet.",
-    "roleTaken": "Këtë rol e ka tashmë një i ftuar tjetër."
+    "roleTaken": "Këtë rol e ka tashmë një i ftuar tjetër.",
+    "videoSize": "Videoja është shumë e madhe. Kufiri është 50 MB.",
+    "videoType": "Ky skedar nuk është video që mund të luhet. Përdorni MP4, MOV ose WebM."
   },
   "email": {
     "greeting": "Përshëndetje {name},",
@@ -1395,8 +1397,8 @@
       "lead": "Të ftuarit hapin lidhjen e tyre dhe shohin një zarf me vulë dylli. Me një prekje hapet te emrat tuaj mbi videon tuaj, numërimi mbrapsht, pjesa e tyre e ditës, vendet dhe formulari i konfirmimit.",
       "enabled": "Shfaqua të ftuarve ftesën",
       "enabledHint": "Kur është e fikur, të ftuarit shohin faqen e thjeshtë të konfirmimit.",
-      "videoUrl": "Lidhja e videos",
-      "videoUrlHint": "Lidhje e drejtpërdrejtë te një skedar MP4 ose WebM që fillon me https://. Lëreni bosh për videon shembull.",
+      "videoUrl": "Ose një lidhje videoje",
+      "videoUrlHint": "Lidhje e drejtpërdrejtë te një skedar MP4 ose WebM që fillon me https://. Pa ngarkim dhe pa lidhje luhet videoja shembull.",
       "useSample": "Përdor videon shembull",
       "sampleNote": "Për momentin shfaqet një video shembull nga",
       "headline": "Rreshti mbi emrat tuaj",
@@ -1423,7 +1425,15 @@
       "music": "Muzika",
       "musicHint": "Fillon kur i ftuari prek vulën. Mund ta heshtë në çdo kohë.",
       "noMusic": "Pa muzikë",
-      "previewMore": "Pastaj të ftuarit shohin pjesën e tyre të ditës, vendet me harta dhe formularin e konfirmimit."
+      "previewMore": "Pastaj të ftuarit shohin pjesën e tyre të ditës, vendet me harta dhe formularin e konfirmimit.",
+      "videoFile": "Videoja juaj",
+      "videoFileHint": "Ngarkoni një klip nga kompjuteri ose telefoni: MP4, MOV ose WebM, deri në {mb} MB. Ngarkimi i ri e zëvendëson të vjetrin.",
+      "videoFileSet": "Videoja u ngarkua",
+      "videoFileRemove": "Fshije videon",
+      "videoFileReplace": "Ngarko një video tjetër",
+      "videoFileUpload": "Ngarko video",
+      "videoFileUploading": "Po ngarkohet…",
+      "videoLinkIgnored": "Përdoret videoja e ngarkuar në vend të kësaj lidhjeje."
     }
   },
   "rsvp": {
@@ -1769,6 +1779,8 @@
     "theDay": "Dita",
     "location": "Vendndodhja",
     "rsvpTitle": "Do të na bashkoheni?",
-    "directions": "Udhëzime"
+    "directions": "Udhëzime",
+    "swipeToReveal": "Rrëshqitni gishtin për ta zbuluar",
+    "showPhoto": "Shfaq fotografinë"
   }
 }

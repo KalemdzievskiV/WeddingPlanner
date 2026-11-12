@@ -8,6 +8,7 @@ import { inviteFontClass } from "@/lib/invite-fonts";
 import { cn } from "@/lib/utils";
 import { ArchFrame, Bow } from "./ornaments";
 import { InviteSection } from "./invite-section";
+import { RevealPhoto } from "./reveal-photo";
 
 /** closed → (tap) opening: seal breaks, flaps slide away → untie: the ribbon comes off → done: the envelope fades → gone. */
 type Phase = "closed" | "opening" | "untie" | "done" | "gone";
@@ -423,7 +424,6 @@ function Countdown({ to, photoUrl, message, couple }: { to: string; photoUrl: st
   const t = useTranslations("invite");
   // Unknown on the server (its clock and time zone differ), so it fills in after the page loads.
   const [now, setNow] = useState<number | null>(null);
-  const [photoFailed, setPhotoFailed] = useState(false);
   useEffect(() => {
     const tick = () => setNow(Date.now());
     const first = window.setTimeout(tick, 0);
@@ -460,12 +460,7 @@ function Countdown({ to, photoUrl, message, couple }: { to: string; photoUrl: st
         </div>
       )}
       {message && <p className="mx-auto mt-8 max-w-sm whitespace-pre-line text-center text-lg italic">{message}</p>}
-      {photoUrl && !photoFailed && (
-        <div className="mx-auto mt-8 w-[min(70%,15rem)] rounded-[50%] border border-[var(--inv-line)] p-2">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={photoUrl} alt={t("photoAlt", { couple })} onError={() => setPhotoFailed(true)} className="aspect-[3/4] w-full rounded-[50%] object-cover" />
-        </div>
-      )}
+      {photoUrl && <RevealPhoto src={photoUrl} alt={t("photoAlt", { couple })} />}
     </InviteSection>
   );
 }

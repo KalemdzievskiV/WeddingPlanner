@@ -71,7 +71,59 @@ export async function saveImage(file: File, folder: string, maxSize = 1600): Pro
   return `/uploads/${key}`;
 }
 
-/** Deletes a stored image by its public URL. Best effort: a missing file is not an error. */
+export class VideoError extends Error {
+  constructor(public code: "fileType" | "fileSize") {
+    super(code);
+  }
+}
+
+/** Works out a video's real format from its first bytes: MP4 / MOV (ISO media) or WebM. */
+export function sniffVideo(head: Uint8Array): { ext: "mp4" | "mov" | "webm"; type: string } | null {
+  if (head.length >= 4 && head[0] === 0x1a && head[1] === 0x45 && head[2] === 0xdf && head[3] === 0xa3) {
+    return { ext: "webm", type: "video/webm" };
+  }
+  if (head.length < 12) return null;
+  const box = String.fromCharCode(...head.slice(4, 8));
+  if (box === "ftyp") {
+    const brand = String.fromCharCode(...head.slice(8, 12));
+    return brand === "qt  " ? { ext: "mov", type: "video/quicktime" } : { ext: "mp4", type: "video/mp4" };
+  }
+  // Older QuickTime files can start with these boxes instead.
+  if (["moov", "wide", "mdat", "free"].includes(box)) return { ext: "mov", type: "video/quicktime" };
+  return null;
+}
+
+/**
+ * Stores an uploaded video as is (no re-encoding) after checking its real format.
+ * Returns its public URL. Goes to Cloudflare R2 when configured, otherwise to UPLOAD_DIR.
+ */
+export async function saveVideo(data: Buffer, folder: string, maxBytes: number): Promise<string> {
+  if (data.length > maxBytes) throw new VideoError("fileSize");
+  const kind = sniffVideo(data.subarray(0, 12));
+  if (!kind) throw new VideoError("fileType");
+
+  const key = `${folder.replace(/[^a-z0-9/-]/gi, "")}/${randomUUID()}.${kind.ext}`;
+  const client = r2Client();
+  if (client && env.r2) {
+    await client.send(
+      new PutObjectCommand({
+        Bucket: env.r2.bucket,
+        Key: key,
+        Body: data,
+        ContentType: kind.type,
+        CacheControl: "public, max-age=31536000, immutable",
+      }),
+    );
+    return `${env.r2.publicUrl}/${key}`;
+  }
+
+  const target = path.join(localUploadRoot(), key);
+  await mkdir(path.dirname(target), { recursive: true });
+  await writeFile(target, data);
+  return `/uploads/${key}`;
+}
+
+/** Deletes a stored image (or video) by its public URL. Best effort: a missing file is not an error. */
 export async function deleteImage(url: string) {
   try {
     const client = r2Client();

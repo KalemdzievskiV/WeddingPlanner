@@ -278,7 +278,21 @@
 .inv-pulse {
   animation: inv-pulse 2.4s ease-in-out infinite;
 }
+/* The hand on the frosted photo sways side to side: "swipe here". */
+@keyframes invite-swipe {
+  0%,
+  100% {
+    transform: translateX(-10px) rotate(-8deg);
+  }
+  50% {
+    transform: translateX(10px) rotate(8deg);
+  }
+}
+.invite-swipe {
+  animation: invite-swipe 1.6s ease-in-out infinite;
+}
 @media (prefers-reduced-motion: reduce) {
+  .invite-swipe,
   .inv-pulse {
     animation: none !important;
   }
