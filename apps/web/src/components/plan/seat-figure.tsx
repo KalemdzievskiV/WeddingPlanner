@@ -1,7 +1,7 @@
 "use client";
 
 import type { GuestRole } from "@svadba/shared";
-import { useId } from "react";
+import { memo, useId } from "react";
 
 /**
  * Guests on the seating plan (decision 132): a small person seen from above, sitting on a chair, with the name
@@ -21,7 +21,7 @@ const SKIN = ["#f2cfae", "#cfa47f"] as const;
 const HAIR = "#3b2f38";
 
 /** The figure itself, centred on the chair, facing up. */
-export function FigureShape({ look, plain }: { look: FigureLook; plain: boolean }) {
+export const FigureShape = memo(function FigureShape({ look, plain }: { look: FigureLook; plain: boolean }) {
   const bride = !plain && look.role === "BRIDE";
   const groom = !plain && look.role === "GROOM";
   const [shirt, shirtLine] = bride ? ["#fdfbfd", "#d6c3d8"] : groom ? ["#3a3140", "#241d29"] : SHIRT[plain ? "PLAIN" : look.side];
@@ -40,7 +40,7 @@ export function FigureShape({ look, plain }: { look: FigureLook; plain: boolean 
       {bride && <circle cx={0} cy={6.4} r={2.6} fill={HAIR} />}
     </g>
   );
-}
+});
 
 /** An empty chair: dashed ring with its seat number. */
 export function EmptyChair({ number, hidden }: { number: number; hidden?: boolean }) {
@@ -63,13 +63,13 @@ const LINE = 7;
  * which points away from the table. Below the chair the arc runs the other way so the text stays upright.
  * Full names use two arcs, so they read first name, then surname, from top to bottom.
  */
-export function SeatName({ name, firstOnly, angle }: { name: string; firstOnly: boolean; angle: number }) {
+export const SeatName = memo(function SeatName({ name, firstOnly, angle }: { name: string; firstOnly: boolean; angle: number }) {
   const id = useId().replace(/[^a-zA-Z0-9]/g, "");
   const words = name.trim().split(/\s+/).filter(Boolean);
   const lines = firstOnly || words.length < 2 ? [words[0] ?? ""] : [words[0]!, words.slice(1).join(" ")];
   const lower = Math.sin(angle) > 0.05;
   return (
-    <g pointerEvents="none">
+    <g pointerEvents="none" className="seat-name">
       {lines.map((text, i) => {
         // Below the chair the letters hang inside the arc, so push the baseline out by their height.
         // Read top to bottom, the first name always comes first: outer arc above the chair, inner arc below it.
@@ -99,7 +99,7 @@ export function SeatName({ name, firstOnly, angle }: { name: string; firstOnly: 
       })}
     </g>
   );
-}
+});
 
 /** Arc around (0, 0) of radius r centred on `angle`; runs left to right as read (clockwise on top, anticlockwise below). */
 function arc(r: number, angle: number, span: number, lower: boolean) {
@@ -110,10 +110,10 @@ function arc(r: number, angle: number, span: number, lower: boolean) {
 }
 
 /** A figure on its own (side panel, drag preview), `size` in CSS pixels. */
-export function FigureBadge({ look, plain, size = 40, className }: { look: FigureLook; plain: boolean; size?: number; className?: string }) {
+export const FigureBadge = memo(function FigureBadge({ look, plain, size = 40, className }: { look: FigureLook; plain: boolean; size?: number; className?: string }) {
   return (
     <svg viewBox="-15 -15 30 30" width={size} height={size} aria-hidden className={className}>
       <FigureShape look={look} plain={plain} />
     </svg>
   );
-}
+});

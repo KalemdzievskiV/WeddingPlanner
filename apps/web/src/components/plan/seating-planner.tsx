@@ -40,7 +40,7 @@ import {
   ZoomOut,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useLayoutEffect, useOptimistic, useRef, useState, useSyncExternalStore, useTransition } from "react";
+import { memo, useEffect, useLayoutEffect, useMemo, useOptimistic, useRef, useState, useSyncExternalStore, useTransition } from "react";
 import {
   addFloorItemAction,
   addTableAction,
@@ -345,7 +345,7 @@ export function SeatingPlanner({
   const [moved, setMoved] = useState<Record<string, { x: number; y: number; rotation: number }>>({});
   const [pending, start] = useTransition();
   const [query, setQuery] = useState("");
-  const byId = new Map(guests.map((g) => [g.id, g]));
+  const byId = useMemo(() => new Map(guests.map((g) => [g.id, g])), [guests]);
   // Moves show at once; the server's answer replaces them (decision 133).
   const [tables, changeSeats] = useOptimistic(rawTables, applySeatChange);
   const [look, setLook] = useOptimistic(display);
@@ -414,7 +414,8 @@ export function SeatingPlanner({
   };
 
   // Dragging a guest (from the list or a chair) onto a chair, a table, or back to the list.
-  const [dragGuest, setDragGuest] = useState<{ id: string; x: number; y: number } | null>(null);
+  // The ghost under the pointer lives in its own small store, so moving it doesn't redraw the planner.
+  const [ghostStore] = useState(createGhostStore);
   const dropRef = useRef<(id: string, x: number, y: number) => void>(() => {});
   useEffect(() => {
     dropRef.current = (id, x, y) => {
@@ -435,13 +436,13 @@ export function SeatingPlanner({
     let active = false;
     const move = (ev: PointerEvent) => {
       active ||= Math.abs(ev.clientX - sx) + Math.abs(ev.clientY - sy) > 5;
-      if (active) setDragGuest({ id, x: ev.clientX, y: ev.clientY });
+      if (active) ghostStore.set({ id, x: ev.clientX, y: ev.clientY });
     };
     const done = (ev: PointerEvent, cancelled: boolean) => {
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", up);
       window.removeEventListener("pointercancel", cancel);
-      setDragGuest(null);
+      ghostStore.set(null);
       if (cancelled) return;
       if (active) dropRef.current(id, ev.clientX, ev.clientY);
       else onClick?.();
@@ -495,7 +496,8 @@ export function SeatingPlanner({
   const seatedMatches = q
     ? tables.flatMap((tb) => tb.guestIds.flatMap((id) => (byId.get(id) && matches(byId.get(id)!) ? [{ guest: byId.get(id)!, table: tb }] : [])))
     : [];
-  const highlight = new Set(seatedMatches.map((m) => m.guest.id));
+  // Stable while the search hits stay the same, so tables don't redraw on every keystroke.
+  const highlight = useIdSet(seatedMatches.map((m) => m.guest.id).join(" "));
 
   const pos = (tb: TableRow) => moved[tb.id] ?? { x: tb.x, y: tb.y, rotation: tb.rotation };
   const seat = (ids: string[]) => selected && start(async () => void (await seatGuestsAction(selected.id, ids)));
@@ -523,8 +525,7 @@ export function SeatingPlanner({
                 setMoved((m) => ({ ...m, [id]: p }));
                 start(async () => void (await moveTableAction(id, p.x, p.y, p.rotation)));
               }}
-              occupancy={(tb) => tb.guestIds.length}
-              guestOf={(id) => byId.get(id)}
+              guestById={byId}
               highlight={highlight}
               look={look}
               selectedSeat={chartMode ? null : selectedSeat}
@@ -944,12 +945,8 @@ export function SeatingPlanner({
     />
   );
 
-  const ghostGuest = dragGuest ? byId.get(dragGuest.id) : undefined;
-  const ghost = ghostGuest && dragGuest && (
-    <div className="pointer-events-none fixed z-[60] -translate-x-1/2 -translate-y-1/2" style={{ left: dragGuest.x, top: dragGuest.y }}>
-      <FigureBadge look={ghostGuest} plain={look.plain} size={44} className="drop-shadow" />
-      <span className="mt-0.5 block whitespace-nowrap rounded bg-surface/90 px-1.5 text-center text-xs shadow-sm">{ghostGuest.name}</span>
-    </div>
+  const ghost = (
+    <DragGhost store={ghostStore} guestById={byId} plain={look.plain} />
   );
 
   if (mode === "chart") {
@@ -1287,8 +1284,7 @@ function FloorPlan({
   editable,
   onSelect,
   onMove,
-  occupancy,
-  guestOf,
+  guestById,
   highlight,
   look,
   selectedSeat,
@@ -1313,7 +1309,7 @@ function FloorPlan({
   onSelectLine: (id: string | null) => void;
   roomWidthM: number;
   locale: string;
-  guestOf: (guestId: string) => SeatGuest | undefined;
+  guestById: Map<string, SeatGuest>;
   look: SeatDisplay;
   selectedSeat: Seat | null;
   onSelectSeat: (tableId: string, seat: number) => void;
@@ -1331,7 +1327,6 @@ function FloorPlan({
   editable: boolean;
   onSelect: (id: string) => void;
   onMove: (id: string, p: { x: number; y: number; rotation: number }) => void;
-  occupancy: (tb: TableRow) => number;
   highlight: Set<string>;
   mode: "page" | "editor" | "chart";
   eventId: string;
@@ -1343,10 +1338,8 @@ function FloorPlan({
   const chart = mode === "chart";
   const ref = planRef;
   const viewport = viewportRef;
-  const [drag, setDrag] = useState<{ id: string; x: number; y: number; startX: number; startY: number; moved: boolean; seat: number | null } | null>(null);
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState<{ x: number; y: number; left: number; top: number } | null>(null);
-  const [turning, setTurning] = useState<{ id: string; deg: number } | null>(null);
 
   // Smallest zoom: the whole plan fits the view (editor), or the plan fills the width (page).
   const [minZoom, setMinZoom] = useState(1);
@@ -1360,6 +1353,13 @@ function FloorPlan({
       y: Math.min(PLAN_HEIGHT, Math.max(0, ((clientY - r.top) / r.height) * PLAN_HEIGHT)),
     };
   };
+
+  // Tables are memoized: they reach the latest handlers through this stable ref, so a new closure on every
+  // render doesn't redraw every table (and every curved name) each time.
+  const actions = useRef<TableActions>(null!);
+  useLayoutEffect(() => {
+    actions.current = { toPlan, onSelect, onSelectSeat, onGuestPointerDown, onMove };
+  });
 
   // Zoom keeping the point under `anchor` (client coordinates; default: middle of the view) in place.
   const zoomTo = (next: number, anchor?: { x: number; y: number }) => {
@@ -1376,8 +1376,18 @@ function FloorPlan({
       anchorRef.current = { at, fx: (at.x - r.left) / r.width, fy: (at.y - r.top) / r.height };
     }
     zoomRef.current = z;
+    // Curved names are slow to paint, and every zoom step repaints all of them: hide them while the
+    // zoom is moving and bring them back once it settles (like the labels on a map).
+    c.dataset.zooming = "";
+    if (zoomEndRef.current) clearTimeout(zoomEndRef.current);
+    zoomEndRef.current = setTimeout(() => {
+      delete c.dataset.zooming;
+      zoomEndRef.current = null;
+    }, 220);
     setZoom(z);
   };
+  const zoomEndRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => void (zoomEndRef.current && clearTimeout(zoomEndRef.current)), []);
   // After the plan is redrawn at the new zoom, scroll so the anchored spot is back under the pointer.
   const anchorRef = useRef<{ at: { x: number; y: number }; fx: number; fy: number } | null>(null);
   useLayoutEffect(() => {
@@ -1624,7 +1634,7 @@ function FloorPlan({
         <div
           ref={ref}
           className={cn(
-            "@container relative select-none overflow-hidden",
+            "@container relative select-none overflow-hidden [&[data-zooming]_.seat-name]:hidden",
             editor && "mx-auto my-4 bg-surface shadow-[var(--shadow-card)]",
             crop && "absolute",
           )}
@@ -1653,148 +1663,25 @@ function FloorPlan({
             />
           ))}
           {tables.map((tb) => {
-            const base = drag?.id === tb.id ? { ...pos(tb), x: drag.x, y: drag.y } : pos(tb);
-            const p = turning?.id === tb.id ? { ...base, rotation: turning.deg } : base;
-            const seated = occupancy(tb);
-            const chairs = chairCount(tb);
-            const size = tableSize(tb.shape, chairs);
-            const over = seated > openSeats(tb) || chairs > tb.seats;
-            const at = new Map(tb.chairs.map((c) => [c.seat, c.guestId]));
+            const p = pos(tb);
             return (
-              <button
+              <TableNode
                 key={tb.id}
-                type="button"
-                data-table-id={tb.id}
-                onPointerDown={(e) => {
-                  if (e.button !== 0) return;
-                  const chairEl = (e.target as Element).closest<SVGElement>("[data-seat], [data-hidden-seat]");
-                  const seatNo = chairEl ? Number(chairEl.dataset.seat ?? chairEl.dataset.hiddenSeat) : null;
-                  // A seated guest: drag them to another chair, or click to open the chair (decision 133).
-                  const guestId = chairEl?.dataset.guest;
-                  if (guestId && editable && seatNo !== null) return onGuestPointerDown(guestId, e, { tableId: tb.id, seat: seatNo });
-                  if (seatNo === null) onSelect(tb.id);
-                  if (!editable) {
-                    if (seatNo !== null) onSelectSeat(tb.id, seatNo);
-                    return;
-                  }
-                  try {
-                    e.currentTarget.setPointerCapture(e.pointerId);
-                  } catch {
-                    // Synthetic or already-released pointers can't be captured; dragging still works without it.
-                  }
-                  setDrag({ id: tb.id, x: p.x, y: p.y, startX: e.clientX, startY: e.clientY, moved: false, seat: seatNo });
-                }}
-                onPointerMove={(e) => {
-                  if (!drag || drag.id !== tb.id) return;
-                  const moved = drag.moved || Math.abs(e.clientX - drag.startX) + Math.abs(e.clientY - drag.startY) > 4;
-                  setDrag({ ...drag, ...toPlan(e.clientX, e.clientY), moved });
-                }}
-                onPointerUp={() => {
-                  if (drag?.id === tb.id && drag.moved) onMove(tb.id, { x: drag.x, y: drag.y, rotation: p.rotation });
-                  else if (drag?.id === tb.id && drag.seat !== null) onSelectSeat(tb.id, drag.seat);
-                  setDrag(null);
-                }}
-                onKeyDown={(e) => {
-                  // Arrow keys nudge the table (keyboard alternative to dragging).
-                  const step = e.shiftKey ? 50 : 10;
-                  const d = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] }[e.key];
-                  if (!d || !editable) return;
-                  e.preventDefault();
-                  onMove(tb.id, { x: p.x + d[0]!, y: p.y + d[1]!, rotation: p.rotation });
-                }}
-                aria-pressed={selectedId === tb.id}
-                className={cn(
-                  "absolute flex touch-none flex-col items-center justify-center border-2 text-center shadow-sm transition-shadow",
-                  editable ? "cursor-grab active:cursor-grabbing" : "cursor-pointer",
-                  tb.shape === "HEAD" ? "border-vranec bg-rosehip" : "border-line-strong bg-linen",
-                  tableShapeClass[tb.shape],
-                  selectedId === tb.id && "z-10 ring-4 ring-vranec/25",
-                  over && "border-danger",
-                )}
-                style={{
-                  left: `${(p.x / PLAN_WIDTH) * 100}%`,
-                  top: `${(p.y / PLAN_HEIGHT) * 100}%`,
-                  width: `${(size.w / PLAN_WIDTH) * 100}%`,
-                  height: `${(size.h / PLAN_HEIGHT) * 100}%`,
-                  transform: `translate(-50%, -50%) rotate(${p.rotation}deg)`,
-                }}
-              >
-                {selectedId === tb.id && editable && tb.shape !== "ROUND" && (
-                  <RotateHandle
-                    lift={`${(CHAIR + 2 * GAP) / (PLAN_WIDTH / 100)}cqw`}
-                    onTurn={(deg) => setTurning({ id: tb.id, deg })}
-                    onDone={(deg) => {
-                      setTurning(null);
-                      onMove(tb.id, { x: base.x, y: base.y, rotation: deg });
-                    }}
-                  />
-                )}
-                {chairSpots(tb.shape, chairs, size.w, size.h).map((c, i) => {
-                  const guestId = at.get(i);
-                  const guest = guestId ? guestOf(guestId) : undefined;
-                  const hidden = !guest && i < tb.seats && tb.hidden.includes(i);
-                  // Hidden chairs only show (faintly) while their table is selected, so they can be shown again.
-                  if (hidden && !(editable && selectedId === tb.id)) return null;
-                  const face = facing(tb.shape, c, size.w, size.h);
-                  const isSelected = selectedSeat?.tableId === tb.id && selectedSeat.seat === i;
-                  const ring = isSelected
-                    ? "var(--color-vranec)"
-                    : guestId && highlight.has(guestId)
-                      ? "var(--color-ink)"
-                      : i >= tb.seats
-                        ? "var(--color-danger)"
-                        : null;
-                  const box = CHAIR * 3;
-                  return (
-                    <svg
-                      key={i}
-                      viewBox={`${-box / 2} ${-box / 2} ${box} ${box}`}
-                      overflow="visible"
-                      className="pointer-events-none absolute"
-                      style={{
-                        left: `${((c.x - box / 2) / size.w) * 100}%`,
-                        top: `${((c.y - box / 2) / size.h) * 100}%`,
-                        width: `${(box / size.w) * 100}%`,
-                        height: `${(box / size.h) * 100}%`,
-                        zIndex: isSelected || (guestId && highlight.has(guestId)) ? 10 : undefined,
-                      }}
-                    >
-                      {ring && <circle r={14.5} fill="none" stroke={ring} strokeWidth={2} />}
-                      <g transform={`rotate(${face.deg.toFixed(1)})`}>
-                        {guest ? <FigureShape look={guest} plain={look.plain} /> : <EmptyChair number={i + 1} hidden={hidden} />}
-                      </g>
-                      {guest && (
-                        <SeatName name={guest.name} firstOnly={look.firstNames} angle={face.out + (p.rotation * Math.PI) / 180} />
-                      )}
-                      <circle
-                        r={13}
-                        fill="transparent"
-                        pointerEvents="all"
-                        className={cn(editable && (guest ? "cursor-grab" : armed ? "cursor-copy" : "cursor-pointer"))}
-                        {...(hidden ? { "data-hidden-seat": i } : { "data-seat": i, "data-table": tb.id })}
-                        {...(guestId ? { "data-guest": guestId } : {})}
-                      >
-                        <title>{guest ? `${guest.name} · ${t("seatNumber", { n: i + 1 })}` : t("seatNumber", { n: i + 1 })}</title>
-                      </circle>
-                    </svg>
-                  );
-                })}
-                <span
-                  className={cn(
-                    "max-w-full truncate px-1 font-medium leading-tight",
-                    // A row of chairs has no table top: its name sits under the chairs.
-                    tb.shape === "ROW" && "absolute top-full mt-[0.6cqw] max-w-none whitespace-nowrap",
-                  )}
-                  style={{ transform: `rotate(${-p.rotation}deg)`, fontSize: `${LABEL / (PLAN_WIDTH / 100)}cqw` }}
-                >
-                  {tb.name}
-                  {!chart && (
-                    <span className={cn("block tabular-nums", over ? "text-danger" : "text-stone")}>
-                      {occupancy(tb)}/{tb.seats}
-                    </span>
-                  )}
-                </span>
-              </button>
+                tb={tb}
+                x={p.x}
+                y={p.y}
+                rotation={p.rotation}
+                selected={selectedId === tb.id}
+                selectedSeat={selectedSeat?.tableId === tb.id ? selectedSeat.seat : null}
+                editable={editable}
+                chart={chart}
+                armed={armed}
+                plain={look.plain}
+                firstNames={look.firstNames}
+                guestById={guestById}
+                highlight={highlight}
+                actions={actions}
+              />
             );
           })}
           <svg
@@ -1835,6 +1722,284 @@ function FloorPlan({
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+/** Handlers the memoized tables call; kept in a ref so they never make a table redraw. */
+type TableActions = {
+  toPlan: (clientX: number, clientY: number) => { x: number; y: number };
+  onSelect: (id: string) => void;
+  onSelectSeat: (tableId: string, seat: number) => void;
+  onGuestPointerDown: (guestId: string, e: React.PointerEvent, seat: Seat) => void;
+  onMove: (id: string, p: { x: number; y: number; rotation: number }) => void;
+};
+
+/**
+ * One table on the floor plan. Memoized, and it keeps its own drag / turn state, so dragging a table
+ * redraws only that table, and the rest of the plan (with all its figures and names) stays untouched.
+ */
+const TableNode = memo(function TableNode({
+  tb,
+  x,
+  y,
+  rotation,
+  selected,
+  selectedSeat,
+  editable,
+  chart,
+  armed,
+  plain,
+  firstNames,
+  guestById,
+  highlight,
+  actions,
+}: {
+  tb: TableRow;
+  x: number;
+  y: number;
+  rotation: number;
+  selected: boolean;
+  /** The selected chair, when it is at this table. */
+  selectedSeat: number | null;
+  editable: boolean;
+  chart: boolean;
+  armed: boolean;
+  plain: boolean;
+  firstNames: boolean;
+  guestById: Map<string, SeatGuest>;
+  highlight: Set<string>;
+  actions: React.RefObject<TableActions>;
+}) {
+  const [drag, setDrag] = useState<{ x: number; y: number; startX: number; startY: number; moved: boolean; seat: number | null } | null>(null);
+  const [turning, setTurning] = useState<number | null>(null);
+  const px = drag ? drag.x : x;
+  const py = drag ? drag.y : y;
+  const deg = turning ?? rotation;
+  const seated = tb.guestIds.length;
+  const chairs = chairCount(tb);
+  const size = tableSize(tb.shape, chairs);
+  const over = seated > openSeats(tb) || chairs > tb.seats;
+  return (
+    <button
+      type="button"
+      data-table-id={tb.id}
+      onPointerDown={(e) => {
+        if (e.button !== 0) return;
+        const a = actions.current;
+        const chairEl = (e.target as Element).closest<SVGElement>("[data-seat], [data-hidden-seat]");
+        const seatNo = chairEl ? Number(chairEl.dataset.seat ?? chairEl.dataset.hiddenSeat) : null;
+        // A seated guest: drag them to another chair, or click to open the chair (decision 133).
+        const guestId = chairEl?.dataset.guest;
+        if (guestId && editable && seatNo !== null) return a.onGuestPointerDown(guestId, e, { tableId: tb.id, seat: seatNo });
+        if (seatNo === null) a.onSelect(tb.id);
+        if (!editable) {
+          if (seatNo !== null) a.onSelectSeat(tb.id, seatNo);
+          return;
+        }
+        try {
+          e.currentTarget.setPointerCapture(e.pointerId);
+        } catch {
+          // Synthetic or already-released pointers can't be captured; dragging still works without it.
+        }
+        setDrag({ x: px, y: py, startX: e.clientX, startY: e.clientY, moved: false, seat: seatNo });
+      }}
+      onPointerMove={(e) => {
+        if (!drag) return;
+        const moved = drag.moved || Math.abs(e.clientX - drag.startX) + Math.abs(e.clientY - drag.startY) > 4;
+        setDrag({ ...drag, ...actions.current.toPlan(e.clientX, e.clientY), moved });
+      }}
+      onPointerUp={() => {
+        if (drag?.moved) actions.current.onMove(tb.id, { x: drag.x, y: drag.y, rotation: deg });
+        else if (drag && drag.seat !== null) actions.current.onSelectSeat(tb.id, drag.seat);
+        setDrag(null);
+      }}
+      onKeyDown={(e) => {
+        // Arrow keys nudge the table (keyboard alternative to dragging).
+        const step = e.shiftKey ? 50 : 10;
+        const d = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] }[e.key];
+        if (!d || !editable) return;
+        e.preventDefault();
+        actions.current.onMove(tb.id, { x: px + d[0]!, y: py + d[1]!, rotation: deg });
+      }}
+      aria-pressed={selected}
+      className={cn(
+        "absolute flex touch-none flex-col items-center justify-center border-2 text-center shadow-sm transition-shadow",
+        editable ? "cursor-grab active:cursor-grabbing" : "cursor-pointer",
+        tb.shape === "HEAD" ? "border-vranec bg-rosehip" : "border-line-strong bg-linen",
+        tableShapeClass[tb.shape],
+        selected && "z-10 ring-4 ring-vranec/25",
+        over && "border-danger",
+      )}
+      style={{
+        // While dragging, the table stays put in the layout and only its transform moves, on its own GPU
+        // layer: the browser then doesn't repaint the rest of the plan (every figure and name) each frame.
+        left: `${(x / PLAN_WIDTH) * 100}%`,
+        top: `${(y / PLAN_HEIGHT) * 100}%`,
+        width: `${(size.w / PLAN_WIDTH) * 100}%`,
+        height: `${(size.h / PLAN_HEIGHT) * 100}%`,
+        transform: `translate(${-50 + ((px - x) / size.w) * 100}%, ${-50 + ((py - y) / size.h) * 100}%) rotate(${deg}deg)`,
+        // Always on its own layer (not just while dragging): turning the layer on or off would repaint the
+        // whole plan, and curved names are slow to paint. Not in the chart view, which is printed.
+        willChange: chart ? undefined : "transform",
+      }}
+    >
+      {selected && editable && tb.shape !== "ROUND" && (
+        <RotateHandle
+          lift={`${(CHAIR + 2 * GAP) / (PLAN_WIDTH / 100)}cqw`}
+          onTurn={setTurning}
+          onDone={(d) => {
+            setTurning(null);
+            actions.current.onMove(tb.id, { x: px, y: py, rotation: d });
+          }}
+        />
+      )}
+      <TableChairs
+        tb={tb}
+        chairs={chairs}
+        w={size.w}
+        h={size.h}
+        rotation={deg}
+        selected={selected}
+        selectedSeat={selectedSeat}
+        editable={editable}
+        armed={armed}
+        plain={plain}
+        firstNames={firstNames}
+        guestById={guestById}
+        highlight={highlight}
+      />
+      <span
+        className={cn(
+          "max-w-full truncate px-1 font-medium leading-tight",
+          // A row of chairs has no table top: its name sits under the chairs.
+          tb.shape === "ROW" && "absolute top-full mt-[0.6cqw] max-w-none whitespace-nowrap",
+        )}
+        style={{ transform: `rotate(${-deg}deg)`, fontSize: `${LABEL / (PLAN_WIDTH / 100)}cqw` }}
+      >
+        {tb.name}
+        {!chart && (
+          <span className={cn("block tabular-nums", over ? "text-danger" : "text-stone")}>
+            {seated}/{tb.seats}
+          </span>
+        )}
+      </span>
+    </button>
+  );
+});
+
+/**
+ * All chairs of a table, with their figures and names, in a single SVG (in table units). Memoized on
+ * what it draws, so moving the table doesn't touch it; one SVG per table instead of one per chair keeps
+ * the page light even with hundreds of guests.
+ */
+const TableChairs = memo(function TableChairs({
+  tb,
+  chairs,
+  w,
+  h,
+  rotation,
+  selected,
+  selectedSeat,
+  editable,
+  armed,
+  plain,
+  firstNames,
+  guestById,
+  highlight,
+}: {
+  tb: TableRow;
+  chairs: number;
+  w: number;
+  h: number;
+  rotation: number;
+  selected: boolean;
+  selectedSeat: number | null;
+  editable: boolean;
+  armed: boolean;
+  plain: boolean;
+  firstNames: boolean;
+  guestById: Map<string, SeatGuest>;
+  highlight: Set<string>;
+}) {
+  const t = useTranslations("plan.seating");
+  const at = new Map(tb.chairs.map((c) => [c.seat, c.guestId]));
+  const drawn = chairSpots(tb.shape, chairs, w, h).flatMap((c, i) => {
+    const guestId = at.get(i);
+    const guest = guestId ? guestById.get(guestId) : undefined;
+    const hidden = !guest && i < tb.seats && tb.hidden.includes(i);
+    // Hidden chairs only show (faintly) while their table is selected, so they can be shown again.
+    if (hidden && !(editable && selected)) return [];
+    const face = facing(tb.shape, c, w, h);
+    const isSelected = selectedSeat === i;
+    const lit = !!guestId && highlight.has(guestId);
+    const ring = isSelected ? "var(--color-vranec)" : lit ? "var(--color-ink)" : i >= tb.seats ? "var(--color-danger)" : null;
+    const node = (
+      <g key={i} transform={`translate(${c.x.toFixed(2)} ${c.y.toFixed(2)})`}>
+        {ring && <circle r={14.5} fill="none" stroke={ring} strokeWidth={2} />}
+        <g transform={`rotate(${face.deg.toFixed(1)})`}>
+          {guest ? <FigureShape look={guest} plain={plain} /> : <EmptyChair number={i + 1} hidden={hidden} />}
+        </g>
+        {guest && <SeatName name={guest.name} firstOnly={firstNames} angle={face.out + (rotation * Math.PI) / 180} />}
+        <circle
+          r={13}
+          fill="transparent"
+          pointerEvents="all"
+          className={cn(editable && (guest ? "cursor-grab" : armed ? "cursor-copy" : "cursor-pointer"))}
+          {...(hidden ? { "data-hidden-seat": i } : { "data-seat": i, "data-table": tb.id })}
+          {...(guestId ? { "data-guest": guestId } : {})}
+        >
+          <title>{guest ? `${guest.name} · ${t("seatNumber", { n: i + 1 })}` : t("seatNumber", { n: i + 1 })}</title>
+        </circle>
+      </g>
+    );
+    return [{ node, top: isSelected || lit }];
+  });
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} overflow="visible" className="pointer-events-none absolute inset-0 h-full w-full">
+      {/* The selected or searched-for chair is drawn last, so it sits on top of its neighbours. */}
+      {drawn.filter((d) => !d.top).map((d) => d.node)}
+      {drawn.filter((d) => d.top).map((d) => d.node)}
+    </svg>
+  );
+});
+
+/** A Set of space-separated ids that stays the same object while the ids do (keeps memoized tables still). */
+function useIdSet(key: string) {
+  return useMemo(() => new Set(key ? key.split(" ") : []), [key]);
+}
+
+type GhostState = { id: string; x: number; y: number } | null;
+/** Tiny store for the dragged guest's position: only the ghost subscribes, so the planner doesn't redraw on every move. */
+function createGhostStore() {
+  let value: GhostState = null;
+  const subs = new Set<() => void>();
+  return {
+    get: () => value,
+    set: (next: GhostState) => {
+      value = next;
+      subs.forEach((f) => f());
+    },
+    subscribe: (f: () => void) => {
+      subs.add(f);
+      return () => void subs.delete(f);
+    },
+  };
+}
+
+/** The guest following the pointer while it is dragged. */
+function DragGhost({ store, guestById, plain }: { store: ReturnType<typeof createGhostStore>; guestById: Map<string, SeatGuest>; plain: boolean }) {
+  const g = useSyncExternalStore(store.subscribe, store.get, () => null);
+  const guest = g ? guestById.get(g.id) : undefined;
+  if (!g || !guest) return null;
+  return (
+    // Moved by transform on its own layer, so following the pointer doesn't repaint the plan underneath.
+    <div
+      className="pointer-events-none fixed left-0 top-0 z-[60]"
+      style={{ transform: `translate(${g.x}px, ${g.y}px) translate(-50%, -50%)`, willChange: "transform" }}
+    >
+      <FigureBadge look={guest} plain={plain} size={44} className="drop-shadow" />
+      <span className="mt-0.5 block whitespace-nowrap rounded bg-surface/90 px-1.5 text-center text-xs shadow-sm">{guest.name}</span>
     </div>
   );
 }
