@@ -1361,8 +1361,14 @@ function FloorPlan({
     actions.current = { toPlan, onSelect, onSelectSeat, onGuestPointerDown, onMove };
   });
 
-  // Zoom keeping the point under `anchor` (client coordinates; default: middle of the view) in place.
-  const zoomTo = (next: number, anchor?: { x: number; y: number }) => {
+  /**
+   * Zoom keeping the point under `anchor` (client coordinates; default: middle of the view) in place.
+   * Laying the plan out at a new size takes the browser tens of milliseconds (every table, chair and name is
+   * sized from the plan's width), too slow for each wheel tick. So a wheel or pinch gesture (`live`) only
+   * scales the plan on the GPU around the pointer, like a map does, and the real zoom is applied once the
+   * gesture pauses. Buttons zoom at once.
+   */
+  const zoomTo = (next: number, anchor?: { x: number; y: number }, live = false) => {
     const v = viewport.current;
     const c = ref.current;
     if (!v || !c) return;
@@ -1370,27 +1376,51 @@ function FloorPlan({
     if (z === zoomRef.current) return;
     const vr = v.getBoundingClientRect();
     const at = anchor ?? { x: vr.left + vr.width / 2, y: vr.top + vr.height / 2 };
-    // Several wheel ticks can arrive before a redraw: keep the first tick's spot on the plan.
-    if (!anchorRef.current || anchorRef.current.at.x !== at.x || anchorRef.current.at.y !== at.y) {
-      const r = c.getBoundingClientRect();
-      anchorRef.current = { at, fx: (at.x - r.left) / r.width, fy: (at.y - r.top) / r.height };
-    }
     zoomRef.current = z;
-    // Curved names are slow to paint, and every zoom step repaints all of them: hide them while the
-    // zoom is moving and bring them back once it settles (like the labels on a map).
-    c.dataset.zooming = "";
-    if (zoomEndRef.current) clearTimeout(zoomEndRef.current);
-    zoomEndRef.current = setTimeout(() => {
-      delete c.dataset.zooming;
-      zoomEndRef.current = null;
-    }, 220);
+    if (live) {
+      // The first tick fixes the spot on the plan the gesture zooms around (the plan isn't scaled yet).
+      if (!gestureRef.current) {
+        const r = c.getBoundingClientRect();
+        gestureRef.current = { at, fx: (at.x - r.left) / r.width, fy: (at.y - r.top) / r.height };
+        c.style.transformOrigin = `${at.x - r.left}px ${at.y - r.top}px`;
+      }
+      c.style.transform = `scale(${z / zoom})`;
+      if (gestureEndRef.current) clearTimeout(gestureEndRef.current);
+      gestureEndRef.current = setTimeout(commitGesture, 160);
+      return;
+    }
+    if (gestureEndRef.current) clearTimeout(gestureEndRef.current);
+    gestureEndRef.current = null;
+    gestureRef.current = null;
+    // Measured as it shows now (scaled or not): the fraction of the plan under the anchor is the same.
+    const r = c.getBoundingClientRect();
+    anchorRef.current = { at, fx: (at.x - r.left) / r.width, fy: (at.y - r.top) / r.height };
     setZoom(z);
   };
-  const zoomEndRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => () => void (zoomEndRef.current && clearTimeout(zoomEndRef.current)), []);
-  // After the plan is redrawn at the new zoom, scroll so the anchored spot is back under the pointer.
+  const gestureRef = useRef<{ at: { x: number; y: number }; fx: number; fy: number } | null>(null);
+  const gestureEndRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** The wheel or pinch paused: lay the plan out at the zoom it was scaled to. */
+  const commitGesture = () => {
+    gestureEndRef.current = null;
+    const g = gestureRef.current;
+    gestureRef.current = null;
+    if (!g) return;
+    anchorRef.current = g;
+    if (zoomRef.current === zoom) clearScale();
+    else setZoom(zoomRef.current);
+  };
+  const clearScale = () => {
+    const c = ref.current;
+    if (!c) return;
+    c.style.transform = "";
+    c.style.transformOrigin = "";
+  };
+  useEffect(() => () => void (gestureEndRef.current && clearTimeout(gestureEndRef.current)), []);
+  // After the plan is laid out at the new zoom, drop the gesture's scale and scroll so the anchored spot is
+  // back under the pointer, in the same frame, so the switch doesn't show.
   const anchorRef = useRef<{ at: { x: number; y: number }; fx: number; fy: number } | null>(null);
   useLayoutEffect(() => {
+    clearScale();
     const a = anchorRef.current;
     const v = viewport.current;
     const c = ref.current;
@@ -1398,6 +1428,7 @@ function FloorPlan({
     const n = c.getBoundingClientRect();
     v.scrollBy({ left: n.left + a.fx * n.width - a.at.x, top: n.top + a.fy * n.height - a.at.y });
     anchorRef.current = null;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs after each zoom change; clearScale only reads the ref
   }, [zoom, viewport, ref]);
   const zoomToRef = useRef(zoomTo);
   useEffect(() => {
@@ -1437,7 +1468,7 @@ function FloorPlan({
       // One wheel notch (about 100) zooms ~40%; a fast spin is capped so the view doesn't leap.
       const raw = e.deltaMode === 1 ? e.deltaY * 33 : e.deltaY;
       const step = Math.max(-150, Math.min(150, raw));
-      zoomToRef.current(zoomRef.current * Math.exp(-step * (pinch ? 0.012 : 0.0035)), { x: e.clientX, y: e.clientY });
+      zoomToRef.current(zoomRef.current * Math.exp(-step * (pinch ? 0.012 : 0.0035)), { x: e.clientX, y: e.clientY }, true);
     };
     v.addEventListener("wheel", onWheel, { passive: false });
     return () => v.removeEventListener("wheel", onWheel);
@@ -1634,7 +1665,7 @@ function FloorPlan({
         <div
           ref={ref}
           className={cn(
-            "@container relative select-none overflow-hidden [&[data-zooming]_.seat-name]:hidden",
+            "@container relative select-none overflow-hidden",
             editor && "mx-auto my-4 bg-surface shadow-[var(--shadow-card)]",
             crop && "absolute",
           )}
@@ -1644,6 +1675,8 @@ function FloorPlan({
               ? { width: `${(PLAN_WIDTH / crop.w) * 100}%`, left: `${(-crop.x / crop.w) * 100}%`, top: `${(-crop.y / crop.h) * 100}%` }
               : {
                   width: `${zoom * 100}%`,
+                  // Its own GPU layer, so a wheel or pinch gesture scales it without repainting (see zoomTo).
+                  willChange: "transform",
                   backgroundImage: "radial-gradient(circle, rgb(35 26 29 / 0.09) 1px, transparent 1px)",
                   backgroundSize: "24px 24px",
                 }),

@@ -69,7 +69,7 @@ export const SeatName = memo(function SeatName({ name, firstOnly, angle }: { nam
   const lines = firstOnly || words.length < 2 ? [words[0] ?? ""] : [words[0]!, words.slice(1).join(" ")];
   const lower = Math.sin(angle) > 0.05;
   return (
-    <g pointerEvents="none" className="seat-name">
+    <g pointerEvents="none">
       {lines.map((text, i) => {
         // Below the chair the letters hang inside the arc, so push the baseline out by their height.
         // Read top to bottom, the first name always comes first: outer arc above the chair, inner arc below it.
